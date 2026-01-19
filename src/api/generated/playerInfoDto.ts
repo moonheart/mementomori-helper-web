@@ -3,8 +3,9 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class AddAccountRequest {
-    userId: number;
-    clientKey: string = "";
-    name: string;
+export class PlayerInfoDto {
+    playerId: number;
+    playerName: string = "";
+    level: number;
+    worldId: number;
 }

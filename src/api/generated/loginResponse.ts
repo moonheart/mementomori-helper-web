@@ -3,8 +3,9 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class AddAccountRequest {
+export class LoginResponse {
+    success: boolean;
     userId: number;
-    clientKey: string = "";
-    name: string;
+    playerName: string = "";
+    message: string = "";
 }

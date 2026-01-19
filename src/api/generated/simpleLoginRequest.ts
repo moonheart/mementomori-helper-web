@@ -3,8 +3,7 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class AddAccountRequest {
+export class SimpleLoginRequest {
     userId: number;
     clientKey: string = "";
-    name: string;
 }
