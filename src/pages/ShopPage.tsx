@@ -1,221 +1,430 @@
-import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { mockShopItems } from '@/mocks/data';
-import { ShoppingCart, Diamond, Coins } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+    ShoppingCart,
+    Gem,
+    Coins,
+    Heart,
+    Trophy,
+    Clock,
+    Sparkles,
+    BookOpen,
+    Tag
+} from 'lucide-react';
+
+// Mock数据 - 钻石商城
+const diamondPackages = [
+    { id: 1, name: '初心礼包', diamonds: 120, bonus: 20, price: '￥6', hot: false, firstDouble: true },
+    { id: 2, name: '每日特惠', diamonds: 680, bonus: 80, price: '￥30', hot: true, firstDouble: true },
+    { id: 3, name: '豪华礼包', diamonds: 1980, bonus: 300, price: '￥98', hot: true, firstDouble: true },
+    { id: 4, name: '至尊礼包', diamonds: 6480, bonus: 1200, price: '￥328', hot: false, firstDouble: true }
+];
+
+// Mock数据 - 金币商店
+const goldShopItems = [
+    { id: 1, name: '强化石箱', quantity: '×50', price: 50000, currency: 'gold', stock: '∞' },
+    { id: 2, name: 'SSR装备碎片', quantity: '×5', price: 100000, currency: 'gold', stock: '5/5' },
+    { id: 3, name: '经验药水', quantity: '×20', price: 30000, currency: 'gold', stock: '∞' },
+    { id: 4, name: '角色碎片', quantity: '×10', price: 150000, currency: 'gold', stock: '3/3' }
+];
+
+// Mock数据 - 友情点商店
+const friendshipShopItems = [
+    { id: 1, name: '友情召唤券', quantity: '×1', price: 100, currency: 'friendship', stock: '∞' },
+    { id: 2, name: '强化石', quantity: '×10', price: 50, currency: 'friendship', stock: '∞' },
+    { id: 3, name: 'SR装备箱', quantity: '×1', price: 200, currency: 'friendship', stock: '10/10' },
+    { id: 4, name: '金币', quantity: '×10000', price: 80, currency: 'friendship', stock: '∞' }
+];
+
+// Mock数据 - 竞技场商店
+const arenaShopItems = [
+    { id: 1, name: 'UR装备碎片', quantity: '×3', price: 500, currency: 'arena', stock: '5/5' },
+    { id: 2, name: 'SSR装备箱', quantity: '×1', price: 300, currency: 'arena', stock: '∞' },
+    { id: 3, name: '专属角色碎片', quantity: '×5', price: 400, currency: 'arena', stock: '10/10' }
+];
+
+// Mock数据 - 特别兑换
+const specialExchangeItems = [
+    {
+        id: 1,
+        name: '限定时装-星河',
+        description: '限时兑换',
+        price: 2980,
+        currency: 'diamond',
+        timeLeft: '23:45:12',
+        limited: true,
+        rarity: 'legendary'
+    },
+    {
+        id: 2,
+        name: 'LR角色选择箱',
+        description: '每月限购1次',
+        price: 4980,
+        currency: 'diamond',
+        stock: '0/1',
+        rarity: 'legendary'
+    }
+];
+
+// Mock用户货币
+const userCurrency = {
+    diamond: 8520,
+    gold: 1250000,
+    friendship: 3200,
+    arenaPoints: 1850
+};
 
 export function ShopPage() {
-    const [selectedItem, setSelectedItem] = useState<typeof mockShopItems[0] | null>(null);
-    const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
-
-    const handlePurchase = (item: typeof mockShopItems[0]) => {
-        setSelectedItem(item);
-        setPurchaseDialogOpen(true);
+    const getCurrencyIcon = (currency: string) => {
+        const icons: Record<string, JSX.Element> = {
+            'gold': <Coins className="h-4 w-4 text-yellow-600" />,
+            'friendship': <Heart className="h-4 w-4 text-pink-500" />,
+            'arena': <Trophy className="h-4 w-4 text-purple-500" />,
+            'diamond': <Gem className="h-4 w-4 text-cyan-500" />
+        };
+        return icons[currency] || <Coins className="h-4 w-4" />;
     };
 
-    const confirmPurchase = () => {
-        console.log('Purchasing:', selectedItem);
-        setPurchaseDialogOpen(false);
-        setSelectedItem(null);
+    const getCurrencyName = (currency: string) => {
+        const names: Record<string, string> = {
+            'gold': '金币',
+            'friendship': '友情点',
+            'arena': '竞技点',
+            'diamond': '钻石'
+        };
+        return names[currency] || currency;
     };
 
-    const categories = {
-        general: mockShopItems.filter(item => item.category === 'general'),
-        special: mockShopItems.filter(item => item.category === 'special'),
-        premium: mockShopItems.filter(item => item.category === 'premium'),
-        limited: mockShopItems.filter(item => item.category === 'limited')
-    };
-
-    const renderShopItem = (item: typeof mockShopItems[0]) => {
-        const canPurchase = item.purchaseLimit.current < item.purchaseLimit.max;
-        const remaining = item.purchaseLimit.max - item.purchaseLimit.current;
-
-        return (
-            <Card key={item.id}>
-                <CardHeader>
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <CardTitle className="text-lg">{item.name}</CardTitle>
-                            <CardDescription className="mt-1">{item.description}</CardDescription>
-                        </div>
-                        {item.category === 'limited' && (
-                            <Badge variant="destructive">限时</Badge>
-                        )}
-                    </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    {/* Items */}
-                    <div className="rounded-lg border p-3">
-                        <div className="text-sm text-muted-foreground mb-2">包含物品</div>
-                        <div className="flex flex-wrap gap-2">
-                            {item.items.map((reward, idx) => (
-                                <Badge key={idx} variant="secondary">
-                                    {reward.type === 'diamond' && '💎'}
-                                    {reward.type === 'gold' && '🪙'}
-                                    {reward.type === 'exp' && '⭐'}
-                                    {' '}
-                                    {reward.amount.toLocaleString()}
-                                </Badge>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Price & Purchase */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            {item.price.type === 'diamond' && <Diamond className="h-5 w-5 text-blue-500" />}
-                            {item.price.type === 'gold' && <Coins className="h-5 w-5 text-yellow-500" />}
-                            <span className="text-2xl font-bold">{item.price.amount.toLocaleString()}</span>
-                        </div>
-                        <Button
-                            onClick={() => handlePurchase(item)}
-                            disabled={!canPurchase}
-                        >
-                            <ShoppingCart className="mr-2 h-4 w-4" />
-                            {canPurchase ? '购买' : '已售罄'}
-                        </Button>
-                    </div>
-
-                    {/* Purchase Limit */}
-                    <div className="text-sm text-muted-foreground">
-                        {canPurchase ? (
-                            <>剩余: {remaining} / {item.purchaseLimit.max}</>
-                        ) : (
-                            <>已达购买上限</>
-                        )}
-                        {' '}
-                        ({item.purchaseLimit.period === 'daily' && '每日'}
-                        {item.purchaseLimit.period === 'weekly' && '每周'}
-                        {item.purchaseLimit.period === 'total' && '总计'})
-                    </div>
-                </CardContent>
-            </Card>
-        );
+    const formatCurrency = (amount: number) => {
+        if (amount >= 10000) {
+            return `${(amount / 10000).toFixed(1)}万`;
+        }
+        return amount.toLocaleString();
     };
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
+            {/* 页面标题 */}
             <div>
-                <h1 className="text-3xl font-bold">商店</h1>
-                <p className="text-muted-foreground">购买道具和资源</p>
+                <h1 className="text-3xl font-bold">商城</h1>
+                <p className="text-muted-foreground mt-1">
+                    购买资源，提升实力
+                </p>
             </div>
 
-            {/* Shop Tabs */}
-            <Tabs defaultValue="general">
-                <TabsList className="grid w-full max-w-2xl grid-cols-4">
-                    <TabsTrigger value="general">
-                        常规
-                        {categories.general.length > 0 && (
-                            <Badge variant="secondary" className="ml-2">{categories.general.length}</Badge>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="special">
-                        特殊
-                        {categories.special.length > 0 && (
-                            <Badge variant="secondary" className="ml-2">{categories.special.length}</Badge>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="premium">
-                        高级
-                        {categories.premium.length > 0 && (
-                            <Badge variant="secondary" className="ml-2">{categories.premium.length}</Badge>
-                        )}
-                    </TabsTrigger>
-                    <TabsTrigger value="limited">
-                        限时
-                        {categories.limited.length > 0 && (
-                            <Badge variant="destructive" className="ml-2">{categories.limited.length}</Badge>
-                        )}
-                    </TabsTrigger>
+            {/* 帮助说明 */}
+            <Alert>
+                <BookOpen className="h-4 w-4" />
+                <AlertDescription>
+                    <strong>商城说明：</strong>
+                    使用不同货币购买各类资源和道具。部分商品有库存限制，每日或每周刷新。
+                </AlertDescription>
+            </Alert>
+
+            {/* 货币显示 */}
+            <div className="grid gap-4 md:grid-cols-4">
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Gem className="h-5 w-5 text-cyan-500" />
+                                <span className="text-sm text-muted-foreground">钻石</span>
+                            </div>
+                            <span className="font-bold text-cyan-600">
+                                {userCurrency.diamond.toLocaleString()}
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Coins className="h-5 w-5 text-yellow-600" />
+                                <span className="text-sm text-muted-foreground">金币</span>
+                            </div>
+                            <span className="font-bold text-yellow-700">
+                                {formatCurrency(userCurrency.gold)}
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Heart className="h-5 w-5 text-pink-500" />
+                                <span className="text-sm text-muted-foreground">友情点</span>
+                            </div>
+                            <span className="font-bold text-pink-600">
+                                {userCurrency.friendship.toLocaleString()}
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+                <Card>
+                    <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Trophy className="h-5 w-5 text-purple-500" />
+                                <span className="text-sm text-muted-foreground">竞技点</span>
+                            </div>
+                            <span className="font-bold text-purple-600">
+                                {userCurrency.arenaPoints.toLocaleString()}
+                            </span>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <Tabs defaultValue="diamond" className="space-y-6">
+                <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="diamond">钻石商城</TabsTrigger>
+                    <TabsTrigger value="gold">金币商店</TabsTrigger>
+                    <TabsTrigger value="friendship">友情商店</TabsTrigger>
+                    <TabsTrigger value="arena">竞技商店</TabsTrigger>
+                    <TabsTrigger value="special">特别兑换</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="general" className="mt-6">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {categories.general.length > 0 ? (
-                            categories.general.map(renderShopItem)
-                        ) : (
-                            <div className="col-span-full text-center py-12 text-muted-foreground">
-                                暂无常规商品
-                            </div>
-                        )}
+                {/* 钻石商城 */}
+                <TabsContent value="diamond" className="space-y-4">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        {diamondPackages.map((pkg) => (
+                            <Card
+                                key={pkg.id}
+                                className={`relative overflow-hidden ${pkg.hot ? 'border-2 border-orange-500' : ''
+                                    }`}
+                            >
+                                {pkg.hot && (
+                                    <div className="absolute top-2 right-2">
+                                        <Badge className="bg-gradient-to-r from-orange-500 to-red-500">
+                                            <Sparkles className="h-3 w-3 mr-1" />
+                                            热卖
+                                        </Badge>
+                                    </div>
+                                )}
+                                {pkg.firstDouble && (
+                                    <div className="absolute top-2 left-2">
+                                        <Badge className="bg-gradient-to-r from-purple-500 to-pink-500">
+                                            首充双倍
+                                        </Badge>
+                                    </div>
+                                )}
+                                <CardHeader className="text-center pt-8">
+                                    <CardTitle className="text-lg">{pkg.name}</CardTitle>
+                                    <div className="flex items-center justify-center gap-2 mt-4">
+                                        <Gem className="h-8 w-8 text-cyan-500" />
+                                        <span className="text-4xl font-bold text-cyan-600">
+                                            {pkg.diamonds}
+                                        </span>
+                                    </div>
+                                    {pkg.bonus > 0 && (
+                                        <div className="text-sm text-orange-600">
+                                            +{pkg.bonus} 额外赠送
+                                        </div>
+                                    )}
+                                </CardHeader>
+                                <CardContent className="space-y-3">
+                                    <div className="text-center">
+                                        <div className="text-2xl font-bold text-primary">
+                                            {pkg.price}
+                                        </div>
+                                    </div>
+                                    <Button className="w-full" size="lg">
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        购买
+                                    </Button>
+                                </CardContent>
+                            </Card>
+                        ))}
                     </div>
                 </TabsContent>
 
-                <TabsContent value="special" className="mt-6">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {categories.special.length > 0 ? (
-                            categories.special.map(renderShopItem)
-                        ) : (
-                            <div className="col-span-full text-center py-12 text-muted-foreground">
-                                暂无特殊商品
+                {/* 金币商店 */}
+                <TabsContent value="gold" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <CardTitle>金币商店</CardTitle>
+                                    <CardDescription>使用金币购买资源</CardDescription>
+                                </div>
+                                <Badge variant="outline">
+                                    每日刷新
+                                </Badge>
                             </div>
-                        )}
-                    </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {goldShopItems.map((item) => (
+                                    <Card key={item.id}>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <div className="font-semibold">{item.name}</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        {item.quantity}
+                                                    </div>
+                                                </div>
+                                                <Badge variant="secondary">{item.stock}</Badge>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    {getCurrencyIcon(item.currency)}
+                                                    <span className="font-bold text-yellow-700">
+                                                        {item.price.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <Button size="sm">
+                                                    购买
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
-                <TabsContent value="premium" className="mt-6">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {categories.premium.length > 0 ? (
-                            categories.premium.map(renderShopItem)
-                        ) : (
-                            <div className="col-span-full text-center py-12 text-muted-foreground">
-                                暂无高级商品
+                {/* 友情商店 */}
+                <TabsContent value="friendship" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Heart className="h-6 w-6 text-pink-500" />
+                                友情商店
+                            </CardTitle>
+                            <CardDescription>使用友情点兑换道具</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {friendshipShopItems.map((item) => (
+                                    <Card key={item.id}>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <div className="font-semibold">{item.name}</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        {item.quantity}
+                                                    </div>
+                                                </div>
+                                                <Badge variant="secondary">{item.stock}</Badge>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    {getCurrencyIcon(item.currency)}
+                                                    <span className="font-bold text-pink-600">
+                                                        {item.price.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <Button size="sm">
+                                                    兑换
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        )}
-                    </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
 
-                <TabsContent value="limited" className="mt-6">
-                    <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                        {categories.limited.length > 0 ? (
-                            categories.limited.map(renderShopItem)
-                        ) : (
-                            <div className="col-span-full text-center py-12 text-muted-foreground">
-                                暂无限时商品
+                {/* 竞技商店 */}
+                <TabsContent value="arena" className="space-y-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Trophy className="h-6 w-6 text-purple-500" />
+                                竞技商店
+                            </CardTitle>
+                            <CardDescription>使用竞技点兑换稀有道具</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {arenaShopItems.map((item) => (
+                                    <Card key={item.id}>
+                                        <CardContent className="p-4">
+                                            <div className="flex items-center justify-between mb-3">
+                                                <div>
+                                                    <div className="font-semibold">{item.name}</div>
+                                                    <div className="text-sm text-muted-foreground">
+                                                        {item.quantity}
+                                                    </div>
+                                                </div>
+                                                <Badge variant="secondary">{item.stock}</Badge>
+                                            </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    {getCurrencyIcon(item.currency)}
+                                                    <span className="font-bold text-purple-600">
+                                                        {item.price.toLocaleString()}
+                                                    </span>
+                                                </div>
+                                                <Button size="sm">
+                                                    兑换
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                ))}
                             </div>
-                        )}
-                    </div>
+                        </CardContent>
+                    </Card>
                 </TabsContent>
-            </Tabs>
 
-            {/* Purchase Confirmation Dialog */}
-            <AlertDialog open={purchaseDialogOpen} onOpenChange={setPurchaseDialogOpen}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>确认购买</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            {selectedItem && (
-                                <div className="space-y-3 mt-4">
-                                    <div>确定要购买 <span className="font-semibold">{selectedItem.name}</span> 吗？</div>
-                                    <div className="flex items-center gap-2 text-lg">
-                                        消耗:
-                                        {selectedItem.price.type === 'diamond' && <Diamond className="h-5 w-5 text-blue-500" />}
-                                        {selectedItem.price.type === 'gold' && <Coins className="h-5 w-5 text-yellow-500" />}
-                                        <span className="font-bold">{selectedItem.price.amount.toLocaleString()}</span>
+                {/* 特别兑换 */}
+                <TabsContent value="special" className="space-y-4">
+                    {specialExchangeItems.map((item) => (
+                        <Card
+                            key={item.id}
+                            className="border-2 border-gradient-to-r from-purple-500 to-pink-500"
+                        >
+                            <CardContent className="p-6">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-3 mb-2">
+                                            <h3 className="text-xl font-bold">{item.name}</h3>
+                                            <Badge className="bg-gradient-to-r from-orange-500 to-red-600">
+                                                {item.rarity === 'legendary' ? '传说' : '稀有'}
+                                            </Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground mb-3">
+                                            {item.description}
+                                        </p>
+                                        {item.timeLeft && (
+                                            <div className="flex items-center gap-2 text-sm text-orange-600">
+                                                <Clock className="h-4 w-4" />
+                                                剩余时间: {item.timeLeft}
+                                            </div>
+                                        )}
+                                        {item.stock && (
+                                            <div className="text-sm text-muted-foreground mt-2">
+                                                本月已购买: {item.stock}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="text-right space-y-3">
+                                        <div className="flex items-center justify-end gap-2">
+                                            {getCurrencyIcon(item.currency)}
+                                            <span className="text-2xl font-bold text-cyan-600">
+                                                {item.price.toLocaleString()}
+                                            </span>
+                                        </div>
+                                        <Button size="lg" className="bg-gradient-to-r from-purple-600 to-pink-600">
+                                            <Tag className="mr-2 h-4 w-4" />
+                                            立即兑换
+                                        </Button>
                                     </div>
                                 </div>
-                            )}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmPurchase}>确认购买</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </TabsContent>
+            </Tabs>
         </div>
     );
 }

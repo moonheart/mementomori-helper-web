@@ -1,135 +1,158 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useMemo } from 'react';
 import { mockEquipment } from '@/mocks/data';
-import { Search, ArrowUpCircle } from 'lucide-react';
-import { useState } from 'react';
+import { EquipmentCard } from '@/components/equipment/EquipmentCard';
+import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
+import type { Equipment, EquipmentRarity, EquipmentSlot } from '@/mocks/types';
+import { sortEquipment } from '@/lib/equipmentUtils';
+import { Book } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export function EquipmentPage() {
-    const [search, setSearch] = useState('');
-    const [selectedType, setSelectedType] = useState<string>('all');
+    // 筛选状态
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedSlot, setSelectedSlot] = useState<EquipmentSlot | 'all'>('all');
+    const [selectedRarities, setSelectedRarities] = useState<EquipmentRarity[]>([]);
+    const [equippedFilter, setEquippedFilter] = useState<'all' | 'equipped' | 'unequipped'>('all');
+    const [setFilter, setSetFilter] = useState<string | 'all'>('all');
+    const [sortBy, setSortBy] = useState<'level' | 'rarity' | 'enhance' | 'power'>('power');
 
-    const filteredEquipment = mockEquipment.filter(eq => {
-        const matchesSearch = eq.name.toLowerCase().includes(search.toLowerCase());
-        const matchesType = selectedType === 'all' || eq.type === selectedType;
-        return matchesSearch && matchesType;
-    });
+    // 筛选和排序装备
+    const filteredAndSortedEquipment = useMemo(() => {
+        let filtered = mockEquipment.filter(eq => {
+            // 搜索筛选
+            if (searchQuery && !eq.name.toLowerCase().includes(searchQuery.toLowerCase())) {
+                return false;
+            }
 
-    const getRarityColor = (rarity: string) => {
-        const colors = {
-            SR: 'bg-blue-500',
-            SSR: 'bg-purple-500',
-            UR: 'bg-yellow-500'
-        };
-        return colors[rarity as keyof typeof colors] || 'bg-gray-500';
+            // 部位筛选
+            if (selectedSlot !== 'all' && eq.slot !== selectedSlot) {
+                return false;
+            }
+
+            // 稀有度筛选
+            if (selectedRarities.length > 0 && !selectedRarities.includes(eq.rarity)) {
+                return false;
+            }
+
+            // 装备状态筛选
+            if (equippedFilter === 'equipped' && !eq.equippedBy) {
+                return false;
+            }
+            if (equippedFilter === 'unequipped' && eq.equippedBy) {
+                return false;
+            }
+
+            // 套装筛选
+            if (setFilter !== 'all') {
+                if (setFilter === 'none' && eq.setId) {
+                    return false;
+                }
+                if (setFilter !== 'none' && eq.setId !== setFilter) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        // 排序
+        return sortEquipment(filtered, sortBy);
+    }, [mockEquipment, searchQuery, selectedSlot, selectedRarities, equippedFilter, setFilter, sortBy]);
+
+    // 重置所有筛选
+    const handleReset = () => {
+        setSearchQuery('');
+        setSelectedSlot('all');
+        setSelectedRarities([]);
+        setEquippedFilter('all');
+        setSetFilter('all');
     };
 
-    const getTypeIcon = (type: string) => {
-        const icons = {
-            weapon: '⚔️',
-            armor: '🛡️',
-            accessory: '💍'
-        };
-        return icons[type as keyof typeof icons] || '📦';
+    // 装备操作处理
+    const handleViewDetails = (equipment: Equipment) => {
+        console.log('查看装备详情:', equipment);
+        // TODO: 打开详情对话框
+    };
+
+    const handleEnhance = (equipment: Equipment) => {
+        console.log('强化装备:', equipment);
+        // TODO: 打开强化界面
+    };
+
+    const handleEquip = (equipment: Equipment) => {
+        console.log('装备:', equipment);
+        // TODO: 装备到角色
+    };
+
+    const handleUnequip = (equipment: Equipment) => {
+        console.log('卸下装备:', equipment);
+        // TODO: 从角色卸下
     };
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
+            {/* 页面标题 */}
             <div>
                 <h1 className="text-3xl font-bold">装备管理</h1>
-                <p className="text-muted-foreground">管理和强化你的装备</p>
+                <p className="text-muted-foreground mt-1">
+                    管理和强化你的装备 • {filteredAndSortedEquipment.length} / {mockEquipment.length} 件装备
+                </p>
             </div>
 
-            {/* Filters */}
-            <div className="flex items-center gap-4">
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                    <Input
-                        placeholder="搜索装备..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-10"
-                    />
+            {/* 帮助提示 */}
+            <Alert>
+                <Book className="h-4 w-4" />
+                <AlertDescription>
+                    <strong>装备系统说明：</strong>
+                    装备分为武器、头部、身体、腿部、手部和饰品6个部位。稀有度越高属性越强，可通过强化、神装强化(圣装/魔装)和符石镶嵌提升战斗力。
+                    装备同一套装可激活套装效果。
+                </AlertDescription>
+            </Alert>
+
+            {/* 筛选器 */}
+            <EquipmentFilters
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                selectedSlot={selectedSlot}
+                onSlotChange={setSelectedSlot}
+                selectedRarities={selectedRarities}
+                onRaritiesChange={setSelectedRarities}
+                equippedFilter={equippedFilter}
+                onEquippedFilterChange={setEquippedFilter}
+                setFilter={setFilter}
+                onSetFilterChange={setSetFilter}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+                onReset={handleReset}
+            />
+
+            {/* 装备网格 */}
+            {filteredAndSortedEquipment.length > 0 ? (
+                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredAndSortedEquipment.map((equipment) => (
+                        <EquipmentCard
+                            key={equipment.id}
+                            equipment={equipment}
+                            onViewDetails={handleViewDetails}
+                            onEnhance={handleEnhance}
+                            onEquip={handleEquip}
+                            onUnequip={handleUnequip}
+                        />
+                    ))}
                 </div>
-
-                <Tabs value={selectedType} onValueChange={setSelectedType}>
-                    <TabsList>
-                        <TabsTrigger value="all">全部</TabsTrigger>
-                        <TabsTrigger value="weapon">武器</TabsTrigger>
-                        <TabsTrigger value="armor">防具</TabsTrigger>
-                        <TabsTrigger value="accessory">饰品</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-            </div>
-
-            {/* Equipment Grid */}
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {filteredEquipment.map((equipment) => (
-                    <Card key={equipment.id} className="hover:shadow-lg transition-shadow">
-                        <CardHeader>
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                    <div className="text-3xl">{getTypeIcon(equipment.type)}</div>
-                                    <div>
-                                        <CardTitle className="text-lg">{equipment.name}</CardTitle>
-                                        <CardDescription>
-                                            {equipment.type === 'weapon' && '武器'}
-                                            {equipment.type === 'armor' && '防具'}
-                                            {equipment.type === 'accessory' && '饰品'}
-                                        </CardDescription>
-                                    </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                    <Badge className={getRarityColor(equipment.rarity)}>
-                                        {equipment.rarity}
-                                    </Badge>
-                                    <Badge variant="outline">Lv.{equipment.level}</Badge>
-                                </div>
-                            </div>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {/* Stats */}
-                            <div className="rounded-lg border p-3">
-                                <div className="text-sm text-muted-foreground mb-2">属性</div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {Object.entries(equipment.stats).map(([stat, value]) => (
-                                        <div key={stat} className="flex justify-between">
-                                            <span className="text-sm text-muted-foreground capitalize">{stat}:</span>
-                                            <span className="text-sm font-semibold">+{value}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Equipped Status */}
-                            {equipment.equippedBy ? (
-                                <Badge variant="secondary" className="w-full justify-center">
-                                    已装备
-                                </Badge>
-                            ) : (
-                                <Button variant="outline" className="w-full">
-                                    装备
-                                </Button>
-                            )}
-
-                            {/* Enhance Button */}
-                            {equipment.level < equipment.maxLevel && (
-                                <Button className="w-full">
-                                    <ArrowUpCircle className="mr-2 h-4 w-4" />
-                                    强化
-                                </Button>
-                            )}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
-
-            {filteredEquipment.length === 0 && (
-                <div className="text-center py-12">
-                    <p className="text-muted-foreground">未找到匹配的装备</p>
+            ) : (
+                <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+                    <div className="text-6xl mb-4 opacity-20">📦</div>
+                    <h3 className="text-lg font-semibold mb-2">未找到匹配的装备</h3>
+                    <p className="text-muted-foreground mb-4">
+                        尝试调整筛选条件或重置筛选
+                    </p>
+                    <button
+                        onClick={handleReset}
+                        className="text-primary hover:underline"
+                    >
+                        重置所有筛选
+                    </button>
                 </div>
             )}
         </div>

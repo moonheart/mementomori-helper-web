@@ -1,4 +1,4 @@
-import { Home, Users, Package, ListTodo, ShoppingCart, Sparkles, Swords, Shield, MapPin, Settings } from 'lucide-react';
+import { Home, Users, Package, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -10,7 +10,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
     {
-        title: '仪表板',
+        title: '每日清单',
         href: '/dashboard',
         icon: Home
     },
@@ -25,6 +25,41 @@ const navItems: NavItem[] = [
         icon: Package
     },
     {
+        title: '战斗',
+        href: '/battle',
+        icon: Swords
+    },
+    {
+        title: '塔攻略',
+        href: '/tower',
+        icon: MapPin
+    },
+    {
+        title: '祈愿之泉',
+        href: '/fountain',
+        icon: Sparkles
+    },
+    {
+        title: '时空洞窟',
+        href: '/cave',
+        icon: Mountain
+    },
+    {
+        title: '幻影神殿',
+        href: '/temple',
+        icon: Ghost
+    },
+    {
+        title: '竞技场',
+        href: '/pvp',
+        icon: Shield
+    },
+    {
+        title: '公会',
+        href: '/guild',
+        icon: Users
+    },
+    {
         title: '任务',
         href: '/missions',
         icon: ListTodo
@@ -35,24 +70,14 @@ const navItems: NavItem[] = [
         icon: ShoppingCart
     },
     {
-        title: '抽卡',
-        href: '/gacha',
-        icon: Sparkles
+        title: '好友',
+        href: '/friends',
+        icon: Users
     },
     {
-        title: '竞技场',
-        href: '/pvp',
-        icon: Swords
-    },
-    {
-        title: '公会',
-        href: '/guild',
-        icon: Shield
-    },
-    {
-        title: '副本',
-        href: '/dungeon',
-        icon: MapPin
+        title: '排行榜',
+        href: '/leaderboard',
+        icon: TrendingUp
     },
     {
         title: '设置',
@@ -97,16 +122,6 @@ export function Sidebar() {
                     );
                 })}
             </nav>
-
-            {/* Footer */}
-            <div className="border-t p-4">
-                <Link
-                    to="/accounts"
-                    className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
-                >
-                    账号管理
-                </Link>
-            </div>
         </div>
     );
 }
