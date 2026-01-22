@@ -12,6 +12,7 @@ trigger: always_on
 docs\提取的游戏内帮助文档.md 这个文档是我们的业务说明书
 
 .\api\MementoMori.Ortega 这个项目是从游戏文件(il2cpp)提取出来的部分 C# 代码
+.\api\MementoMori.Ortega\Share\Data\ApiInterface 里面是游戏的接口,我们在 api\MementoMori.Api\Controllers\OrtegaProxyController.cs 实现了自动化代理
 
 
 项目使用 typegen 从C#代码生成typescript的类型定义
@@ -20,3 +21,5 @@ pnpm run generate-types
 
 
 
+
+所有生成的文档使用中文
