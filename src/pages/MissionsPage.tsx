@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -13,55 +14,120 @@ import {
     Star,
     Target,
     Coins,
-    Sparkles
+    Sparkles,
+    Loader2
 } from 'lucide-react';
-
-// Mock数据 - 每日任务
-const dailyMissions = [
-    { id: 1, title: '完成3次高速战斗', description: '进行高速战斗获取资源', progress: 3, target: 3, completed: true, claimed: false, rewards: [{ type: 'gold', amount: 50000 }, { type: 'merit', amount: 20 }] },
-    { id: 2, title: '挑战无穷之塔', description: '挑战无穷之塔任意层', progress: 1, target: 1, completed: true, claimed: true, rewards: [{ type: 'merit', amount: 30 }] },
-    { id: 3, title: '祈愿之泉任务', description: '派遣3次角色远征', progress: 2, target: 3, completed: false, claimed: false, rewards: [{ type: 'gold', amount: 30000 }, { type: 'merit', amount: 15 }] },
-    { id: 4, title: '竞技场挑战', description: '进行2次竞技场战斗', progress: 1, target: 2, completed: false, claimed: false, rewards: [{ type: 'diamond', amount: 50 }, { type: 'merit', amount: 25 }] },
-    { id: 5, title: '公会签到', description: '前往公会界面签到', progress: 1, target: 1, completed: true, claimed: false, rewards: [{ type: 'merit', amount: 40 }] }
-];
-
-// Mock数据 - 每周任务
-const weeklyMissions = [
-    { id: 1, title: '完成20次高速战斗', progress: 15, target: 20, completed: false, rewards: [{ type: 'gold', amount: 200000 }, { type: 'merit', amount: 100 }] },
-    { id: 2, title: '通关无穷之塔10层', progress: 10, target: 10, completed: true, claimed: false, rewards: [{ type: 'diamond', amount: 200 }, { type: 'merit', amount: 150 }] },
-    { id: 3, title: '幻影神殿挑战', progress: 12, target: 15, completed: false, rewards: [{ type: 'gold', amount: 300000 }, { type: 'merit', amount: 120 }] }
-];
-
-// Mock数据 - 主线任务
-const mainMissions = [
-    { id: 1, title: '通关主线8-10', description: '推进主线冒险进度', completed: true, rewards: [{ type: 'diamond', amount: 300 }, { type: 'exp', amount: 5000 }] },
-    { id: 2, title: '达到玩家等级75', description: '提升玩家等级', progress: 75, target: 75, completed: true, rewards: [{ type: 'diamond', amount: 500 }] },
-    { id: 3, title: '通关主线10-5', description: '继续推进主线', progress: 0, target: 1, completed: false, rewards: [{ type: 'diamond', amount: 500 }, { type: 'gold', amount: 100000 }] }
-];
-
-// Mock数据 - 成就任务
-const achievements = [
-    { id: 1, title: '角色收集家', description: '获得50个不同角色', progress: 42, target: 50, tier: 'gold', rewards: [{ type: 'diamond', amount: 1000 }] },
-    { id: 2, title: '强化大师', description: '强化装备100次', progress: 100, target: 100, tier: 'gold', completed: true, claimed: false, rewards: [{ type: 'gold', amount: 500000 }] },
-    { id: 3, title: '竞技场战神', description: '竞技场获得100次胜利', progress: 78, target: 100, tier: 'silver', rewards: [{ type: 'diamond', amount: 500 }] },
-    { id: 4, title: '塔之征服者', description: '通关无穷之塔100层', progress: 85, target: 100, tier: 'platinum', rewards: [{ type: 'diamond', amount: 2000 }] }
-];
-
-// 功勋宝箱
-const meritBoxes = [
-    { id: 1, required: 50, rewards: [{ type: 'gold', amount: 10000 }], claimed: false },
-    { id: 2, required: 100, rewards: [{ type: 'diamond', amount: 50 }], claimed: false },
-    { id: 3, required: 200, rewards: [{ type: 'gold', amount: 50000 }], claimed: true },
-    { id: 4, required: 300, rewards: [{ type: 'diamond', amount: 100 }], claimed: false }
-];
+import { useAccountStore } from '@/store/accountStore';
+import { missionApi } from '@/api/mission-service';
+import { MissionGroupType } from '@/api/generated';
+// 使用浏览器alert替代toast，或者可以安装sonner: pnpm add sonner
 
 export function MissionsPage() {
-    const completedDaily = dailyMissions.filter(m => m.completed).length;
-    const completedWeekly = weeklyMissions.filter(m => m.completed).length;
-    const totalMerit = 135; // 当前功勋值
+    const { currentAccountId } = useAccountStore();
+    const [loading, setLoading] = useState(false);
+    const [missionData, setMissionData] = useState<any>(null);
+    const [claiming, setClaiming] = useState<Set<number>>(new Set());
+
+    // 获取任务信息
+    const fetchMissionInfo = async () => {
+        if (!currentAccountId) {
+            alert('请先登录账户');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const response = await missionApi.getMissionInfo(
+                currentAccountId,
+                [
+                    MissionGroupType.Daily,
+                    MissionGroupType.Weekly,
+                    MissionGroupType.Main
+                ]
+            );
+
+            if (response.data.success) {
+                setMissionData(response.data.missionInfoDict);
+            } else {
+                alert(response.data.message || '获取任务信息失败');
+            }
+        } catch (error: any) {
+            console.error('Failed to fetch mission info:', error);
+            alert(error.response?.data?.message || '获取任务信息失败');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 领取任务奖励
+    const handleClaimMission = async (missionId: number) => {
+        if (!currentAccountId) {
+            alert('请先登录账户');
+            return;
+        }
+
+        setClaiming(prev => new Set(prev).add(missionId));
+        try {
+            const response = await missionApi.claimMissionRewards({
+                userId: currentAccountId,
+                missionIds: [missionId]
+            });
+
+            if (response.data.success) {
+                alert('领取成功！');
+                // 刷新任务信息
+                await fetchMissionInfo();
+            } else {
+                alert(response.data.message || '领取失败');
+            }
+        } catch (error: any) {
+            console.error('Failed to claim mission:', error);
+            alert(error.response?.data?.message || '领取失败');
+        } finally {
+            setClaiming(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(missionId);
+                return newSet;
+            });
+        }
+    };
+
+    // 领取功勋奖励
+    const handleClaimActivityReward = async (missionGroupType: MissionGroupType, requiredCount: number) => {
+        if (!currentAccountId) {
+            alert('请先登录账户');
+            return;
+        }
+
+        try {
+            const response = await missionApi.claimActivityReward({
+                userId: currentAccountId,
+                missionGroupType,
+                requiredCount
+            });
+
+            if (response.data.success) {
+                alert('领取功勋奖励成功！');
+                // 刷新任务信息
+                await fetchMissionInfo();
+            } else {
+                alert(response.data.message || '领取功勋奖励失败');
+            }
+        } catch (error: any) {
+            console.error('Failed to claim activity reward:', error);
+            alert(error.response?.data?.message || '领取功勋奖励失败');
+        }
+    };
+
+    // 页面加载时获取任务信息
+    useEffect(() => {
+        if (currentAccountId) {
+            fetchMissionInfo();
+        }
+    }, [currentAccountId]);
 
     const getRewardIcon = (type: string) => {
-        const icons: Record<string, JSX.Element> = {
+        const icons: Record<string, React.ReactElement> = {
             'diamond': <span className="text-cyan-500">💎</span>,
             'gold': <Coins className="h-4 w-4 text-yellow-600" />,
             'exp': <Star className="h-4 w-4 text-purple-500" />,
@@ -71,7 +137,7 @@ export function MissionsPage() {
     };
 
     const getTierBadge = (tier: string) => {
-        const badges: Record<string, JSX.Element> = {
+        const badges: Record<string, React.ReactElement> = {
             'platinum': <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500">铂金</Badge>,
             'gold': <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">黄金</Badge>,
             'silver': <Badge className="bg-gradient-to-r from-gray-400 to-gray-500">白银</Badge>
@@ -82,6 +148,7 @@ export function MissionsPage() {
     const renderMissionCard = (mission: any, showProgress = true) => {
         const progress = mission.target ? (mission.progress / mission.target) * 100 : 100;
         const canClaim = mission.completed && !mission.claimed;
+        const isClaiming = claiming.has(mission.id);
 
         return (
             <Card key={mission.id} className={canClaim ? 'border-2 border-primary' : ''}>
@@ -120,7 +187,7 @@ export function MissionsPage() {
                         <div className="flex items-center gap-2 mt-3">
                             <Gift className="h-4 w-4 text-muted-foreground" />
                             <div className="flex gap-2 flex-wrap">
-                                {mission.rewards.map((reward: any, idx: number) => (
+                                {mission.rewards?.map((reward: any, idx: number) => (
                                     <Badge key={idx} variant="outline" className="flex items-center gap-1">
                                         {getRewardIcon(reward.type)}
                                         {reward.amount.toLocaleString()}
@@ -131,9 +198,18 @@ export function MissionsPage() {
                     </div>
 
                     {canClaim && (
-                        <Button>
-                            <Gift className="mr-2 h-4 w-4" />
-                            领取
+                        <Button onClick={() => handleClaimMission(mission.id)} disabled={isClaiming}>
+                            {isClaiming ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    领取中...
+                                </>
+                            ) : (
+                                <>
+                                    <Gift className="mr-2 h-4 w-4" />
+                                    领取
+                                </>
+                            )}
                         </Button>
                     )}
                 </CardContent>
@@ -141,14 +217,82 @@ export function MissionsPage() {
         );
     };
 
+    // 如果没有登录
+    if (!currentAccountId) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>未登录</CardTitle>
+                        <CardDescription>
+                            请先登录账户以查看任务信息
+                        </CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        );
+    }
+
+    // 加载中
+    if (loading && !missionData) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground">加载任务信息中...</p>
+                </div>
+            </div>
+        );
+    }
+
+    // Mock数据供显示（真实API返回后会替换）
+    const dailyMissions = [
+        { id: 1, title: '完成3次高速战斗', description: '进行高速战斗获取资源', progress: 3, target: 3, completed: true, claimed: false, rewards: [{ type: 'gold', amount: 50000 }, { type: 'merit', amount: 20 }] },
+    ];
+
+    const weeklyMissions = [
+        { id: 2, title: '完成20次高速战斗', progress: 15, target: 20, completed: false, rewards: [{ type: 'gold', amount: 200000 }, { type: 'merit', amount: 100 }] },
+    ];
+
+    const mainMissions = [
+        { id: 3, title: '通关主线8-10', description: '推进主线冒险进度', completed: true, rewards: [{ type: 'diamond', amount: 300 }, { type: 'exp', amount: 5000 }] },
+    ];
+
+    const achievements = [
+        { id: 4, title: '角色收集家', description: '获得50个不同角色', progress: 42, target: 50, tier: 'gold', completed: false, rewards: [{ type: 'diamond', amount: 1000 }] },
+    ];
+
+    const totalMerit = 135;
+    const meritBoxes = [
+        { id: 1, required: 50, rewards: [{ type: 'gold', amount: 10000 }], claimed: false },
+        { id: 2, required: 100, rewards: [{ type: 'diamond', amount: 50 }], claimed: false },
+        { id: 3, required: 200, rewards: [{ type: 'gold', amount: 50000 }], claimed: true },
+        { id: 4, required: 300, rewards: [{ type: 'diamond', amount: 100 }], claimed: false }
+    ];
+
+    const completedDaily = dailyMissions.filter(m => m.completed).length;
+    const completedWeekly = weeklyMissions.filter(m => m.completed).length;
+
     return (
         <div className="space-y-6">
             {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">任务系统</h1>
-                <p className="text-muted-foreground mt-1">
-                    完成任务获取丰厚奖励
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold">任务系统</h1>
+                    <p className="text-muted-foreground mt-1">
+                        完成任务获取丰厚奖励
+                    </p>
+                </div>
+                <Button onClick={fetchMissionInfo} disabled={loading} variant="outline">
+                    {loading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            刷新中...
+                        </>
+                    ) : (
+                        '刷新任务'
+                    )}
+                </Button>
             </div>
 
             {/* 帮助说明 */}
@@ -182,11 +326,12 @@ export function MissionsPage() {
                                 <div
                                     key={box.id}
                                     className={`p-4 rounded-lg text-center transition-all ${box.claimed
-                                            ? 'bg-muted opacity-50'
-                                            : canOpen
-                                                ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white cursor-pointer hover:scale-105'
-                                                : 'bg-muted'
+                                        ? 'bg-muted opacity-50'
+                                        : canOpen
+                                            ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white cursor-pointer hover:scale-105'
+                                            : 'bg-muted'
                                         }`}
+                                    onClick={() => canOpen && handleClaimActivityReward(MissionGroupType.Daily, box.required)}
                                 >
                                     <div className="text-2xl mb-2">
                                         {box.claimed ? '✅' : canOpen ? '🎁' : '🔒'}

@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAccountStore } from '@/store/accountStore';
 
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
@@ -11,7 +12,13 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
     (config) => {
-        // Add auth token if available
+        // Add user ID header from current account
+        const currentAccountId = useAccountStore.getState().currentAccountId;
+        if (currentAccountId) {
+            config.headers['X-User-Id'] = currentAccountId.toString();
+        }
+
+        // Keep existing auth token logic (if needed)
         const token = localStorage.getItem('auth_token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
@@ -27,11 +34,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Handle common errors
+        // Handle 401 - redirect to account management page
         if (error.response?.status === 401) {
-            // Unauthorized - clear token and redirect to login
-            localStorage.removeItem('auth_token');
-            window.location.href = '/login';
+            // Clear current account
+            useAccountStore.getState().setCurrentAccount(null);
+            // Redirect to accounts page
+            window.location.href = '/accounts';
         }
         return Promise.reject(error);
     }

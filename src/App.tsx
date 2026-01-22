@@ -18,12 +18,16 @@ import { PhantomTemplePage } from './pages/PhantomTemplePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
 import { FriendsPage } from './pages/FriendsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AccountsPage } from './pages/AccountsPage';
 import './index.css';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* 账号管理页面 - 独立页面，不使用 MainLayout */}
+        <Route path="/accounts" element={<AccountsPage />} />
+
         {/* 主应用 - 使用 MainLayout */}
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />

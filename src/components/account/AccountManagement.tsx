@@ -28,10 +28,12 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Loader2, MoreVertical, Plus, Trash2, LogIn } from 'lucide-react';
+import { Loader2, MoreVertical, Plus, Trash2, LogIn, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export function AccountManagement() {
     const { accounts, currentAccountId, setAccounts, removeAccount, setCurrentAccount, setLoading } = useAccountStore();
+    const navigate = useNavigate();
     const [showAddDialog, setShowAddDialog] = useState(false);
     const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
     const [loginLoading, setLoginLoading] = useState<number | null>(null);
@@ -115,6 +117,16 @@ export function AccountManagement() {
         }
     };
 
+    const handleEnterAccount = (userId: number) => {
+        setCurrentAccount(userId);
+        toast({
+            title: '已切换账号',
+            description: '正在进入游戏...',
+        });
+        // 跳转到主界面
+        navigate('/dashboard');
+    };
+
     return (
         <div className="container mx-auto py-6 space-y-6">
             <Card>
@@ -172,6 +184,14 @@ export function AccountManagement() {
                                     </div>
 
                                     <div className="flex items-center gap-2">
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleEnterAccount(account.userId)}
+                                        >
+                                            <ArrowRight className="mr-2 h-4 w-4" />
+                                            进入该账号
+                                        </Button>
+
                                         <Button
                                             size="sm"
                                             variant="outline"

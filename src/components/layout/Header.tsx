@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Bell, ChevronDown, Diamond, Coins, Zap, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,11 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { mockCurrency, mockPlayerInfo } from '@/mocks/data';
-import { AccountManagementDialog } from '@/components/account/AccountManagementDialog';
 
 export function Header() {
     const navigate = useNavigate();
-    const [accountDialogOpen, setAccountDialogOpen] = useState(false);
 
     return (
         <>
@@ -74,7 +71,7 @@ export function Header() {
                         <DropdownMenuContent align="end" className="w-56">
                             <DropdownMenuLabel>我的账号</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => setAccountDialogOpen(true)}>
+                            <DropdownMenuItem onClick={() => navigate('/accounts')}>
                                 <Users className="mr-2 h-4 w-4" />
                                 账号管理
                             </DropdownMenuItem>
@@ -89,12 +86,6 @@ export function Header() {
                     </DropdownMenu>
                 </div>
             </header>
-
-            {/* Account Management Dialog */}
-            <AccountManagementDialog
-                open={accountDialogOpen}
-                onOpenChange={setAccountDialogOpen}
-            />
         </>
     );
 }
