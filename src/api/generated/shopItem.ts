@@ -3,14 +3,11 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-import { ShopCurrency } from "./shopCurrency";
+import { IUserCharacterItem } from "./iUserCharacterItem";
+import { CharacterRarityFlags } from "./characterRarityFlags";
+import { UserItem } from "./userItem";
 
-export class ShopItem {
-    id: number;
-    name: string = "";
-    price: number;
-    currency: ShopCurrency;
-    stock: number;
-    maxStock: number;
-    discount: number;
+export class ShopItem implements IUserCharacterItem {
+    rarityFlags: CharacterRarityFlags;
+    item: UserItem;
 }

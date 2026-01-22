@@ -3,10 +3,16 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-import { CharacterInfo } from "./characterInfo";
-import { CharacterStats } from "./characterStats";
+import { UserEquipmentDtoInfo } from "./userEquipmentDtoInfo";
+import { BaseParameter } from "./baseParameter";
+import { BattleParameter } from "./battleParameter";
+import { CharacterRarityFlags } from "./characterRarityFlags";
 
-export class CharacterDetailInfo extends CharacterInfo {
-    baseStats: CharacterStats = {"hp":0,"attack":0,"defense":0,"speed":0};
-    battleStats: CharacterStats = {"hp":0,"attack":0,"defense":0,"speed":0};
+export class CharacterDetailInfo {
+    userEquipmentDtoInfos: UserEquipmentDtoInfo[];
+    baseParameter: BaseParameter;
+    battleParameter: BattleParameter;
+    battlePower: number;
+    level: number;
+    rarityFlags: CharacterRarityFlags;
 }

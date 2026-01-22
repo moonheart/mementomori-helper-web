@@ -4,6 +4,5 @@
  */
 
 export class ApiClaimMissionRequest {
-    userId: number;
     missionIds: number[] = [];
 }

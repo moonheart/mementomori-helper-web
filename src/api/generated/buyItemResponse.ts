@@ -3,8 +3,12 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class BuyItemResponse {
-    success: boolean;
-    message: string = "";
-    remainingStock: number;
+import { ApiResponseBase } from "./apiResponseBase";
+import { IUserSyncApiResponse } from "./iUserSyncApiResponse";
+import { TradeShopItem } from "./tradeShopItem";
+import { UserSyncData } from "./userSyncData";
+
+export class BuyItemResponse extends ApiResponseBase implements IUserSyncApiResponse {
+    tradeShopItems: TradeShopItem[];
+    userSyncData: UserSyncData;
 }

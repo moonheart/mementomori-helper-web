@@ -3,7 +3,15 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class LoginRequest {
+import { ApiRequestBase } from "./apiRequestBase";
+
+export class LoginRequest extends ApiRequestBase {
+    clientKey: string;
+    deviceToken: string;
+    appVersion: string;
+    oSVersion: string;
+    modelName: string;
+    adverisementId: string;
     userId: number;
-    clientKey: string = "";
+    isPushNotificationAllowed: boolean;
 }

@@ -6,6 +6,5 @@
 import { MissionGroupType } from "./missionGroupType";
 
 export class ApiGetMissionInfoRequest {
-    userId: number;
     missionGroupTypes: MissionGroupType[] = [];
 }

@@ -4,7 +4,7 @@
  */
 
 export class WorldInfo {
-    worldId: number;
-    worldName: string = "";
-    lastLoginTime: number;
+    gameServerId: number;
+    id: number;
+    startTime: Date;
 }

@@ -3,7 +3,12 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-export class BuyItemRequest {
-    itemId: number;
-    quantity: number;
+import { ApiRequestBase } from "./apiRequestBase";
+import { TradeShopItemInfo } from "./tradeShopItemInfo";
+
+export class BuyItemRequest extends ApiRequestBase {
+    tradeShopTabId: number;
+    tradeShopItemInfos: TradeShopItemInfo[];
+    tradeShopSphereId: number;
+    tradeSphereCount: number;
 }

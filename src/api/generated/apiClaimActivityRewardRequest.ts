@@ -6,7 +6,6 @@
 import { MissionGroupType } from "./missionGroupType";
 
 export class ApiClaimActivityRewardRequest {
-    userId: number;
     missionGroupType: MissionGroupType;
     requiredCount: number;
 }
