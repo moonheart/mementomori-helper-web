@@ -2,192 +2,147 @@
 
 ## 概述
 
-Ortega API 代理系统会自动包装所有来自 `MementoMori.Ortega` 的游戏后端接口，无需为每个接口手动编写代码。
+Ortega API 代理系统会自动包装所有来自 `MementoMori.Ortega` 的游戏后端接口。该系统通过 C# 后端自动扫描 API 并生成前端 RPC 客户端，实现了类型安全、零手动配置的接口调用。
 
 ## 工作原理
 
-1. **API 发现**：系统启动时自动扫描所有标记了 `[OrtegaApi]` 特性的 Request 类型
-2. **动态路由**：所有 Ortega API 都通过统一的端点访问：`POST /api/ortega/{category}/{action}`
-3. **类型生成**：使用 `typegen` 从 C# 代码自动生成 TypeScript 类型定义
+1.  **API 发现**：后端启动时自动扫描标记了 `[OrtegaApi]` 特性的 Request 类型。
+2.  **代码生成**：通过 `pnpm generate-types` 命令，后端会生成：
+    *   `src/api/generated/`：所有请求/响应的 TypeScript 接口。
+    *   `src/api/ortega-rpc-manifest.ts`：完整的 RPC 路由与类型映射表。
+    *   `src/api/ortega-client.ts`：强类型的快捷调用对象。
+3.  **动态代理**：前端通过统一的 `rpcClient` 将请求发送至 `/api/ortega/{category}/{action}`，后端利用反射调用对应的 Ortega 引擎方法。
+
+### 调用流程图
+
+```mermaid
+sequenceDiagram
+    participant UI as React Component
+    participant Service as MissionService
+    participant Client as ortegaApi (Generated)
+    participant RPC as rpcClient
+    participant Proxy as ASP.NET Core Proxy
+    participant Game as Ortega Engine
+
+    UI->>Service: getMissionInfo()
+    Service->>Client: mission.getMissionInfo(req)
+    Client->>RPC: call("mission/getMissionInfo", req)
+    RPC->>Proxy: POST /api/ortega/mission/getMissionInfo
+    Proxy->>Game: Invoke Method (Reflection)
+    Game-->>Proxy: Response Data
+    Proxy-->>RPC: JSON Response
+    RPC-->>Client: Typed Object
+    Client-->>Service: Typed Object
+    Service-->>UI: Business Model
+```
 
 ## 前端调用方式
 
-### 方式一：使用类型安全的辅助函数（推荐）
+### 方式一：使用强类型快捷对象（推荐）
+
+这是最常用的方式，代码提示最友好。
 
 ```typescript
-import ortegaApi from '@/api/ortega-client';
+import { ortegaApi } from '@/api/ortega-client';
 
-// User API 示例
-const userData = await ortegaApi.user.getUserData();
-const mypageData = await ortegaApi.user.getMypage();
+// 获取用户数据
+const userData = await ortegaApi.user.getUserData({});
 
-// Mission API 示例
-import { GetMissionInfoRequest } from '@/api/generated';
-
+// 获取任务信息
 const missionInfo = await ortegaApi.mission.getMissionInfo({
-  targetMissionGroupList: [/* ... */]
-} as GetMissionInfoRequest);
-
-// Shop API 示例
-const shopList = await ortegaApi.shop.getList();
+  targetMissionGroupList: [1, 2] // 使用生成的枚举或 ID
+});
 ```
 
-### 方式二：使用通用调用函数
+### 方式二：使用通用调用接口
+
+当你需要动态指定路由时，可以使用 `call` 方法，它依然保持了请求和响应的类型校验。
 
 ```typescript
-import { callOrtegaApi } from '@/api/ortega-client';
-import type { GetUserDataRequest, GetUserDataResponse } from '@/api/generated';
+import { ortegaApi } from '@/api/ortega-client';
 
-const response = await callOrtegaApi<GetUserDataRequest, GetUserDataResponse>(
-  'user',
-  'getUserData',
-  {} // 请求参数
-);
+// 传入 URI 字符串，IDE 会根据 URI 自动推断 request 和 response 的类型
+const response = await ortegaApi.call("shop/getList", {
+  // 这里会有类型提示
+});
 ```
 
-### 方式三：直接使用 axios
+## 代码生成
 
-```typescript
-import apiClient from '@/api/axios-client';
-import type { GetMissionInfoRequest, GetMissionInfoResponse } from '@/api/generated';
-
-const request: GetMissionInfoRequest = {
-  targetMissionGroupList: [/* ... */]
-};
-
-const response = await apiClient.post<GetMissionInfoResponse>(
-  '/api/ortega/mission/getMissionInfo',
-  request
-);
-```
-
-## 生成 TypeScript 类型
-
-运行以下命令生成所有 Ortega API 的 TypeScript 类型定义：
+每当 C# 后端的 Ortega 接口发生变化（新增 API 或修改字段）时，必须运行以下命令更新前端定义：
 
 ```bash
-cd api/MementoMori.Api
-pnpm run generate-types
+pnpm generate-types
 ```
 
-这将在 `src/api/generated/` 目录下生成所有的类型文件，包括：
-- 所有 Ortega Request 类型（如 `getUserDataRequest.ts`）
-- 所有 Ortega Response 类型（如 `getUserDataResponse.ts`）
-- 相关的枚举和数据类型
+该命令会同步更新以下文件：
+*   `src/api/generated/*.ts`
+*   `src/api/ortega-rpc-manifest.ts`
+*   `src/api/ortega-client.ts`
 
-## 可用的 API 列表
+> [!CAUTION]
+> **严禁手动修改** 上述由生成的代码文件。任何手动修改都会在下次运行生成命令时被覆盖。
 
-可以通过以下端点查看所有可用的 Ortega API：
+## 认证与 Header
 
-```typescript
-import { getOrtegaApiList } from '@/api/ortega-client';
-
-const apiList = await getOrtegaApiList();
-console.log(`总共有 ${apiList.total} 个 API`);
-console.log(apiList.apis);
-```
-
-或者直接访问：`GET http://localhost:5000/api/ortega/list`
-
-## 路由格式
-
-所有 Ortega API 遵循统一的路由格式：
-
-```
-POST /api/ortega/{category}/{action}
-```
-
-**示例**：
-- `POST /api/ortega/user/getUserData` - 获取用户数据
-- `POST /api/ortega/mission/getMissionInfo` - 获取任务信息
-- `POST /api/ortega/shop/getList` - 获取商店列表
-- `POST /api/ortega/battle/pvpStart` - 开始 PVP 战斗
-
-## 认证
-
-所有请求都需要在 Header 中包含 `X-User-Id`，这个会由 `axios-client` 的拦截器自动添加。
+系统通过 `axios-client` 的请求拦截器自动处理认证。
+*   所有请求都会自动携带 `X-User-Id`（从 `accountStore` 获取）。
+*   后端 `OrtegaProxyController` 会验证该 ID 并将其注入到 Ortega 引擎上下文中。
 
 ## 错误处理
 
-代理系统会统一处理 Ortega API 错误：
+代理系统会捕获 Ortega 引擎抛出的异常并将其包装为标准错误响应。
 
 ```typescript
 try {
-  const userData = await ortegaApi.user.getUserData();
-} catch (error) {
-  if (error.response?.status === 400) {
-    // Ortega API 错误
-    console.error('API Error:', error.response.data);
-  } else if (error.response?.status === 401) {
-    // 认证错误，会自动重定向到账户管理页面
+  const response = await ortegaApi.battle.pvpStart({ ... });
+} catch (error: any) {
+  if (error.response?.data?.errorCode) {
+    // 处理 Ortega 特有的错误码
+    const { errorCode, error: errorMsg } = error.response.data;
+    console.error(`游戏逻辑错误 [${errorCode}]: ${errorMsg}`);
+  } else {
+    // 处理网络或其他系统错误
+    console.error("系统错误:", error.message);
   }
 }
 ```
 
-## 添加新的快捷方法
+## 特殊数据处理
 
-如果你想为某个 Ortega API 添加快捷方法，编辑 `src/api/ortega-client.ts`：
+### 字典类型的 Key
+Ortega API 经常返回以数字 ID 为 Key 的字典。在 TypeScript 中，这些 Key 可能会被处理为字符串。建议使用以下方式安全访问：
 
 ```typescript
-export const ortegaApi = {
-  // ... 现有的快捷方法
-  
-  // 添加新的分类
-  gacha: {
-    exec: (request: any) =>
-      callOrtegaApi('gacha', 'exec', request),
-    getGachaSelectListInfo: (request = {}) =>
-      callOrtegaApi('gacha', 'getGachaSelectListInfo', request),
-  },
-};
+const groupInfo = missionData.missionInfoDict[groupType] 
+               || missionData.missionInfoDict[groupType.toString()];
 ```
-
-## 注意事项
-
-1. **类型生成**：每次修改 Ortega 相关的 C# 代码后，记得运行 `pnpm run generate-types`
-2. **空请求**：如果接口不需要请求参数，可以传递空对象 `{}`
-3. **异步调用**：所有 API 调用都是异步的，记得使用 `await` 或者 `.then()`
-4. **错误处理**：务必添加适当的错误处理逻辑
 
 ## 完整示例
 
 ```typescript
 import { useEffect, useState } from 'react';
-import ortegaApi from '@/api/ortega-client';
-import type { GetMissionInfoRequest, GetMissionInfoResponse } from '@/api/generated';
+import { ortegaApi } from '@/api/ortega-client';
+import { MissionGroupType, GetMissionInfoResponse } from '@/api/generated';
 
-function MissionsPage() {
-  const [missionInfo, setMissionInfo] = useState<GetMissionInfoResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+export function MyComponent() {
+  const [data, setData] = useState<GetMissionInfoResponse | null>(null);
 
-  useEffect(() => {
-    async function loadMissions() {
-      try {
-        setLoading(true);
-        
-        const request: GetMissionInfoRequest = {
-          targetMissionGroupList: [/* 填入需要的参数 */]
-        };
-        
-        const response = await ortegaApi.mission.getMissionInfo(request);
-        setMissionInfo(response);
-      } catch (error) {
-        console.error('Failed to load missions:', error);
-      } finally {
-        setLoading(false);
-      }
+  const loadData = async () => {
+    try {
+      const res = await ortegaApi.mission.getMissionInfo({
+        targetMissionGroupList: [MissionGroupType.Daily]
+      });
+      setData(res);
+    } catch (e) {
+      console.error("加载失败", e);
     }
+  };
 
-    loadMissions();
-  }, []);
-
-  if (loading) return <div>Loading...</div>;
-  if (!missionInfo) return <div>No data</div>;
+  useEffect(() => { loadData(); }, []);
 
   return (
-    <div>
-      {/* 渲染任务信息 */}
-    </div>
+    // ... 渲染逻辑
   );
 }
 ```

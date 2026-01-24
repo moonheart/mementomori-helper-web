@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
 import { useLocalizationStore } from './store/localization-store';
+import { useMasterStore } from './store/masterStore';
 import { MainLayout } from './components/layout/MainLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { CharactersPage } from './pages/CharactersPage';
@@ -25,10 +26,12 @@ import './index.css';
 
 function App() {
   const { currentLanguage, fetchResources } = useLocalizationStore();
+  const syncMasterData = useMasterStore(state => state.sync);
 
   useEffect(() => {
     fetchResources(currentLanguage);
-  }, [currentLanguage, fetchResources]);
+    syncMasterData();
+  }, [currentLanguage, fetchResources, syncMasterData]);
 
   return (
     <BrowserRouter>
