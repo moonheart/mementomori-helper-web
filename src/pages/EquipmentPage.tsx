@@ -1,31 +1,130 @@
-import { useState, useMemo } from 'react';
-import { mockEquipment } from '@/mocks/data';
+import { useState, useMemo, useEffect } from 'react';
 import { EquipmentCard } from '@/components/equipment/EquipmentCard';
 import { EquipmentFilters } from '@/components/equipment/EquipmentFilters';
-import type { Equipment, EquipmentRarity, EquipmentSlot } from '@/mocks/types';
-import { sortEquipment } from '@/lib/equipmentUtils';
-import { Book } from 'lucide-react';
+import { 
+    UIEquipment, 
+    sortEquipment, 
+    calculateEquipmentPower 
+} from '@/lib/equipmentUtils';
+import { Book, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAccountStore } from '@/store/accountStore';
+import { ortegaApi } from '@/api/ortega-client';
+import { useMasterStore } from '@/store/masterStore';
+import { useLocalizationStore } from '@/store/localization-store';
+import { 
+    EquipmentMB, 
+    EquipmentSetMB, 
+    UserEquipmentDtoInfo,
+    EquipmentSlotType,
+    EquipmentRarityFlags,
+    CharacterMB
+} from '@/api/generated';
 
 export function EquipmentPage() {
+    const { currentAccountId } = useAccountStore();
+    const t = useLocalizationStore(state => state.t);
+    const getTable = useMasterStore(state => state.getTable);
+
+    // 状态
+    const [loading, setLoading] = useState(false);
+    const [userEquipments, setUserEquipments] = useState<UserEquipmentDtoInfo[]>([]);
+    const [equipmentMasterMap, setEquipmentMasterMap] = useState<Record<number, EquipmentMB>>({});
+    const [setMasterMap, setSetMasterMap] = useState<Record<number, EquipmentSetMB>>({});
+    const [characterNameMap, setCharacterNameMap] = useState<Record<string, string>>({});
+
     // 筛选状态
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedSlot, setSelectedSlot] = useState<EquipmentSlot | 'all'>('all');
-    const [selectedRarities, setSelectedRarities] = useState<EquipmentRarity[]>([]);
+    const [selectedSlot, setSelectedSlot] = useState<EquipmentSlotType | 'all'>('all');
+    const [selectedRarities, setSelectedRarities] = useState<EquipmentRarityFlags[]>([]);
     const [equippedFilter, setEquippedFilter] = useState<'all' | 'equipped' | 'unequipped'>('all');
     const [setFilter, setSetFilter] = useState<string | 'all'>('all');
     const [sortBy, setSortBy] = useState<'level' | 'rarity' | 'enhance' | 'power'>('power');
 
+    // 获取数据
+    useEffect(() => {
+        if (!currentAccountId) return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // 1. 获取用户装备和角色信息
+                const userData = await ortegaApi.user.getUserData({});
+                const equipments = userData.userSyncData?.userEquipmentDtoInfos || [];
+                setUserEquipments(equipments);
+
+                // 构建角色 Guid 到名称的映射
+                const chars = userData.userSyncData?.userCharacterDtoInfos || [];
+                const charNameMap: Record<string, string> = {};
+                
+                // 获取 CharacterMaster 来获取名称
+                const charMasterTable = await getTable<CharacterMB>('CharacterTable');
+                const charMasterMap: Record<number, CharacterMB> = {};
+                charMasterTable.forEach(m => { charMasterMap[m.id] = m; });
+
+                chars.forEach(c => {
+                    const master = charMasterMap[c.characterId];
+                    if (master) {
+                        charNameMap[c.guid] = t(master.nameKey);
+                    }
+                });
+                setCharacterNameMap(charNameMap);
+
+                // 2. 获取 Master 数据
+                const eqMasterTable = await getTable<EquipmentMB>('EquipmentTable');
+                const eqMasterMap: Record<number, EquipmentMB> = {};
+                eqMasterTable.forEach((m) => {
+                    eqMasterMap[m.id] = m;
+                });
+                setEquipmentMasterMap(eqMasterMap);
+
+                const setTable = await getTable<EquipmentSetMB>('EquipmentSetTable');
+                const setMap: Record<number, EquipmentSetMB> = {};
+                setTable.forEach((m) => {
+                    setMap[m.id] = m;
+                });
+                setSetMasterMap(setMap);
+
+            } catch (error) {
+                console.error('Failed to fetch equipment data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [currentAccountId, getTable, t]);
+
+    // 合并数据并计算
+    const allEquipments: UIEquipment[] = useMemo(() => {
+        return userEquipments.map(eq => {
+            const master = equipmentMasterMap[eq.equipmentId];
+            const setMaster = master?.equipmentSetId ? setMasterMap[master.equipmentSetId] : undefined;
+            
+            return {
+                ...eq,
+                master,
+                name: master ? t(master.nameKey) : `装备 ${eq.equipmentId}`,
+                rarity: master?.rarityFlags || EquipmentRarityFlags.None,
+                slotType: master?.slotType || EquipmentSlotType.Weapon,
+                level: master?.equipmentLv || 0,
+                setName: setMaster ? t(setMaster.nameKey) : undefined,
+                equippedByName: eq.characterGuid ? characterNameMap[eq.characterGuid] : undefined,
+                power: calculateEquipmentPower(eq, master)
+            };
+        });
+    }, [userEquipments, equipmentMasterMap, setMasterMap, characterNameMap, t]);
+
     // 筛选和排序装备
     const filteredAndSortedEquipment = useMemo(() => {
-        let filtered = mockEquipment.filter(eq => {
+        const filtered = allEquipments.filter(eq => {
             // 搜索筛选
             if (searchQuery && !eq.name.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false;
             }
 
             // 部位筛选
-            if (selectedSlot !== 'all' && eq.slot !== selectedSlot) {
+            if (selectedSlot !== 'all' && eq.slotType !== selectedSlot) {
                 return false;
             }
 
@@ -35,19 +134,19 @@ export function EquipmentPage() {
             }
 
             // 装备状态筛选
-            if (equippedFilter === 'equipped' && !eq.equippedBy) {
+            if (equippedFilter === 'equipped' && !eq.characterGuid) {
                 return false;
             }
-            if (equippedFilter === 'unequipped' && eq.equippedBy) {
+            if (equippedFilter === 'unequipped' && eq.characterGuid) {
                 return false;
             }
 
             // 套装筛选
             if (setFilter !== 'all') {
-                if (setFilter === 'none' && eq.setId) {
+                if (setFilter === 'none' && eq.setName) {
                     return false;
                 }
-                if (setFilter !== 'none' && eq.setId !== setFilter) {
+                if (setFilter !== 'none' && eq.setName !== setFilter) {
                     return false;
                 }
             }
@@ -57,7 +156,7 @@ export function EquipmentPage() {
 
         // 排序
         return sortEquipment(filtered, sortBy);
-    }, [mockEquipment, searchQuery, selectedSlot, selectedRarities, equippedFilter, setFilter, sortBy]);
+    }, [allEquipments, searchQuery, selectedSlot, selectedRarities, equippedFilter, setFilter, sortBy]);
 
     // 重置所有筛选
     const handleReset = () => {
@@ -69,34 +168,49 @@ export function EquipmentPage() {
     };
 
     // 装备操作处理
-    const handleViewDetails = (equipment: Equipment) => {
+    const handleViewDetails = (equipment: UIEquipment) => {
         console.log('查看装备详情:', equipment);
-        // TODO: 打开详情对话框
     };
 
-    const handleEnhance = (equipment: Equipment) => {
+    const handleEnhance = (equipment: UIEquipment) => {
         console.log('强化装备:', equipment);
-        // TODO: 打开强化界面
     };
 
-    const handleEquip = (equipment: Equipment) => {
+    const handleEquip = (equipment: UIEquipment) => {
         console.log('装备:', equipment);
-        // TODO: 装备到角色
     };
 
-    const handleUnequip = (equipment: Equipment) => {
+    const handleUnequip = (equipment: UIEquipment) => {
         console.log('卸下装备:', equipment);
-        // TODO: 从角色卸下
     };
+
+    if (!currentAccountId) {
+        return (
+            <div className="flex items-center justify-center h-[60vh] text-muted-foreground">
+                请先选择一个账户以管理装备
+            </div>
+        );
+    }
+
+    if (loading && allEquipments.length === 0) {
+        return (
+            <div className="flex flex-col items-center justify-center h-[60vh]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                <p className="text-muted-foreground">正在同步账户装备数据...</p>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
             {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">装备管理</h1>
-                <p className="text-muted-foreground mt-1">
-                    管理和强化你的装备 • {filteredAndSortedEquipment.length} / {mockEquipment.length} 件装备
-                </p>
+            <div className="flex justify-between items-end">
+                <div>
+                    <h1 className="text-3xl font-bold">装备管理</h1>
+                    <p className="text-muted-foreground mt-1">
+                        管理和强化你的装备 • {filteredAndSortedEquipment.length} / {allEquipments.length} 件装备
+                    </p>
+                </div>
             </div>
 
             {/* 帮助提示 */}
@@ -104,7 +218,7 @@ export function EquipmentPage() {
                 <Book className="h-4 w-4" />
                 <AlertDescription>
                     <strong>装备系统说明：</strong>
-                    装备分为武器、头部、身体、腿部、手部和饰品6个部位。稀有度越高属性越强，可通过强化、神装强化(圣装/魔装)和符石镶嵌提升战斗力。
+                    装备分为武器、头部、身体、腿部、手部和饰品等部位。稀有度越高属性越强，可通过强化、神装强化(圣装/魔装)提升战斗力。
                     装备同一套装可激活套装效果。
                 </AlertDescription>
             </Alert>
@@ -131,7 +245,7 @@ export function EquipmentPage() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {filteredAndSortedEquipment.map((equipment) => (
                         <EquipmentCard
-                            key={equipment.id}
+                            key={equipment.guid}
                             equipment={equipment}
                             onViewDetails={handleViewDetails}
                             onEnhance={handleEnhance}

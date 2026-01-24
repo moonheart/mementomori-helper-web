@@ -3,24 +3,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import type { EquipmentRarity, EquipmentSlot } from '@/mocks/types';
-import { SLOT_CONFIG } from '@/constants/equipment';
+import { EquipmentSlotType } from '@/api/generated/equipmentSlotType';
+import { EquipmentRarityFlags } from '@/api/generated/equipmentRarityFlags';
 import { Search, Filter, X } from 'lucide-react';
 import { useState } from 'react';
+import { getRarityColor, getRarityName, getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
+
+type SortOption = 'level' | 'rarity' | 'enhance' | 'power';
+type EquippedFilterOption = 'all' | 'equipped' | 'unequipped';
 
 interface EquipmentFiltersProps {
     searchQuery: string;
     onSearchChange: (query: string) => void;
-    selectedSlot: EquipmentSlot | 'all';
-    onSlotChange: (slot: EquipmentSlot | 'all') => void;
-    selectedRarities: EquipmentRarity[];
-    onRaritiesChange: (rarities: EquipmentRarity[]) => void;
-    equippedFilter: 'all' | 'equipped' | 'unequipped';
-    onEquippedFilterChange: (filter: 'all' | 'equipped' | 'unequipped') => void;
+    selectedSlot: EquipmentSlotType | 'all';
+    onSlotChange: (slot: EquipmentSlotType | 'all') => void;
+    selectedRarities: EquipmentRarityFlags[];
+    onRaritiesChange: (rarities: EquipmentRarityFlags[]) => void;
+    equippedFilter: EquippedFilterOption;
+    onEquippedFilterChange: (filter: EquippedFilterOption) => void;
     setFilter: string | 'all';
     onSetFilterChange: (setId: string | 'all') => void;
-    sortBy: 'level' | 'rarity' | 'enhance' | 'power';
-    onSortChange: (sort: 'level' | 'rarity' | 'enhance' | 'power') => void;
+    sortBy: SortOption;
+    onSortChange: (sort: SortOption) => void;
     onReset: () => void;
 }
 
@@ -41,9 +45,29 @@ export function EquipmentFilters({
 }: EquipmentFiltersProps) {
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-    const rarities: EquipmentRarity[] = ['LR', 'UR', 'SSR', 'SR', 'R', 'S', 'A', 'D'];
+    const rarityOptions = [
+        EquipmentRarityFlags.LR,
+        EquipmentRarityFlags.UR,
+        EquipmentRarityFlags.SSR,
+        EquipmentRarityFlags.SR,
+        EquipmentRarityFlags.R,
+        EquipmentRarityFlags.S,
+        EquipmentRarityFlags.A,
+        EquipmentRarityFlags.B,
+        EquipmentRarityFlags.C,
+        EquipmentRarityFlags.D,
+    ];
 
-    const toggleRarity = (rarity: EquipmentRarity) => {
+    const slotOptions = [
+        EquipmentSlotType.Weapon,
+        EquipmentSlotType.Sub,
+        EquipmentSlotType.Gauntlet,
+        EquipmentSlotType.Helmet,
+        EquipmentSlotType.Armor,
+        EquipmentSlotType.Shoes,
+    ];
+
+    const toggleRarity = (rarity: EquipmentRarityFlags) => {
         if (selectedRarities.includes(rarity)) {
             onRaritiesChange(selectedRarities.filter(r => r !== rarity));
         } else {
@@ -82,7 +106,7 @@ export function EquipmentFilters({
                 </div>
 
                 {/* 排序 */}
-                <Select value={sortBy} onValueChange={(value: any) => onSortChange(value)}>
+                <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
                     <SelectTrigger className="w-full md:w-[180px]">
                         <SelectValue placeholder="排序方式" />
                     </SelectTrigger>
@@ -104,20 +128,20 @@ export function EquipmentFilters({
                     高级筛选
                     {hasActiveFilters && (
                         <Badge variant="secondary" className="ml-2">
-                            {[searchQuery && 1, selectedSlot !== 'all' && 1, selectedRarities.length, equippedFilter !== 'all' && 1, setFilter !== 'all' && 1].filter(Boolean).reduce((a: number, b: any) => a + (typeof b === 'number' ? b : 1), 0)}
+                            {[searchQuery && 1, selectedSlot !== 'all' && 1, selectedRarities.length, equippedFilter !== 'all' && 1, setFilter !== 'all' && 1].filter(Boolean).length}
                         </Badge>
                     )}
                 </Button>
             </div>
 
             {/* 部位筛选 */}
-            <Tabs value={selectedSlot} onValueChange={(value: any) => onSlotChange(value)}>
+            <Tabs value={selectedSlot.toString()} onValueChange={(value) => onSlotChange(value === 'all' ? 'all' : parseInt(value))}>
                 <TabsList className="grid w-full grid-cols-7">
                     <TabsTrigger value="all">全部</TabsTrigger>
-                    {(Object.keys(SLOT_CONFIG) as EquipmentSlot[]).map(slot => (
-                        <TabsTrigger key={slot} value={slot}>
-                            <span className="mr-1">{SLOT_CONFIG[slot].icon}</span>
-                            <span className="hidden sm:inline">{SLOT_CONFIG[slot].name}</span>
+                    {slotOptions.map(slot => (
+                        <TabsTrigger key={slot} value={slot.toString()}>
+                            <span className="mr-1">{getSlotIcon(slot)}</span>
+                            <span className="hidden sm:inline">{getSlotName(slot)}</span>
                         </TabsTrigger>
                     ))}
                 </TabsList>
@@ -130,17 +154,17 @@ export function EquipmentFilters({
                     <div className="space-y-2">
                         <label className="text-sm font-medium">稀有度筛选</label>
                         <div className="flex flex-wrap gap-2">
-                            {rarities.map(rarity => (
+                            {rarityOptions.map(rarity => (
                                 <Badge
                                     key={rarity}
                                     variant={selectedRarities.includes(rarity) ? "default" : "outline"}
                                     className={`cursor-pointer ${selectedRarities.includes(rarity)
-                                            ? 'bg-primary text-primary-foreground'
+                                            ? `${getRarityColor(rarity)} text-white`
                                             : 'hover:bg-muted'
                                         }`}
                                     onClick={() => toggleRarity(rarity)}
                                 >
-                                    {rarity}
+                                    {getRarityName(rarity)}
                                 </Badge>
                             ))}
                         </div>
@@ -149,7 +173,7 @@ export function EquipmentFilters({
                     {/* 装备状态筛选 */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium">装备状态</label>
-                        <Tabs value={equippedFilter} onValueChange={(value: any) => onEquippedFilterChange(value)}>
+                        <Tabs value={equippedFilter} onValueChange={(value: string) => onEquippedFilterChange(value as EquippedFilterOption)}>
                             <TabsList className="grid w-full grid-cols-3">
                                 <TabsTrigger value="all">全部</TabsTrigger>
                                 <TabsTrigger value="equipped">已装备</TabsTrigger>
@@ -167,9 +191,6 @@ export function EquipmentFilters({
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部套装</SelectItem>
-                                <SelectItem value="flame_set">炎之审判</SelectItem>
-                                <SelectItem value="guardian_set">守护者之誓</SelectItem>
-                                <SelectItem value="mystic_set">神秘咏唱</SelectItem>
                                 <SelectItem value="none">无套装</SelectItem>
                             </SelectContent>
                         </Select>
