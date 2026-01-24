@@ -43,3 +43,37 @@ export function useMasterData<T = any>(tableName: string, id: number | string | 
 
     return { data, loading };
 }
+
+/**
+ * Hook 用于获取 Master 全表数据
+ * @param tableName 表名
+ * @returns { data: T | null, loading: boolean }
+ */
+export function useMasterTable<T = any>(tableName: string) {
+    const [data, setData] = useState<T | null>(null);
+    const [loading, setLoading] = useState(true);
+    const getTable = useMasterStore(state => state.getTable);
+
+    useEffect(() => {
+        let isMounted = true;
+        setLoading(true);
+
+        getTable<T>(tableName).then(res => {
+            if (isMounted) {
+                setData(res as any);
+                setLoading(false);
+            }
+        }).catch(() => {
+            if (isMounted) {
+                setData(null);
+                setLoading(false);
+            }
+        });
+
+        return () => {
+            isMounted = false;
+        };
+    }, [tableName, getTable]);
+
+    return { data, loading };
+}

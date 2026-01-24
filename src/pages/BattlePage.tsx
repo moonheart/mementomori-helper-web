@@ -1,3 +1,4 @@
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,38 +16,174 @@ import {
     TrendingUp,
     Shield,
     Coins,
-    BookOpen
+    BookOpen,
+    Loader2
 } from 'lucide-react';
-
-// Mock数据
-const mockStages = [
-    { id: 1, name: '1-1 序章', cleared: true, stars: 3, power: 5000 },
-    { id: 2, name: '1-2 初遇', cleared: true, stars: 3, power: 5500 },
-    { id: 3, name: '1-3 试炼', cleared: true, stars: 2, power: 6000 },
-    { id: 4, name: '1-4 挑战', cleared: true, stars: 1, power: 6500 },
-    { id: 5, name: '1-5 突破', cleared: false, stars: 0, power: 7000 },
-];
-
-const mockBattleStats = {
-    gold: 125830,
-    exp: 15600,
-    items: 45,
-    time: '2小时15分'
-};
-
-const mockRescuedCitizens = {
-    total: 1250,
-    byRegion: [
-        { name: '忧蓝之国', count: 280, bonus: '+15% 金币' },
-        { name: '业红之国', count: 195, bonus: '+12% 经验' },
-        { name: '苍翠之国', count: 340, bonus: '+18% 掉落' },
-        { name: '流金之国', count: 220, bonus: '+14% 金币' },
-        { name: '天光之国', count: 125, bonus: '+10% 经验' },
-        { name: '幽冥之国', count: 90, bonus: '+8% 掉落' }
-    ]
-};
+import { ortegaApi } from '@/api/ortega-client';
+import { useMasterTable } from '@/hooks/useMasterData';
+import { useTranslation } from '@/hooks/useTranslation';
+import { UserSyncData } from '@/api/generated/userSyncData';
+import { QuestMB } from '@/api/generated/questMB';
+import { ChapterMB } from '@/api/generated/chapterMB';
+import { toast } from '@/hooks/use-toast';
+import { QuestQuickExecuteType } from '@/api/generated/questQuickExecuteType';
+import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 
 export function BattlePage() {
+    const { t } = useTranslation();
+    const [userData, setUserData] = useState<UserSyncData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState(Date.now());
+
+    // 加载 Master 数据
+    const { data: questTable } = useMasterTable<QuestMB[]>('Quest');
+    const { data: chapterTable } = useMasterTable<ChapterMB[]>('Chapter');
+
+    const loadUserData = async () => {
+        try {
+            const response = await ortegaApi.user.getUserData({});
+            if (response.userSyncData) {
+                setUserData(response.userSyncData);
+            }
+        } catch (error) {
+            console.error('Failed to load user data:', error);
+            toast({
+                title: '加载失败',
+                description: '无法获取用户数据，请检查网络连接',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadUserData();
+        // 每分钟更新一次当前时间，用于计算挂机收益
+        const timer = setInterval(() => setCurrentTime(Date.now()), 60000);
+        return () => clearInterval(timer);
+    }, []);
+
+    // 计算逻辑
+    const maxQuestId = userData?.userBattleBossDtoInfo?.bossClearMaxQuestId || 0;
+    
+    // 当前正在挂机的关卡（通常是已通关的最大关卡）
+    const currentQuest = useMemo(() => {
+        if (!questTable) return null;
+        return questTable.find(q => q.id === maxQuestId) || questTable[0];
+    }, [questTable, maxQuestId]);
+
+    // 下一个要挑战的关卡
+    const nextQuest = useMemo(() => {
+        if (!questTable) return null;
+        return questTable.find(q => q.id === maxQuestId + 1);
+    }, [questTable, maxQuestId]);
+
+    // 自动战斗时长计算
+    const autoBattleStats = useMemo(() => {
+        if (!userData || !currentQuest) return { timeStr: '0分钟', minutes: 0, gold: 0, exp: 0, progress: 0 };
+        
+        const lastRewardTime = (userData.receivedAutoBattleRewardLastTime || 0) * 1000;
+        const diffMs = Math.max(0, currentTime - lastRewardTime);
+        const diffMinutes = Math.floor(diffMs / 60000);
+        
+        const hours = Math.floor(diffMinutes / 60) ;
+        const mins = diffMinutes % 60;
+        
+        return {
+            timeStr: hours > 0 ? `${hours}小时${mins}分` : `${mins}分`,
+            minutes: diffMinutes,
+            gold: diffMinutes * (currentQuest.goldPerMinute || 0),
+            exp: diffMinutes * (currentQuest.minPlayerExp || 0),
+            progress: Math.min(100, (diffMinutes / (24 * 60)) * 100) // 假设24小时满溢
+        };
+    }, [userData, currentQuest, currentTime]);
+
+    // 领民数据汇总
+    const citizenStats = useMemo(() => {
+        if (!questTable || !chapterTable) return { total: 0, byRegion: [] };
+        
+        const stats = chapterTable.map(chapter => {
+            const chapterQuests = questTable.filter(q => q.chapterId === chapter.id && q.id <= maxQuestId);
+            const population = chapterQuests.reduce((sum, q) => sum + (q.population || 0), 0);
+            return {
+                name: t(chapter.territoryNameKey) || `章节 ${chapter.id}`,
+                count: population,
+                bonus: `+${Math.floor(population / 100)}% 收益` // 模拟加成逻辑
+            };
+        }).filter(s => s.count > 0);
+
+        const total = stats.reduce((sum, s) => sum + s.count, 0);
+        return { total, byRegion: stats };
+    }, [questTable, chapterTable, maxQuestId, t]);
+
+    // 关卡列表显示逻辑（当前关卡前后5关）
+    const displayStages = useMemo(() => {
+        if (!questTable) return [];
+        const start = Math.max(0, maxQuestId - 2);
+        const end = Math.min(questTable.length, maxQuestId + 3);
+        return questTable.slice(start, end).map(q => ({
+            id: q.id,
+            name: `${q.chapterId}-${q.id % 100 || 100} ${t(`Quest_Name_${q.id}`) || '未知关卡'}`,
+            cleared: q.id <= maxQuestId,
+            stars: q.id <= maxQuestId ? 3 : 0,
+            power: q.baseBattlePower
+        }));
+    }, [questTable, maxQuestId, t]);
+
+    // 操作处理
+    const handleClaimReward = async () => {
+        try {
+            await ortegaApi.battle.rewardAutoBattle({});
+            toast({ title: '领取成功', description: '已获得自动战斗收益' });
+            loadUserData(); // 刷新数据
+        } catch (error) {
+            console.error('Claim reward failed:', error);
+            toast({ title: '领取失败', description: '接口调用异常', variant: 'destructive' });
+        }
+    };
+
+    const handleQuickBattle = async () => {
+        try {
+            // 使用钻石进行高速战斗
+            await ortegaApi.battle.quick({
+                questQuickExecuteType: QuestQuickExecuteType.Currency,
+                quickCount: 1
+            });
+            toast({ title: '加速成功', description: '已获得2小时额外收益' });
+            loadUserData();
+        } catch (error) {
+            console.error('Quick battle failed:', error);
+            toast({ title: '加速失败', description: '钻石不足或次数已满', variant: 'destructive' });
+        }
+    };
+
+    const handleChallengeBoss = async () => {
+        if (!nextQuest) return;
+        try {
+            const res = await ortegaApi.battle.boss({ questId: nextQuest.id });
+            const isWin = res.battleResult?.simulationResult?.battleEndInfo?.winGroupType === BattleFieldCharacterGroupType.Attacker;
+            
+            if (isWin) {
+                toast({ title: '挑战成功', description: `已通关 ${nextQuest.id}` });
+                loadUserData();
+            } else {
+                toast({ title: '挑战失败', description: '战力不足，请提升后再试', variant: 'destructive' });
+            }
+        } catch (error) {
+            console.error('Boss battle failed:', error);
+            toast({ title: '挑战异常', description: '服务器请求失败', variant: 'destructive' });
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div className="flex h-[400px] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
             {/* 页面标题 */}
@@ -86,9 +223,9 @@ export function BattlePage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">已进行</span>
-                                <span className="font-semibold">{mockBattleStats.time}</span>
+                                <span className="font-semibold">{autoBattleStats.timeStr}</span>
                             </div>
-                            <Progress value={75} className="h-2" />
+                            <Progress value={autoBattleStats.progress} className="h-2" />
                         </div>
 
                         <div className="grid grid-cols-2 gap-3 text-sm">
@@ -96,19 +233,19 @@ export function BattlePage() {
                                 <Coins className="h-4 w-4 text-yellow-600" />
                                 <div>
                                     <div className="text-xs text-muted-foreground">金币</div>
-                                    <div className="font-semibold">{mockBattleStats.gold.toLocaleString()}</div>
+                                    <div className="font-semibold">{autoBattleStats.gold.toLocaleString()}</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 p-2 bg-muted rounded">
                                 <Star className="h-4 w-4 text-purple-600" />
                                 <div>
                                     <div className="text-xs text-muted-foreground">经验</div>
-                                    <div className="font-semibold">{mockBattleStats.exp.toLocaleString()}</div>
+                                    <div className="font-semibold">{autoBattleStats.exp.toLocaleString()}</div>
                                 </div>
                             </div>
                         </div>
 
-                        <Button className="w-full">
+                        <Button className="w-full" onClick={handleClaimReward}>
                             <Target className="mr-2 h-4 w-4" />
                             领取收益
                         </Button>
@@ -132,7 +269,9 @@ export function BattlePage() {
                         <div className="p-3 bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950 dark:to-yellow-950 rounded-lg border border-orange-200 dark:border-orange-800">
                             <div className="text-sm text-muted-foreground mb-1">预计获得</div>
                             <div className="flex items-baseline gap-2">
-                                <span className="text-2xl font-bold text-orange-600">~83K</span>
+                                <span className="text-2xl font-bold text-orange-600">
+                                    ~{Math.round((currentQuest?.goldPerMinute || 0) * 120 / 1000)}K
+                                </span>
                                 <span className="text-sm text-muted-foreground">金币</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
@@ -143,7 +282,9 @@ export function BattlePage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">今日次数</span>
-                                <Badge variant="secondary">2 / 5</Badge>
+                                <Badge variant="secondary">
+                                    {userData?.userBattleBossDtoInfo?.bossTodayUseTicketCount || 0} / 5
+                                </Badge>
                             </div>
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">消耗</span>
@@ -154,7 +295,7 @@ export function BattlePage() {
                             </div>
                         </div>
 
-                        <Button className="w-full" variant="default">
+                        <Button className="w-full" variant="default" onClick={handleQuickBattle}>
                             <Zap className="mr-2 h-4 w-4" />
                             开始高速战斗
                         </Button>
@@ -178,13 +319,17 @@ export function BattlePage() {
                         <div className="p-3 bg-red-50 dark:bg-red-950 rounded-lg border border-red-200 dark:border-red-800">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm font-medium">当前首领</span>
-                                <Badge className="bg-red-500">Boss 5</Badge>
+                                <Badge className="bg-red-500">Boss {nextQuest?.id || 'MAX'}</Badge>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Shield className="h-4 w-4 text-red-600" />
                                 <div className="flex-1">
-                                    <div className="text-sm font-semibold">暗影领主</div>
-                                    <div className="text-xs text-muted-foreground">推荐战力: 7000</div>
+                                    <div className="text-sm font-semibold">
+                                        {nextQuest ? `${nextQuest.chapterId}-${nextQuest.id % 100 || 100}` : '已全部通关'}
+                                    </div>
+                                    <div className="text-xs text-muted-foreground">
+                                        推荐战力: {nextQuest?.baseBattlePower.toLocaleString() || '--'}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -192,14 +337,21 @@ export function BattlePage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">免费挑战</span>
-                                <Badge variant="secondary">3 / 3</Badge>
+                                <Badge variant="secondary">
+                                    {3 - (userData?.userBattleBossDtoInfo?.bossTodayWinCount || 0)} / 3
+                                </Badge>
                             </div>
                             <div className="text-xs text-muted-foreground">
                                 每天凌晨4:00重置
                             </div>
                         </div>
 
-                        <Button className="w-full" variant="destructive">
+                        <Button
+                            className="w-full"
+                            variant="destructive"
+                            disabled={!nextQuest}
+                            onClick={handleChallengeBoss}
+                        >
                             <Sword className="mr-2 h-4 w-4" />
                             挑战首领
                         </Button>
@@ -218,7 +370,7 @@ export function BattlePage() {
                 {/* 关卡进度 */}
                 <TabsContent value="stages" className="space-y-4">
                     <div className="grid gap-4">
-                        {mockStages.map((stage) => (
+                        {displayStages.map((stage) => (
                             <Card key={stage.id} className={stage.cleared ? 'border-green-200 dark:border-green-800' : ''}>
                                 <CardContent className="p-4">
                                     <div className="flex items-center justify-between">
@@ -270,7 +422,11 @@ export function BattlePage() {
                                                     自动战斗
                                                 </Button>
                                             )}
-                                            <Button size="sm" variant={stage.cleared ? 'secondary' : 'default'}>
+                                            <Button
+                                                size="sm"
+                                                variant={stage.cleared ? 'secondary' : 'default'}
+                                                onClick={() => !stage.cleared && handleChallengeBoss()}
+                                            >
                                                 {stage.cleared ? '重新挑战' : '开始挑战'}
                                             </Button>
                                         </div>
@@ -297,7 +453,9 @@ export function BattlePage() {
                                         <Coins className="h-5 w-5 text-yellow-600" />
                                         <span className="text-sm font-medium text-muted-foreground">金币/小时</span>
                                     </div>
-                                    <div className="text-2xl font-bold">62,915</div>
+                                    <div className="text-2xl font-bold">
+                                        {((currentQuest?.goldPerMinute || 0) * 60).toLocaleString()}
+                                    </div>
                                 </div>
 
                                 <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900 rounded-lg">
@@ -305,15 +463,17 @@ export function BattlePage() {
                                         <Star className="h-5 w-5 text-purple-600" />
                                         <span className="text-sm font-medium text-muted-foreground">经验/小时</span>
                                     </div>
-                                    <div className="text-2xl font-bold">7,800</div>
+                                    <div className="text-2xl font-bold">
+                                        {((currentQuest?.minPlayerExp || 0) * 60).toLocaleString()}
+                                    </div>
                                 </div>
 
                                 <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900 rounded-lg">
                                     <div className="flex items-center gap-2 mb-2">
                                         <Target className="h-5 w-5 text-blue-600" />
-                                        <span className="text-sm font-medium text-muted-foreground">道具/小时</span>
+                                        <span className="text-sm font-medium text-muted-foreground">潜能宝珠/天</span>
                                     </div>
-                                    <div className="text-2xl font-bold">22 件</div>
+                                    <div className="text-2xl font-bold">{currentQuest?.potentialJewelPerDay || 0}</div>
                                 </div>
 
                                 <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900 rounded-lg">
@@ -321,7 +481,7 @@ export function BattlePage() {
                                         <TrendingUp className="h-5 w-5 text-green-600" />
                                         <span className="text-sm font-medium text-muted-foreground">效率</span>
                                     </div>
-                                    <div className="text-2xl font-bold">98%</div>
+                                    <div className="text-2xl font-bold">100%</div>
                                 </div>
                             </div>
                         </CardContent>
@@ -341,7 +501,7 @@ export function BattlePage() {
                                 </div>
                                 <div className="text-right">
                                     <div className="text-3xl font-bold text-primary">
-                                        {mockRescuedCitizens.total}
+                                        {citizenStats.total.toLocaleString()}
                                     </div>
                                     <div className="text-sm text-muted-foreground">总人数</div>
                                 </div>
@@ -349,7 +509,7 @@ export function BattlePage() {
                         </CardHeader>
                         <CardContent>
                             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                                {mockRescuedCitizens.byRegion.map((region, index) => (
+                                {citizenStats.byRegion.map((region, index) => (
                                     <div
                                         key={index}
                                         className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -359,7 +519,7 @@ export function BattlePage() {
                                                 <Users className="h-4 w-4 text-muted-foreground" />
                                                 <span className="font-medium">{region.name}</span>
                                             </div>
-                                            <Badge variant="outline">{region.count}</Badge>
+                                            <Badge variant="outline">{region.count.toLocaleString()}</Badge>
                                         </div>
                                         <div className="text-sm text-green-600 dark:text-green-400 font-medium">
                                             {region.bonus}

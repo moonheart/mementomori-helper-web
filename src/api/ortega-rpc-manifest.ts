@@ -3,729 +3,734 @@
 /* eslint-disable */
 
 import type {
-    AutoRequest,
-    AutoResponse,
-    BattleRequest,
-    BattleResponse,
-    BossQuickRequest,
-    BossQuickResponse,
-    BossRequest,
-    BossResponse,
-    BossRewardInfoRequest,
-    BossRewardInfoResponse,
-    BulkApplyFriendsRequest,
-    BulkApplyFriendsResponse,
-    BulkTransferFriendPointRequest,
-    BulkTransferFriendPointResponse,
-    BuyItemRequest,
-    BuyItemResponse,
-    BuyProductRequest,
-    BuyProductResponse,
-    CastManyRequest,
-    CastManyResponse,
-    CastRequest,
-    CastResponse,
-    ChangeEquipmentRequest,
-    ChangeEquipmentResponse,
-    ChangeGachaRelicRequest,
-    ChangeGachaRelicResponse,
-    ComebackUserRequest,
-    ComebackUserResponse,
-    CreateAccessTokenRequest,
-    CreateAccessTokenResponse,
-    CreateUserRequest,
-    CreateUserResponse,
-    CreateWorldPlayerRequest,
-    CreateWorldPlayerResponse,
-    DrawRequest,
-    DrawResponse,
-    EntryCharacterRequest,
-    EntryCharacterResponse,
-    ExecBattleRequest,
-    ExecBattleResponse,
-    ExecGuestRequest,
-    ExecGuestResponse,
-    ExecRecoveryRequest,
-    ExecRecoveryResponse,
-    ExecReinforceRelicRequest,
-    ExecReinforceRelicResponse,
-    ExecReviveRequest,
-    ExecReviveResponse,
-    ExecShopRequest,
-    ExecShopResponse,
-    FinishBattleRequest,
-    FinishBattleResponse,
-    GetAutoBattleRewardItemInfoRequest,
-    GetAutoBattleRewardItemInfoResponse,
-    GetBattleGridDataRequest,
-    GetBattleGridDataResponse,
-    GetCharacterStoryRewardRequest,
-    GetCharacterStoryRewardResponse,
-    GetComebackUserDataRequest,
-    GetComebackUserDataResponse,
-    GetCompetitionInfoRequest,
-    GetCompetitionInfoResponse,
-    GetDailyGiftRequest,
-    GetDailyGiftResponse,
-    GetDataUriRequest,
-    GetDataUriResponse,
-    GetDetailsInfoRequest,
-    GetDetailsInfoResponse,
-    GetDungeonBattleInfoRequest,
-    GetDungeonBattleInfoResponse,
-    GetFriendCampaignInfoRequest,
-    GetFriendCampaignInfoResponse,
-    GetGuildBaseInfoRequest,
-    GetGuildBaseInfoResponse,
-    GetGuildIdRequest,
-    GetGuildIdResponse,
-    GetGuildMemberInfoRequest,
-    GetGuildMemberInfoResponse,
-    GetGuildRaidInfoRequest,
-    GetGuildRaidInfoResponse,
-    GetGuildRaidWorldRewardInfoRequest,
-    GetGuildRaidWorldRewardInfoResponse,
-    GetGuildTowerInfoRequest,
-    GetGuildTowerInfoResponse,
-    GetGuildTowerRankingRequest,
-    GetGuildTowerRankingResponse,
-    GetLegendLeagueInfoRequest,
-    GetLegendLeagueInfoResponse,
-    GetLimitedLoginBonusInfoRequest,
-    GetLimitedLoginBonusInfoResponse,
-    GetListRequest,
-    GetListResponse,
-    GetLocalRaidBattleResultRequest,
-    GetLocalRaidBattleResultResponse,
-    GetLocalRaidInfoRequest,
-    GetLocalRaidInfoResponse,
-    GetLotteryItemListRequest,
-    GetLotteryItemListResponse,
-    GetMissionInfoRequest,
-    GetMissionInfoResponse,
-    GetMonthlyLoginBonusInfoRequest,
-    GetMonthlyLoginBonusInfoResponse,
-    GetMyPageNoticeInfoListRequest,
-    GetMyPageNoticeInfoListResponse,
-    GetMypageRequest,
-    GetMypageResponse,
-    GetNoticeInfoListRequest,
-    GetNoticeInfoListResponse,
-    GetPlayerInfoListRequest,
-    GetPlayerInfoListResponse,
-    GetPlayerRankingRequest,
-    GetPlayerRankingResponse,
-    GetProductListRequest,
-    GetProductListResponse,
-    GetPvpInfoRequest,
-    GetPvpInfoResponse,
-    GetQuestInfoRequest,
-    GetQuestInfoResponse,
-    GetReinforcementJobDataRequest,
-    GetReinforcementJobDataResponse,
-    GetServerHostRequest,
-    GetServerHostResponse,
-    GetUserDataRequest,
-    GetUserDataResponse,
-    GetWeeklyTopicsInfoRequest,
-    GetWeeklyTopicsInfoResponse,
-    GiveAllSrCharacterRequest,
-    GiveAllSrCharacterResponse,
-    GiveGuildRaidWorldRewardItemRequest,
-    GiveGuildRaidWorldRewardItemResponse,
-    InheritanceEquipmentRequest,
-    InheritanceEquipmentResponse,
-    LeaveShopRequest,
-    LeaveShopResponse,
-    LegendLeagueStartRequest,
-    LegendLeagueStartResponse,
-    LoginPlayerRequest,
-    LoginPlayerResponse,
-    LoginRequest,
-    LoginResponse,
-    MapInfoRequest,
-    MapInfoResponse,
-    NextQuestRequest,
-    NextQuestResponse,
-    OpenGuildRaidRequest,
-    OpenGuildRaidResponse,
-    OpenTreasureChestRequest,
-    OpenTreasureChestResponse,
-    ProceedLayerRequest,
-    ProceedLayerResponse,
-    PvpStartRequest,
-    PvpStartResponse,
-    QuickRequest,
-    QuickResponse,
-    QuickStartGuildRaidRequest,
-    QuickStartGuildRaidResponse,
-    RankUpRequest,
-    RankUpResponse,
-    ReadCharacterStoryRequest,
-    ReadCharacterStoryResponse,
-    ReceiveAchieveRankingRewardRequest,
-    ReceiveAchieveRankingRewardResponse,
-    ReceiveDailyLimitedLoginBonusRequest,
-    ReceiveDailyLimitedLoginBonusResponse,
-    ReceiveDailyLoginBonusRequest,
-    ReceiveDailyLoginBonusResponse,
-    ReceiveFloorRewardRequest,
-    ReceiveFloorRewardResponse,
-    ReceiveGlobalGvgRewardRequest,
-    ReceiveGlobalGvgRewardResponse,
-    ReceiveItemRequest,
-    ReceiveItemResponse,
-    ReceiveLocalGvgRewardRequest,
-    ReceiveLocalGvgRewardResponse,
-    ReceiveLoginCountBonusRequest,
-    ReceiveLoginCountBonusResponse,
-    ReceivePanelMissionBingoRewardRequest,
-    ReceivePanelMissionBingoRewardResponse,
-    ReceiveRewardRequest,
-    ReceiveRewardResponse,
-    ReceiveSpecialLimitedLoginBonusRequest,
-    ReceiveSpecialLimitedLoginBonusResponse,
-    ReinforceJobRequest,
-    ReinforceJobResponse,
-    ReinforcementRequest,
-    ReinforcementResponse,
-    RemakeRequest,
-    RemakeResponse,
-    RemoveEquipmentRequest,
-    RemoveEquipmentResponse,
-    RemoveFriendRequest,
-    RemoveFriendResponse,
-    ReplyAllFriendRequest,
-    ReplyAllFriendResponse,
-    ResetTabRequest,
-    ResetTabResponse,
-    RewardAutoBattleRequest,
-    RewardAutoBattleResponse,
-    RewardBattleReceiveRelicRequest,
-    RewardBattleReceiveRelicResponse,
-    RewardBattleReinforceRelicRequest,
-    RewardBattleReinforceRelicResponse,
-    RewardClearLayerRequest,
-    RewardClearLayerResponse,
-    RewardFriendMissionRequest,
-    RewardFriendMissionResponse,
-    RewardMissionActivityRequest,
-    RewardMissionActivityResponse,
-    RewardMissionRequest,
-    RewardMissionResponse,
-    RewardRequest,
-    RewardResponse,
-    SelectGridRequest,
-    SelectGridResponse,
-    SetSelectListRequest,
-    SetSelectListResponse,
-    SetVipLevelRequest,
-    SetVipLevelResponse,
-    SkipDungeonBattleRequest,
-    SkipDungeonBattleResponse,
-    StartGuildRaidRequest,
-    StartGuildRaidResponse,
-    StartRequest,
-    StartResponse,
-    TowerBattleQuickRequest,
-    TowerBattleQuickResponse,
-    TrainingRequest,
-    TrainingResponse,
-    UseAutoBattleRewardItemRequest,
-    UseAutoBattleRewardItemResponse,
-    UseFriendCodeRequest,
-    UseFriendCodeResponse,
-    UseRecoveryItemRequest,
-    UseRecoveryItemResponse,
+    AuthComebackUserRequest,
+    AuthComebackUserResponse,
+    AuthCreateAccessTokenRequest,
+    AuthCreateAccessTokenResponse,
+    AuthCreateUserRequest,
+    AuthCreateUserResponse,
+    AuthCreateWorldPlayerRequest,
+    AuthCreateWorldPlayerResponse,
+    AuthGetComebackUserDataRequest,
+    AuthGetComebackUserDataResponse,
+    AuthGetDataUriRequest,
+    AuthGetDataUriResponse,
+    AuthGetServerHostRequest,
+    AuthGetServerHostResponse,
+    AuthLoginRequest,
+    AuthLoginResponse,
+    BattleAutoRequest,
+    BattleAutoResponse,
+    BattleBossQuickRequest,
+    BattleBossQuickResponse,
+    BattleBossRequest,
+    BattleBossResponse,
+    BattleBossRewardInfoRequest,
+    BattleBossRewardInfoResponse,
+    BattleGetCompetitionInfoRequest,
+    BattleGetCompetitionInfoResponse,
+    BattleGetLegendLeagueInfoRequest,
+    BattleGetLegendLeagueInfoResponse,
+    BattleGetPvpInfoRequest,
+    BattleGetPvpInfoResponse,
+    BattleLegendLeagueStartRequest,
+    BattleLegendLeagueStartResponse,
+    BattleNextQuestRequest,
+    BattleNextQuestResponse,
+    BattlePvpStartRequest,
+    BattlePvpStartResponse,
+    BattleQuickRequest,
+    BattleQuickResponse,
+    BattleRewardAutoBattleRequest,
+    BattleRewardAutoBattleResponse,
+    BountyQuestGetListRequest,
+    BountyQuestRemakeRequest,
+    BountyQuestRemakeResponse,
+    BountyQuestRewardRequest,
+    BountyQuestRewardResponse,
+    BountyQuestStartRequest,
+    CharacterGetCharacterStoryRewardRequest,
+    CharacterGetCharacterStoryRewardResponse,
+    CharacterGetDetailsInfoRequest,
+    CharacterGetDetailsInfoResponse,
+    CharacterRankUpRequest,
+    CharacterRankUpResponse,
+    CharacterReadCharacterStoryRequest,
+    CharacterReadCharacterStoryResponse,
+    DebugGiveAllSrCharacterRequest,
+    DebugGiveAllSrCharacterResponse,
+    DebugSetVipLevelRequest,
+    DebugSetVipLevelResponse,
+    DungeonBattleExecBattleRequest,
+    DungeonBattleExecBattleResponse,
+    DungeonBattleExecGuestRequest,
+    DungeonBattleExecGuestResponse,
+    DungeonBattleExecRecoveryRequest,
+    DungeonBattleExecRecoveryResponse,
+    DungeonBattleExecReinforceRelicRequest,
+    DungeonBattleExecReinforceRelicResponse,
+    DungeonBattleExecReviveRequest,
+    DungeonBattleExecReviveResponse,
+    DungeonBattleExecShopRequest,
+    DungeonBattleExecShopResponse,
+    DungeonBattleFinishBattleRequest,
+    DungeonBattleFinishBattleResponse,
+    DungeonBattleGetBattleGridDataRequest,
+    DungeonBattleGetBattleGridDataResponse,
+    DungeonBattleGetDungeonBattleInfoRequest,
+    DungeonBattleGetDungeonBattleInfoResponse,
+    DungeonBattleLeaveShopRequest,
+    DungeonBattleLeaveShopResponse,
+    DungeonBattleProceedLayerRequest,
+    DungeonBattleProceedLayerResponse,
+    DungeonBattleRewardBattleReceiveRelicRequest,
+    DungeonBattleRewardBattleReceiveRelicResponse,
+    DungeonBattleRewardBattleReinforceRelicRequest,
+    DungeonBattleRewardBattleReinforceRelicResponse,
+    DungeonBattleRewardClearLayerRequest,
+    DungeonBattleRewardClearLayerResponse,
+    DungeonBattleSelectGridRequest,
+    DungeonBattleSelectGridResponse,
+    DungeonBattleSkipDungeonBattleRequest,
+    DungeonBattleSkipDungeonBattleResponse,
+    DungeonBattleUseRecoveryItemRequest,
+    DungeonBattleUseRecoveryItemResponse,
+    EquipmentCastManyRequest,
+    EquipmentCastManyResponse,
+    EquipmentCastRequest,
+    EquipmentCastResponse,
+    EquipmentChangeEquipmentRequest,
+    EquipmentChangeEquipmentResponse,
+    EquipmentInheritanceEquipmentRequest,
+    EquipmentInheritanceEquipmentResponse,
+    EquipmentReinforcementRequest,
+    EquipmentReinforcementResponse,
+    EquipmentRemoveEquipmentRequest,
+    EquipmentRemoveEquipmentResponse,
+    EquipmentTrainingRequest,
+    EquipmentTrainingResponse,
+    FriendBulkApplyFriendsRequest,
+    FriendBulkApplyFriendsResponse,
+    FriendBulkTransferFriendPointRequest,
+    FriendBulkTransferFriendPointResponse,
+    FriendGetFriendCampaignInfoRequest,
+    FriendGetFriendCampaignInfoResponse,
+    FriendGetPlayerInfoListRequest,
+    FriendGetPlayerInfoListResponse,
+    FriendRemoveFriendRequest,
+    FriendRemoveFriendResponse,
+    FriendReplyAllFriendRequest,
+    FriendReplyAllFriendResponse,
+    FriendRewardFriendMissionRequest,
+    FriendRewardFriendMissionResponse,
+    FriendUseFriendCodeRequest,
+    FriendUseFriendCodeResponse,
+    GachaChangeGachaRelicRequest,
+    GachaChangeGachaRelicResponse,
+    GachaDrawRequest,
+    GachaDrawResponse,
+    GachaGetListRequest,
+    GachaGetLotteryItemListRequest,
+    GachaGetLotteryItemListResponse,
+    GachaSetSelectListRequest,
+    GachaSetSelectListResponse,
+    GlobalGvgReceiveGlobalGvgRewardRequest,
+    GlobalGvgReceiveGlobalGvgRewardResponse,
+    GuildGetGuildBaseInfoRequest,
+    GuildGetGuildBaseInfoResponse,
+    GuildGetGuildIdRequest,
+    GuildGetGuildIdResponse,
+    GuildGetGuildMemberInfoRequest,
+    GuildGetGuildMemberInfoResponse,
+    GuildRaidGetGuildRaidInfoRequest,
+    GuildRaidGetGuildRaidInfoResponse,
+    GuildRaidGetGuildRaidWorldRewardInfoRequest,
+    GuildRaidGetGuildRaidWorldRewardInfoResponse,
+    GuildRaidGiveGuildRaidWorldRewardItemRequest,
+    GuildRaidGiveGuildRaidWorldRewardItemResponse,
+    GuildRaidOpenGuildRaidRequest,
+    GuildRaidOpenGuildRaidResponse,
+    GuildRaidQuickStartGuildRaidRequest,
+    GuildRaidQuickStartGuildRaidResponse,
+    GuildRaidStartGuildRaidRequest,
+    GuildRaidStartGuildRaidResponse,
+    GuildTowerBattleRequest,
+    GuildTowerBattleResponse,
+    GuildTowerEntryCharacterRequest,
+    GuildTowerEntryCharacterResponse,
+    GuildTowerGetGuildTowerInfoRequest,
+    GuildTowerGetGuildTowerInfoResponse,
+    GuildTowerGetGuildTowerRankingRequest,
+    GuildTowerGetGuildTowerRankingResponse,
+    GuildTowerGetReinforcementJobDataRequest,
+    GuildTowerGetReinforcementJobDataResponse,
+    GuildTowerReceiveFloorRewardRequest,
+    GuildTowerReceiveFloorRewardResponse,
+    GuildTowerReinforceJobRequest,
+    GuildTowerReinforceJobResponse,
+    ItemGetAutoBattleRewardItemInfoRequest,
+    ItemGetAutoBattleRewardItemInfoResponse,
+    ItemOpenTreasureChestRequest,
+    ItemOpenTreasureChestResponse,
+    ItemUseAutoBattleRewardItemRequest,
+    ItemUseAutoBattleRewardItemResponse,
+    LocalGvgReceiveLocalGvgRewardRequest,
+    LocalGvgReceiveLocalGvgRewardResponse,
+    LocalRaidGetLocalRaidBattleResultRequest,
+    LocalRaidGetLocalRaidBattleResultResponse,
+    LocalRaidGetLocalRaidInfoRequest,
+    LocalRaidGetLocalRaidInfoResponse,
+    LoginBonusGetLimitedLoginBonusInfoRequest,
+    LoginBonusGetLimitedLoginBonusInfoResponse,
+    LoginBonusGetMonthlyLoginBonusInfoRequest,
+    LoginBonusGetMonthlyLoginBonusInfoResponse,
+    LoginBonusReceiveDailyLimitedLoginBonusRequest,
+    LoginBonusReceiveDailyLimitedLoginBonusResponse,
+    LoginBonusReceiveDailyLoginBonusRequest,
+    LoginBonusReceiveDailyLoginBonusResponse,
+    LoginBonusReceiveLoginCountBonusRequest,
+    LoginBonusReceiveLoginCountBonusResponse,
+    LoginBonusReceiveSpecialLimitedLoginBonusRequest,
+    LoginBonusReceiveSpecialLimitedLoginBonusResponse,
+    MissionGetMissionInfoRequest,
+    MissionGetMissionInfoResponse,
+    MissionReceivePanelMissionBingoRewardRequest,
+    MissionReceivePanelMissionBingoRewardResponse,
+    MissionRewardMissionActivityRequest,
+    MissionRewardMissionActivityResponse,
+    MissionRewardMissionRequest,
+    MissionRewardMissionResponse,
+    NoticeGetMyPageNoticeInfoListRequest,
+    NoticeGetMyPageNoticeInfoListResponse,
+    NoticeGetNoticeInfoListRequest,
+    NoticeGetNoticeInfoListResponse,
+    PresentGetListRequest,
+    PresentReceiveItemRequest,
+    PresentReceiveItemResponse,
+    QuestGetQuestInfoRequest,
+    QuestGetQuestInfoResponse,
+    QuestMapInfoRequest,
+    QuestMapInfoResponse,
+    RankingGetPlayerRankingRequest,
+    RankingGetPlayerRankingResponse,
+    RankingReceiveAchieveRankingRewardRequest,
+    RankingReceiveAchieveRankingRewardResponse,
+    ShopBuyProductRequest,
+    ShopBuyProductResponse,
+    ShopGetListRequest,
+    ShopGetProductListRequest,
+    ShopGetProductListResponse,
+    ShopReceiveRewardRequest,
+    ShopReceiveRewardResponse,
+    TowerBattleStartRequest,
+    TowerBattleStartResponse,
+    TowerBattleTowerBattleQuickRequest,
+    TowerBattleTowerBattleQuickResponse,
+    TradeShopBuyItemRequest,
+    TradeShopBuyItemResponse,
+    TradeShopGetListRequest,
+    TradeShopGetListResponse,
+    TradeShopResetTabRequest,
+    TradeShopResetTabResponse,
+    UserGetMypageRequest,
+    UserGetMypageResponse,
+    UserGetUserDataRequest,
+    UserGetUserDataResponse,
+    UserLoginPlayerRequest,
+    UserLoginPlayerResponse,
+    VipGetDailyGiftRequest,
+    VipGetDailyGiftResponse,
+    WeeklyTopicsGetWeeklyTopicsInfoRequest,
+    WeeklyTopicsGetWeeklyTopicsInfoResponse,
 } from './generated';
 
 export interface OrtegaRpcMap {
     "auth/comebackUser": {
-        request: ComebackUserRequest;
-        response: ComebackUserResponse;
+        request: AuthComebackUserRequest;
+        response: AuthComebackUserResponse;
     };
     "auth/createAccessToken": {
-        request: CreateAccessTokenRequest;
-        response: CreateAccessTokenResponse;
+        request: AuthCreateAccessTokenRequest;
+        response: AuthCreateAccessTokenResponse;
     };
     "auth/createUser": {
-        request: CreateUserRequest;
-        response: CreateUserResponse;
+        request: AuthCreateUserRequest;
+        response: AuthCreateUserResponse;
     };
     "auth/createWorldPlayer": {
-        request: CreateWorldPlayerRequest;
-        response: CreateWorldPlayerResponse;
+        request: AuthCreateWorldPlayerRequest;
+        response: AuthCreateWorldPlayerResponse;
     };
     "auth/getComebackUserData": {
-        request: GetComebackUserDataRequest;
-        response: GetComebackUserDataResponse;
+        request: AuthGetComebackUserDataRequest;
+        response: AuthGetComebackUserDataResponse;
     };
     "auth/getDataUri": {
-        request: GetDataUriRequest;
-        response: GetDataUriResponse;
+        request: AuthGetDataUriRequest;
+        response: AuthGetDataUriResponse;
     };
     "auth/getServerHost": {
-        request: GetServerHostRequest;
-        response: GetServerHostResponse;
+        request: AuthGetServerHostRequest;
+        response: AuthGetServerHostResponse;
     };
     "auth/login": {
-        request: LoginRequest;
-        response: LoginResponse;
+        request: AuthLoginRequest;
+        response: AuthLoginResponse;
     };
     "badge/getCompetitionInfo": {
-        request: GetCompetitionInfoRequest;
-        response: GetCompetitionInfoResponse;
+        request: BattleGetCompetitionInfoRequest;
+        response: BattleGetCompetitionInfoResponse;
     };
     "battle/auto": {
-        request: AutoRequest;
-        response: AutoResponse;
+        request: BattleAutoRequest;
+        response: BattleAutoResponse;
     };
     "battle/boss": {
-        request: BossRequest;
-        response: BossResponse;
+        request: BattleBossRequest;
+        response: BattleBossResponse;
     };
     "battle/bossQuick": {
-        request: BossQuickRequest;
-        response: BossQuickResponse;
+        request: BattleBossQuickRequest;
+        response: BattleBossQuickResponse;
     };
     "battle/bossRewardInfo": {
-        request: BossRewardInfoRequest;
-        response: BossRewardInfoResponse;
+        request: BattleBossRewardInfoRequest;
+        response: BattleBossRewardInfoResponse;
     };
     "battle/getLegendLeagueInfo": {
-        request: GetLegendLeagueInfoRequest;
-        response: GetLegendLeagueInfoResponse;
+        request: BattleGetLegendLeagueInfoRequest;
+        response: BattleGetLegendLeagueInfoResponse;
     };
     "battle/getPvpInfo": {
-        request: GetPvpInfoRequest;
-        response: GetPvpInfoResponse;
+        request: BattleGetPvpInfoRequest;
+        response: BattleGetPvpInfoResponse;
     };
     "battle/legendLeagueStart": {
-        request: LegendLeagueStartRequest;
-        response: LegendLeagueStartResponse;
+        request: BattleLegendLeagueStartRequest;
+        response: BattleLegendLeagueStartResponse;
     };
     "battle/nextQuest": {
-        request: NextQuestRequest;
-        response: NextQuestResponse;
+        request: BattleNextQuestRequest;
+        response: BattleNextQuestResponse;
     };
     "battle/pvpStart": {
-        request: PvpStartRequest;
-        response: PvpStartResponse;
+        request: BattlePvpStartRequest;
+        response: BattlePvpStartResponse;
     };
     "battle/quick": {
-        request: QuickRequest;
-        response: QuickResponse;
+        request: BattleQuickRequest;
+        response: BattleQuickResponse;
     };
     "battle/rewardAutoBattle": {
-        request: RewardAutoBattleRequest;
-        response: RewardAutoBattleResponse;
+        request: BattleRewardAutoBattleRequest;
+        response: BattleRewardAutoBattleResponse;
     };
     "bountyQuest/getList": {
-        request: GetListRequest;
-        response: GetListResponse;
+        request: BountyQuestGetListRequest;
+        response: TradeShopGetListResponse;
     };
     "bountyQuest/remake": {
-        request: RemakeRequest;
-        response: RemakeResponse;
+        request: BountyQuestRemakeRequest;
+        response: BountyQuestRemakeResponse;
     };
     "bountyQuest/reward": {
-        request: RewardRequest;
-        response: RewardResponse;
+        request: BountyQuestRewardRequest;
+        response: BountyQuestRewardResponse;
     };
     "bountyQuest/start": {
-        request: StartRequest;
-        response: StartResponse;
+        request: BountyQuestStartRequest;
+        response: TowerBattleStartResponse;
     };
     "character/getCharacterStoryReward": {
-        request: GetCharacterStoryRewardRequest;
-        response: GetCharacterStoryRewardResponse;
+        request: CharacterGetCharacterStoryRewardRequest;
+        response: CharacterGetCharacterStoryRewardResponse;
     };
     "character/getDetailsInfo": {
-        request: GetDetailsInfoRequest;
-        response: GetDetailsInfoResponse;
+        request: CharacterGetDetailsInfoRequest;
+        response: CharacterGetDetailsInfoResponse;
     };
     "character/rankUp": {
-        request: RankUpRequest;
-        response: RankUpResponse;
+        request: CharacterRankUpRequest;
+        response: CharacterRankUpResponse;
     };
     "character/readCharacterStory": {
-        request: ReadCharacterStoryRequest;
-        response: ReadCharacterStoryResponse;
+        request: CharacterReadCharacterStoryRequest;
+        response: CharacterReadCharacterStoryResponse;
     };
     "debug/giveAllSrCharacter": {
-        request: GiveAllSrCharacterRequest;
-        response: GiveAllSrCharacterResponse;
+        request: DebugGiveAllSrCharacterRequest;
+        response: DebugGiveAllSrCharacterResponse;
     };
     "debug/setVipLevel": {
-        request: SetVipLevelRequest;
-        response: SetVipLevelResponse;
+        request: DebugSetVipLevelRequest;
+        response: DebugSetVipLevelResponse;
     };
     "dungeonBattle/execBattle": {
-        request: ExecBattleRequest;
-        response: ExecBattleResponse;
+        request: DungeonBattleExecBattleRequest;
+        response: DungeonBattleExecBattleResponse;
     };
     "dungeonBattle/execGuest": {
-        request: ExecGuestRequest;
-        response: ExecGuestResponse;
+        request: DungeonBattleExecGuestRequest;
+        response: DungeonBattleExecGuestResponse;
     };
     "dungeonBattle/execRecovery": {
-        request: ExecRecoveryRequest;
-        response: ExecRecoveryResponse;
+        request: DungeonBattleExecRecoveryRequest;
+        response: DungeonBattleExecRecoveryResponse;
     };
     "dungeonBattle/execReinforceRelic": {
-        request: ExecReinforceRelicRequest;
-        response: ExecReinforceRelicResponse;
+        request: DungeonBattleExecReinforceRelicRequest;
+        response: DungeonBattleExecReinforceRelicResponse;
     };
     "dungeonBattle/execRevive": {
-        request: ExecReviveRequest;
-        response: ExecReviveResponse;
+        request: DungeonBattleExecReviveRequest;
+        response: DungeonBattleExecReviveResponse;
     };
     "dungeonBattle/execShop": {
-        request: ExecShopRequest;
-        response: ExecShopResponse;
+        request: DungeonBattleExecShopRequest;
+        response: DungeonBattleExecShopResponse;
     };
     "dungeonBattle/finishBattle": {
-        request: FinishBattleRequest;
-        response: FinishBattleResponse;
+        request: DungeonBattleFinishBattleRequest;
+        response: DungeonBattleFinishBattleResponse;
     };
     "dungeonBattle/getBattleGridData": {
-        request: GetBattleGridDataRequest;
-        response: GetBattleGridDataResponse;
+        request: DungeonBattleGetBattleGridDataRequest;
+        response: DungeonBattleGetBattleGridDataResponse;
     };
     "dungeonBattle/getDungeonBattleInfo": {
-        request: GetDungeonBattleInfoRequest;
-        response: GetDungeonBattleInfoResponse;
+        request: DungeonBattleGetDungeonBattleInfoRequest;
+        response: DungeonBattleGetDungeonBattleInfoResponse;
     };
     "dungeonBattle/leaveShop": {
-        request: LeaveShopRequest;
-        response: LeaveShopResponse;
+        request: DungeonBattleLeaveShopRequest;
+        response: DungeonBattleLeaveShopResponse;
     };
     "dungeonBattle/proceedLayer": {
-        request: ProceedLayerRequest;
-        response: ProceedLayerResponse;
+        request: DungeonBattleProceedLayerRequest;
+        response: DungeonBattleProceedLayerResponse;
     };
     "dungeonBattle/rewardBattleReceiveRelic": {
-        request: RewardBattleReceiveRelicRequest;
-        response: RewardBattleReceiveRelicResponse;
+        request: DungeonBattleRewardBattleReceiveRelicRequest;
+        response: DungeonBattleRewardBattleReceiveRelicResponse;
     };
     "dungeonBattle/rewardBattleReinforceRelic": {
-        request: RewardBattleReinforceRelicRequest;
-        response: RewardBattleReinforceRelicResponse;
+        request: DungeonBattleRewardBattleReinforceRelicRequest;
+        response: DungeonBattleRewardBattleReinforceRelicResponse;
     };
     "dungeonBattle/rewardClearLayer": {
-        request: RewardClearLayerRequest;
-        response: RewardClearLayerResponse;
+        request: DungeonBattleRewardClearLayerRequest;
+        response: DungeonBattleRewardClearLayerResponse;
     };
     "dungeonBattle/selectGrid": {
-        request: SelectGridRequest;
-        response: SelectGridResponse;
+        request: DungeonBattleSelectGridRequest;
+        response: DungeonBattleSelectGridResponse;
     };
     "dungeonBattle/skipBattle": {
-        request: SkipDungeonBattleRequest;
-        response: SkipDungeonBattleResponse;
+        request: DungeonBattleSkipDungeonBattleRequest;
+        response: DungeonBattleSkipDungeonBattleResponse;
     };
     "dungeonBattle/useRecoveryItem": {
-        request: UseRecoveryItemRequest;
-        response: UseRecoveryItemResponse;
+        request: DungeonBattleUseRecoveryItemRequest;
+        response: DungeonBattleUseRecoveryItemResponse;
     };
     "equipment/cast": {
-        request: CastRequest;
-        response: CastResponse;
+        request: EquipmentCastRequest;
+        response: EquipmentCastResponse;
     };
     "equipment/castMany": {
-        request: CastManyRequest;
-        response: CastManyResponse;
+        request: EquipmentCastManyRequest;
+        response: EquipmentCastManyResponse;
     };
     "equipment/changeEquipment": {
-        request: ChangeEquipmentRequest;
-        response: ChangeEquipmentResponse;
+        request: EquipmentChangeEquipmentRequest;
+        response: EquipmentChangeEquipmentResponse;
     };
     "equipment/inheritanceEquipment": {
-        request: InheritanceEquipmentRequest;
-        response: InheritanceEquipmentResponse;
+        request: EquipmentInheritanceEquipmentRequest;
+        response: EquipmentInheritanceEquipmentResponse;
     };
     "equipment/reinforcement": {
-        request: ReinforcementRequest;
-        response: ReinforcementResponse;
+        request: EquipmentReinforcementRequest;
+        response: EquipmentReinforcementResponse;
     };
     "equipment/removeEquipment": {
-        request: RemoveEquipmentRequest;
-        response: RemoveEquipmentResponse;
+        request: EquipmentRemoveEquipmentRequest;
+        response: EquipmentRemoveEquipmentResponse;
     };
     "equipment/training": {
-        request: TrainingRequest;
-        response: TrainingResponse;
+        request: EquipmentTrainingRequest;
+        response: EquipmentTrainingResponse;
     };
     "friend/bulkApplyFriends": {
-        request: BulkApplyFriendsRequest;
-        response: BulkApplyFriendsResponse;
+        request: FriendBulkApplyFriendsRequest;
+        response: FriendBulkApplyFriendsResponse;
     };
     "friend/bulkTransferFriendPoint": {
-        request: BulkTransferFriendPointRequest;
-        response: BulkTransferFriendPointResponse;
+        request: FriendBulkTransferFriendPointRequest;
+        response: FriendBulkTransferFriendPointResponse;
     };
     "friend/getFriendCampaignInfo": {
-        request: GetFriendCampaignInfoRequest;
-        response: GetFriendCampaignInfoResponse;
+        request: FriendGetFriendCampaignInfoRequest;
+        response: FriendGetFriendCampaignInfoResponse;
     };
     "friend/getPlayerInfoList": {
-        request: GetPlayerInfoListRequest;
-        response: GetPlayerInfoListResponse;
+        request: FriendGetPlayerInfoListRequest;
+        response: FriendGetPlayerInfoListResponse;
     };
     "friend/removeFriend": {
-        request: RemoveFriendRequest;
-        response: RemoveFriendResponse;
+        request: FriendRemoveFriendRequest;
+        response: FriendRemoveFriendResponse;
     };
     "friend/replyAllFriend": {
-        request: ReplyAllFriendRequest;
-        response: ReplyAllFriendResponse;
+        request: FriendReplyAllFriendRequest;
+        response: FriendReplyAllFriendResponse;
     };
     "friend/rewardFriendMission": {
-        request: RewardFriendMissionRequest;
-        response: RewardFriendMissionResponse;
+        request: FriendRewardFriendMissionRequest;
+        response: FriendRewardFriendMissionResponse;
     };
     "friend/useFriendCode": {
-        request: UseFriendCodeRequest;
-        response: UseFriendCodeResponse;
+        request: FriendUseFriendCodeRequest;
+        response: FriendUseFriendCodeResponse;
     };
     "gacha/changeGachaRelic": {
-        request: ChangeGachaRelicRequest;
-        response: ChangeGachaRelicResponse;
+        request: GachaChangeGachaRelicRequest;
+        response: GachaChangeGachaRelicResponse;
     };
     "gacha/draw": {
-        request: DrawRequest;
-        response: DrawResponse;
+        request: GachaDrawRequest;
+        response: GachaDrawResponse;
     };
     "gacha/getList": {
-        request: GetListRequest;
-        response: GetListResponse;
+        request: GachaGetListRequest;
+        response: TradeShopGetListResponse;
     };
     "gacha/getLotteryItemList": {
-        request: GetLotteryItemListRequest;
-        response: GetLotteryItemListResponse;
+        request: GachaGetLotteryItemListRequest;
+        response: GachaGetLotteryItemListResponse;
     };
     "gacha/setSelectList": {
-        request: SetSelectListRequest;
-        response: SetSelectListResponse;
+        request: GachaSetSelectListRequest;
+        response: GachaSetSelectListResponse;
     };
     "globalGvg/receiveGlobalGvgReward": {
-        request: ReceiveGlobalGvgRewardRequest;
-        response: ReceiveGlobalGvgRewardResponse;
+        request: GlobalGvgReceiveGlobalGvgRewardRequest;
+        response: GlobalGvgReceiveGlobalGvgRewardResponse;
     };
     "guildInfo/getGuildBaseInfo": {
-        request: GetGuildBaseInfoRequest;
-        response: GetGuildBaseInfoResponse;
+        request: GuildGetGuildBaseInfoRequest;
+        response: GuildGetGuildBaseInfoResponse;
     };
     "guildInfo/getGuildId": {
-        request: GetGuildIdRequest;
-        response: GetGuildIdResponse;
+        request: GuildGetGuildIdRequest;
+        response: GuildGetGuildIdResponse;
     };
     "guildInfo/getGuildMemberInfo": {
-        request: GetGuildMemberInfoRequest;
-        response: GetGuildMemberInfoResponse;
+        request: GuildGetGuildMemberInfoRequest;
+        response: GuildGetGuildMemberInfoResponse;
     };
     "guildRaid/getGuildRaidInfo": {
-        request: GetGuildRaidInfoRequest;
-        response: GetGuildRaidInfoResponse;
+        request: GuildRaidGetGuildRaidInfoRequest;
+        response: GuildRaidGetGuildRaidInfoResponse;
     };
     "guildRaid/getGuildRaidWorldRewardInfo": {
-        request: GetGuildRaidWorldRewardInfoRequest;
-        response: GetGuildRaidWorldRewardInfoResponse;
+        request: GuildRaidGetGuildRaidWorldRewardInfoRequest;
+        response: GuildRaidGetGuildRaidWorldRewardInfoResponse;
     };
     "guildRaid/giveGuildRaidWorldRewardItem": {
-        request: GiveGuildRaidWorldRewardItemRequest;
-        response: GiveGuildRaidWorldRewardItemResponse;
+        request: GuildRaidGiveGuildRaidWorldRewardItemRequest;
+        response: GuildRaidGiveGuildRaidWorldRewardItemResponse;
     };
     "guildRaid/openGuildRaid": {
-        request: OpenGuildRaidRequest;
-        response: OpenGuildRaidResponse;
+        request: GuildRaidOpenGuildRaidRequest;
+        response: GuildRaidOpenGuildRaidResponse;
     };
     "guildRaid/quickStartGuildRaid": {
-        request: QuickStartGuildRaidRequest;
-        response: QuickStartGuildRaidResponse;
+        request: GuildRaidQuickStartGuildRaidRequest;
+        response: GuildRaidQuickStartGuildRaidResponse;
     };
     "guildRaid/startGuildRaid": {
-        request: StartGuildRaidRequest;
-        response: StartGuildRaidResponse;
+        request: GuildRaidStartGuildRaidRequest;
+        response: GuildRaidStartGuildRaidResponse;
     };
     "guildTower/battle": {
-        request: BattleRequest;
-        response: BattleResponse;
+        request: GuildTowerBattleRequest;
+        response: GuildTowerBattleResponse;
     };
     "guildTower/entryCharacter": {
-        request: EntryCharacterRequest;
-        response: EntryCharacterResponse;
+        request: GuildTowerEntryCharacterRequest;
+        response: GuildTowerEntryCharacterResponse;
     };
     "guildTower/getGuildTowerInfo": {
-        request: GetGuildTowerInfoRequest;
-        response: GetGuildTowerInfoResponse;
+        request: GuildTowerGetGuildTowerInfoRequest;
+        response: GuildTowerGetGuildTowerInfoResponse;
     };
     "guildTower/getGuildTowerRanking": {
-        request: GetGuildTowerRankingRequest;
-        response: GetGuildTowerRankingResponse;
+        request: GuildTowerGetGuildTowerRankingRequest;
+        response: GuildTowerGetGuildTowerRankingResponse;
     };
     "guildTower/getReinforcementJobData": {
-        request: GetReinforcementJobDataRequest;
-        response: GetReinforcementJobDataResponse;
+        request: GuildTowerGetReinforcementJobDataRequest;
+        response: GuildTowerGetReinforcementJobDataResponse;
     };
     "guildTower/receiveFloorReward": {
-        request: ReceiveFloorRewardRequest;
-        response: ReceiveFloorRewardResponse;
+        request: GuildTowerReceiveFloorRewardRequest;
+        response: GuildTowerReceiveFloorRewardResponse;
     };
     "guildTower/reinforceJob": {
-        request: ReinforceJobRequest;
-        response: ReinforceJobResponse;
+        request: GuildTowerReinforceJobRequest;
+        response: GuildTowerReinforceJobResponse;
     };
     "item/getAutoBattleRewardItemInfo": {
-        request: GetAutoBattleRewardItemInfoRequest;
-        response: GetAutoBattleRewardItemInfoResponse;
+        request: ItemGetAutoBattleRewardItemInfoRequest;
+        response: ItemGetAutoBattleRewardItemInfoResponse;
     };
     "item/openTreasureChest": {
-        request: OpenTreasureChestRequest;
-        response: OpenTreasureChestResponse;
+        request: ItemOpenTreasureChestRequest;
+        response: ItemOpenTreasureChestResponse;
     };
     "item/useAutoBattleRewardItem": {
-        request: UseAutoBattleRewardItemRequest;
-        response: UseAutoBattleRewardItemResponse;
+        request: ItemUseAutoBattleRewardItemRequest;
+        response: ItemUseAutoBattleRewardItemResponse;
     };
     "localGvg/receiveLocalGvgReward": {
-        request: ReceiveLocalGvgRewardRequest;
-        response: ReceiveLocalGvgRewardResponse;
+        request: LocalGvgReceiveLocalGvgRewardRequest;
+        response: LocalGvgReceiveLocalGvgRewardResponse;
     };
     "localRaid/getLocalRaidBattleResult": {
-        request: GetLocalRaidBattleResultRequest;
-        response: GetLocalRaidBattleResultResponse;
+        request: LocalRaidGetLocalRaidBattleResultRequest;
+        response: LocalRaidGetLocalRaidBattleResultResponse;
     };
     "localRaid/getLocalRaidInfo": {
-        request: GetLocalRaidInfoRequest;
-        response: GetLocalRaidInfoResponse;
+        request: LocalRaidGetLocalRaidInfoRequest;
+        response: LocalRaidGetLocalRaidInfoResponse;
     };
     "loginBonus/getLimitedLoginBonusInfo": {
-        request: GetLimitedLoginBonusInfoRequest;
-        response: GetLimitedLoginBonusInfoResponse;
+        request: LoginBonusGetLimitedLoginBonusInfoRequest;
+        response: LoginBonusGetLimitedLoginBonusInfoResponse;
     };
     "loginBonus/getMonthlyLoginBonusInfo": {
-        request: GetMonthlyLoginBonusInfoRequest;
-        response: GetMonthlyLoginBonusInfoResponse;
+        request: LoginBonusGetMonthlyLoginBonusInfoRequest;
+        response: LoginBonusGetMonthlyLoginBonusInfoResponse;
     };
     "loginBonus/receiveDailyLimitedLoginBonus": {
-        request: ReceiveDailyLimitedLoginBonusRequest;
-        response: ReceiveDailyLimitedLoginBonusResponse;
+        request: LoginBonusReceiveDailyLimitedLoginBonusRequest;
+        response: LoginBonusReceiveDailyLimitedLoginBonusResponse;
     };
     "loginBonus/receiveDailyLoginBonus": {
-        request: ReceiveDailyLoginBonusRequest;
-        response: ReceiveDailyLoginBonusResponse;
+        request: LoginBonusReceiveDailyLoginBonusRequest;
+        response: LoginBonusReceiveDailyLoginBonusResponse;
     };
     "loginBonus/receiveLoginCountBonus": {
-        request: ReceiveLoginCountBonusRequest;
-        response: ReceiveLoginCountBonusResponse;
+        request: LoginBonusReceiveLoginCountBonusRequest;
+        response: LoginBonusReceiveLoginCountBonusResponse;
     };
     "loginBonus/receiveSpecialLimitedLoginBonus": {
-        request: ReceiveSpecialLimitedLoginBonusRequest;
-        response: ReceiveSpecialLimitedLoginBonusResponse;
+        request: LoginBonusReceiveSpecialLimitedLoginBonusRequest;
+        response: LoginBonusReceiveSpecialLimitedLoginBonusResponse;
     };
     "mission/getMissionInfo": {
-        request: GetMissionInfoRequest;
-        response: GetMissionInfoResponse;
+        request: MissionGetMissionInfoRequest;
+        response: MissionGetMissionInfoResponse;
     };
     "mission/receivePanelMissionBingoReward": {
-        request: ReceivePanelMissionBingoRewardRequest;
-        response: ReceivePanelMissionBingoRewardResponse;
+        request: MissionReceivePanelMissionBingoRewardRequest;
+        response: MissionReceivePanelMissionBingoRewardResponse;
     };
     "mission/rewardMission": {
-        request: RewardMissionRequest;
-        response: RewardMissionResponse;
+        request: MissionRewardMissionRequest;
+        response: MissionRewardMissionResponse;
     };
     "mission/rewardMissionActivity": {
-        request: RewardMissionActivityRequest;
-        response: RewardMissionActivityResponse;
+        request: MissionRewardMissionActivityRequest;
+        response: MissionRewardMissionActivityResponse;
     };
     "notice/getMypageNoticeInfoList": {
-        request: GetMyPageNoticeInfoListRequest;
-        response: GetMyPageNoticeInfoListResponse;
+        request: NoticeGetMyPageNoticeInfoListRequest;
+        response: NoticeGetMyPageNoticeInfoListResponse;
     };
     "notice/getNoticeInfoList": {
-        request: GetNoticeInfoListRequest;
-        response: GetNoticeInfoListResponse;
+        request: NoticeGetNoticeInfoListRequest;
+        response: NoticeGetNoticeInfoListResponse;
     };
     "present/getList": {
-        request: GetListRequest;
-        response: GetListResponse;
+        request: PresentGetListRequest;
+        response: TradeShopGetListResponse;
     };
     "present/receiveItem": {
-        request: ReceiveItemRequest;
-        response: ReceiveItemResponse;
+        request: PresentReceiveItemRequest;
+        response: PresentReceiveItemResponse;
     };
     "quest/getQuestInfo ": {
-        request: GetQuestInfoRequest;
-        response: GetQuestInfoResponse;
+        request: QuestGetQuestInfoRequest;
+        response: QuestGetQuestInfoResponse;
     };
     "quest/mapInfo": {
-        request: MapInfoRequest;
-        response: MapInfoResponse;
+        request: QuestMapInfoRequest;
+        response: QuestMapInfoResponse;
     };
     "ranking/getPlayerRanking": {
-        request: GetPlayerRankingRequest;
-        response: GetPlayerRankingResponse;
+        request: RankingGetPlayerRankingRequest;
+        response: RankingGetPlayerRankingResponse;
     };
     "ranking/receiveAchieveRankingReward": {
-        request: ReceiveAchieveRankingRewardRequest;
-        response: ReceiveAchieveRankingRewardResponse;
+        request: RankingReceiveAchieveRankingRewardRequest;
+        response: RankingReceiveAchieveRankingRewardResponse;
     };
     "shop/buyProduct": {
-        request: BuyProductRequest;
-        response: BuyProductResponse;
+        request: ShopBuyProductRequest;
+        response: ShopBuyProductResponse;
     };
     "shop/getList": {
-        request: GetListRequest;
-        response: GetListResponse;
+        request: ShopGetListRequest;
+        response: TradeShopGetListResponse;
     };
     "shop/getProductList": {
-        request: GetProductListRequest;
-        response: GetProductListResponse;
+        request: ShopGetProductListRequest;
+        response: ShopGetProductListResponse;
     };
     "shop/receiveReward": {
-        request: ReceiveRewardRequest;
-        response: ReceiveRewardResponse;
+        request: ShopReceiveRewardRequest;
+        response: ShopReceiveRewardResponse;
     };
     "towerBattle/quick": {
-        request: TowerBattleQuickRequest;
-        response: TowerBattleQuickResponse;
+        request: TowerBattleTowerBattleQuickRequest;
+        response: TowerBattleTowerBattleQuickResponse;
     };
     "towerBattle/start": {
-        request: StartRequest;
-        response: StartResponse;
+        request: TowerBattleStartRequest;
+        response: TowerBattleStartResponse;
     };
     "tradeShop/buyItem": {
-        request: BuyItemRequest;
-        response: BuyItemResponse;
+        request: TradeShopBuyItemRequest;
+        response: TradeShopBuyItemResponse;
     };
     "tradeShop/getList": {
-        request: GetListRequest;
-        response: GetListResponse;
+        request: TradeShopGetListRequest;
+        response: TradeShopGetListResponse;
     };
     "tradeShop/resetTab": {
-        request: ResetTabRequest;
-        response: ResetTabResponse;
+        request: TradeShopResetTabRequest;
+        response: TradeShopResetTabResponse;
     };
     "user/getMypage": {
-        request: GetMypageRequest;
-        response: GetMypageResponse;
+        request: UserGetMypageRequest;
+        response: UserGetMypageResponse;
     };
     "user/getUserData": {
-        request: GetUserDataRequest;
-        response: GetUserDataResponse;
+        request: UserGetUserDataRequest;
+        response: UserGetUserDataResponse;
     };
     "user/loginPlayer": {
-        request: LoginPlayerRequest;
-        response: LoginPlayerResponse;
+        request: UserLoginPlayerRequest;
+        response: UserLoginPlayerResponse;
     };
     "vip/getDailyGift": {
-        request: GetDailyGiftRequest;
-        response: GetDailyGiftResponse;
+        request: VipGetDailyGiftRequest;
+        response: VipGetDailyGiftResponse;
     };
     "weeklyTopics/getWeeklyTopicsInfo": {
-        request: GetWeeklyTopicsInfoRequest;
-        response: GetWeeklyTopicsInfoResponse;
+        request: WeeklyTopicsGetWeeklyTopicsInfoRequest;
+        response: WeeklyTopicsGetWeeklyTopicsInfoResponse;
     };
 }
