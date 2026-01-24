@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from './components/ui/toaster';
+import { useLocalizationStore } from './store/localization-store';
 import { MainLayout } from './components/layout/MainLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { CharactersPage } from './pages/CharactersPage';
@@ -22,6 +24,12 @@ import { AccountsPage } from './pages/AccountsPage';
 import './index.css';
 
 function App() {
+  const { currentLanguage, fetchResources } = useLocalizationStore();
+
+  useEffect(() => {
+    fetchResources(currentLanguage);
+  }, [currentLanguage, fetchResources]);
+
   return (
     <BrowserRouter>
       <Routes>

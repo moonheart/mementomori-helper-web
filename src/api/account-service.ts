@@ -1,11 +1,11 @@
-import { apiClient } from './client';
+import apiClient from './axios-client';
 import type {
     AccountDto,
     AddAccountWithClientKeyRequest,
     AddAccountWithPasswordRequest,
     GetClientKeyResponse,
-    SimpleLoginRequest,
-    SimpleLoginResponse,
+    LoginRequest,
+    LoginResponse,
 } from './generated';
 
 export const accountApi = {
@@ -53,8 +53,8 @@ export const accountApi = {
     /**
      * 登录到游戏
      */
-    login: async (request: SimpleLoginRequest): Promise<SimpleLoginResponse> => {
-        const response = await apiClient.post<SimpleLoginResponse>(
+    login: async (request: LoginRequest): Promise<LoginResponse> => {
+        const response = await apiClient.post<LoginResponse>(
             '/api/auth/login',
             request
         );

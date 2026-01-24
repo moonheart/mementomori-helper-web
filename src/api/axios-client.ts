@@ -12,10 +12,31 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
     (config) => {
-        // Add user ID header from current account
-        const currentAccountId = useAccountStore.getState().currentAccountId;
-        if (currentAccountId) {
-            config.headers['X-User-Id'] = currentAccountId.toString();
+        // 优先从请求数据中获取 userId (例如登录请求)
+        let userId: string | null = null;
+        
+        if (config.data) {
+            try {
+                // 处理可能是 JSON 字符串或对象的情况
+                const data = typeof config.data === 'string' ? JSON.parse(config.data) : config.data;
+                if (data && data.userId) {
+                    userId = data.userId.toString();
+                }
+            } catch {
+                // 忽略解析错误
+            }
+        }
+        
+        // 如果请求数据中没有，则从 store 中获取当前账号 ID
+        if (!userId) {
+            const currentAccountId = useAccountStore.getState().currentAccountId;
+            if (currentAccountId) {
+                userId = currentAccountId.toString();
+            }
+        }
+
+        if (userId) {
+            config.headers['X-User-Id'] = userId;
         }
 
         // Keep existing auth token logic (if needed)

@@ -1,12 +1,54 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, User, Star, Calendar, MessageSquare, Diamond, Coins, Heart, FlaskConical, Package, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ortegaApi } from '@/api/ortega-client';
+import { UserSyncData } from '@/api/generated/userSyncData';
+import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
+import { GetUserDataResponse } from '@/api/generated/getUserDataResponse';
+import { useLocalizationStore } from '@/store/localization-store';
 
 export function DashboardPage() {
     const navigate = useNavigate();
+    const { t } = useLocalizationStore();
+    const [userData, setUserData] = useState<UserSyncData | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                setIsLoading(true);
+                const response = await ortegaApi.user.getUserData({}) as GetUserDataResponse;
+                if (response && response.userSyncData) {
+                    setUserData(response.userSyncData);
+                }
+            } catch (error) {
+                console.error('Failed to fetch user data:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
+
+    const getItemCount = (items: UserItemDtoInfo[] | undefined, type: number, id: number) => {
+        if (!items) return 0;
+        return items.find(i => i.itemType === type && i.itemId === id)?.itemCount ?? 0;
+    };
+
+    const formatTimestamp = (timestamp: number) => {
+        if (!timestamp) return '-';
+        return new Date(timestamp * 1000).toLocaleString('zh-CN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
 
     // Mock数据 - 每日任务清单
     const dailyChecklist = [
@@ -76,12 +118,6 @@ export function DashboardPage() {
         { type: 'success', message: '公会战备战期间，记得部署防守队伍' },
     ];
 
-    // 资源状况
-    const resources = [
-        { name: '体力', current: 380, max: 400, icon: '⚡', color: 'text-green-500' },
-        { name: '钻石', current: 15420, icon: '💎', color: 'text-blue-500' },
-        { name: '金币', current: 2450000, icon: '🪙', color: 'text-yellow-500' },
-    ];
 
     const getProgressColor = (current: number, max: number) => {
         const percentage = (current / max) * 100;
@@ -90,11 +126,111 @@ export function DashboardPage() {
         return 'bg-red-500';
     };
 
+    if (isLoading) {
+        return (
+            <div className="flex h-[400px] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">加载玩家数据中...</span>
+            </div>
+        );
+    }
+
+    const status = userData?.userStatusDtoInfo;
+    const items = userData?.userItemDtoInfo;
+
+    const resourcesReal = [
+        {
+            name: t('[ItemName4]'),
+            current: getItemCount(items, 1, 1) + getItemCount(items, 2, 1),
+            free: getItemCount(items, 1, 1),
+            paid: getItemCount(items, 2, 1),
+            icon: <Diamond className="h-5 w-5 text-blue-500" />,
+            color: 'text-blue-500'
+        },
+        {
+            name: t('[ItemName5]'),
+            current: getItemCount(items, 3, 1),
+            icon: <Coins className="h-5 w-5 text-yellow-500" />,
+            color: 'text-yellow-500'
+        },
+        {
+            name: t('[ItemName9]'), // 友谊点
+            current: getItemCount(items, 23, 1),
+            icon: <Heart className="h-5 w-5 text-pink-500" />,
+            color: 'text-pink-500'
+        },
+        {
+            name: t('[ItemName11]'), // 经验珠
+            current: getItemCount(items, 11, 2),
+            icon: <FlaskConical className="h-5 w-5 text-purple-500" />,
+            color: 'text-purple-500'
+        },
+        {
+            name: t('[ItemName10]'), // 潜能果
+            current: getItemCount(items, 11, 1),
+            icon: <Package className="h-5 w-5 text-orange-500" />,
+            color: 'text-orange-500'
+        },
+    ];
+
     return (
         <div className="space-y-6">
+            {/* Player Profile Header */}
+            <Card>
+                <CardHeader className="pb-4">
+                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
+                                <User className="h-10 w-10" />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2">
+                                    <CardTitle className="text-2xl">{t('[CommonPlayerNameFormat]', [status?.name])}</CardTitle>
+                                    <Badge variant="outline" className="font-mono">{t('[PlayerId]')}: {status?.playerId}</Badge>
+                                </div>
+                                <CardDescription className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
+                                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5" /> {t('[CommonPlayerRankLabel]')}: {status?.rank}</span>
+                                    <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5" /> {t('[CommonVipWithSpaceFormat]', [status?.vip])}</span>
+                                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> 创建于: {formatTimestamp(status?.createAt || 0)}</span>
+                                </CardDescription>
+                            </div>
+                        </div>
+                        {status?.comment && (
+                            <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm italic">
+                                <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                <span>{t('[MyPagePlayerInformationCommentLabel]')}: {status.comment}</span>
+                            </div>
+                        )}
+                    </div>
+                </CardHeader>
+            </Card>
+
+            {/* Resources Grid */}
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+                {resourcesReal.map((resource) => (
+                    <Card key={resource.name}>
+                        <CardContent className="p-4 flex flex-col justify-center h-full">
+                            <div className="flex items-center gap-2 mb-1">
+                                {resource.icon}
+                                <span className="text-xs text-muted-foreground font-medium">{resource.name}</span>
+                            </div>
+                            <div className={`text-xl font-bold truncate ${resource.color}`}>
+                                {resource.current.toLocaleString()}
+                            </div>
+                            {resource.name === '钻石' && (
+                                <div className="mt-1 text-[10px] text-muted-foreground flex gap-2">
+                                    <span>免费: {resource.free?.toLocaleString()}</span>
+                                    <span>付费: {resource.paid?.toLocaleString()}</span>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-bold">每日清单</h1>
+                <h1 className="text-2xl font-bold">每日清单</h1>
                 <p className="text-muted-foreground">今天的任务进度 • 重置时间: 凌晨 4:00</p>
             </div>
 
@@ -113,31 +249,6 @@ export function DashboardPage() {
                 ))}
             </div>
 
-            {/* Resources */}
-            <div className="grid gap-4 md:grid-cols-3">
-                {resources.map((resource) => (
-                    <Card key={resource.name}>
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-muted-foreground">{resource.name}</p>
-                                    <p className={`text-2xl font-bold ${resource.color}`}>
-                                        {resource.current.toLocaleString()}
-                                        {resource.max && <span className="text-sm text-muted-foreground">/{resource.max}</span>}
-                                    </p>
-                                </div>
-                                <span className="text-4xl">{resource.icon}</span>
-                            </div>
-                            {resource.max && (
-                                <Progress
-                                    value={(resource.current / resource.max) * 100}
-                                    className="mt-3"
-                                />
-                            )}
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
 
             {/* Daily Checklist */}
             <div className="grid gap-6 md:grid-cols-2">
