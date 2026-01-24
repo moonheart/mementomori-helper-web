@@ -59,6 +59,8 @@ function App() {
 
         {/* 默认重定向到 Dashboard */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        {/* 捕获所有未定义的路由并重定向到 Dashboard */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       <Toaster />
     </BrowserRouter>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -9,51 +9,49 @@ import {
     Trophy,
     Gift,
     CheckCircle2,
-    Clock,
     BookOpen,
     Star,
     Target,
     Coins,
-    Sparkles,
     Loader2
 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
-import { missionApi } from '@/api/mission-service';
-import { MissionGroupType } from '@/api/generated';
-// 使用浏览器alert替代toast，或者可以安装sonner: pnpm add sonner
+import { ortegaApi } from '@/api/ortega-client';
+import { MissionGroupType, MissionStatusType, GetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo } from '@/api/generated';
+
+interface UIStoreMission {
+    id: number;
+    title: string;
+    description: string;
+    progress: number;
+    target: number;
+    completed: boolean;
+    claimed: boolean;
+    rewards: Array<{ type: string; amount: number }>;
+}
 
 export function MissionsPage() {
     const { currentAccountId } = useAccountStore();
     const [loading, setLoading] = useState(false);
-    const [missionData, setMissionData] = useState<any>(null);
+    const [missionData, setMissionData] = useState<GetMissionInfoResponse | null>(null);
     const [claiming, setClaiming] = useState<Set<number>>(new Set());
 
     // 获取任务信息
     const fetchMissionInfo = async () => {
-        if (!currentAccountId) {
-            alert('请先登录账户');
-            return;
-        }
+        if (!currentAccountId) return;
 
         setLoading(true);
         try {
-            const response = await missionApi.getMissionInfo(
-                currentAccountId,
-                [
+            const response = await ortegaApi.mission.getMissionInfo({
+                targetMissionGroupList: [
                     MissionGroupType.Daily,
                     MissionGroupType.Weekly,
                     MissionGroupType.Main
                 ]
-            );
-
-            if (response.data.success) {
-                setMissionData(response.data.missionInfoDict);
-            } else {
-                alert(response.data.message || '获取任务信息失败');
-            }
-        } catch (error: any) {
+            });
+            setMissionData(response);
+        } catch (error) {
             console.error('Failed to fetch mission info:', error);
-            alert(error.response?.data?.message || '获取任务信息失败');
         } finally {
             setLoading(false);
         }
@@ -61,28 +59,14 @@ export function MissionsPage() {
 
     // 领取任务奖励
     const handleClaimMission = async (missionId: number) => {
-        if (!currentAccountId) {
-            alert('请先登录账户');
-            return;
-        }
-
         setClaiming(prev => new Set(prev).add(missionId));
         try {
-            const response = await missionApi.claimMissionRewards({
-                userId: currentAccountId,
-                missionIds: [missionId]
+            await ortegaApi.mission.rewardMission({
+                targetMissionIdList: [missionId]
             });
-
-            if (response.data.success) {
-                alert('领取成功！');
-                // 刷新任务信息
-                await fetchMissionInfo();
-            } else {
-                alert(response.data.message || '领取失败');
-            }
-        } catch (error: any) {
+            await fetchMissionInfo();
+        } catch (error) {
             console.error('Failed to claim mission:', error);
-            alert(error.response?.data?.message || '领取失败');
         } finally {
             setClaiming(prev => {
                 const newSet = new Set(prev);
@@ -94,28 +78,14 @@ export function MissionsPage() {
 
     // 领取功勋奖励
     const handleClaimActivityReward = async (missionGroupType: MissionGroupType, requiredCount: number) => {
-        if (!currentAccountId) {
-            alert('请先登录账户');
-            return;
-        }
-
         try {
-            const response = await missionApi.claimActivityReward({
-                userId: currentAccountId,
+            await ortegaApi.mission.rewardMissionActivity({
                 missionGroupType,
                 requiredCount
             });
-
-            if (response.data.success) {
-                alert('领取功勋奖励成功！');
-                // 刷新任务信息
-                await fetchMissionInfo();
-            } else {
-                alert(response.data.message || '领取功勋奖励失败');
-            }
-        } catch (error: any) {
+            await fetchMissionInfo();
+        } catch (error) {
             console.error('Failed to claim activity reward:', error);
-            alert(error.response?.data?.message || '领取功勋奖励失败');
         }
     };
 
@@ -125,6 +95,70 @@ export function MissionsPage() {
             fetchMissionInfo();
         }
     }, [currentAccountId]);
+
+    // 辅助函数：安全地从字典获取任务组信息 (兼容数字和字符串 Key)
+    const getGroupInfo = (groupType: MissionGroupType): MissionInfo | undefined => {
+        if (!missionData?.missionInfoDict) return undefined;
+        const dict = missionData.missionInfoDict as Record<string | number, MissionInfo>;
+        return dict[groupType] || dict[MissionGroupType[groupType]];
+    };
+
+    // 辅助函数：将接口原始数据转换为 UI 模型
+    const mapMissions = (groupType: MissionGroupType): UIStoreMission[] => {
+        const groupInfo = getGroupInfo(groupType);
+        if (!groupInfo || !groupInfo.userMissionDtoInfoDict) return [];
+        
+        const missions: UIStoreMission[] = [];
+
+        // 遍历字典中的所有 MissionType
+        Object.values(groupInfo.userMissionDtoInfoDict).forEach((dtoList) => {
+            if (!dtoList) return;
+            (dtoList as UserMissionDtoInfo[]).forEach((dto) => {
+                const isClaimed = (dto.missionStatusHistory?.[MissionStatusType.Received]?.length ?? 0) > 0;
+                const isCompleted = isClaimed || (dto.missionStatusHistory?.[MissionStatusType.NotReceived]?.length ?? 0) > 0;
+                
+                const missionId = 
+                    dto.missionStatusHistory?.[MissionStatusType.NotReceived]?.[0] || 
+                    dto.missionStatusHistory?.[MissionStatusType.Progress]?.[0] || 
+                    dto.missionStatusHistory?.[MissionStatusType.Received]?.[0] || 
+                    dto.achievementType;
+
+                missions.push({
+                    id: missionId,
+                    title: `任务 ${dto.achievementType}`,
+                    description: `成就类型: ${dto.achievementType}`,
+                    progress: dto.progressCount,
+                    target: 0, 
+                    completed: isCompleted,
+                    claimed: isClaimed,
+                    rewards: []
+                });
+            });
+        });
+
+        return missions;
+    };
+
+    const dailyMissions = useMemo(() => mapMissions(MissionGroupType.Daily), [missionData]);
+    const weeklyMissions = useMemo(() => mapMissions(MissionGroupType.Weekly), [missionData]);
+    const mainMissions = useMemo(() => mapMissions(MissionGroupType.Main), [missionData]);
+
+    const activityInfo = useMemo(() => getGroupInfo(MissionGroupType.Daily)?.userMissionActivityDtoInfo, [missionData]);
+    const totalMerit = activityInfo?.progressCount || 0;
+    
+    // 功勋宝箱
+    const meritBoxes = useMemo(() => {
+        if (!activityInfo?.rewardStatusDict) return [];
+        
+        return Object.entries(activityInfo.rewardStatusDict)
+            .map(([count, status]) => ({
+                id: Number(count),
+                required: Number(count),
+                status: Number(status),
+                claimed: Number(status) === MissionActivityRewardStatusType.Received
+            }))
+            .sort((a, b) => a.required - b.required);
+    }, [activityInfo]);
 
     const getRewardIcon = (type: string) => {
         const icons: Record<string, React.ReactElement> = {
@@ -136,25 +170,16 @@ export function MissionsPage() {
         return icons[type] || <Gift className="h-4 w-4" />;
     };
 
-    const getTierBadge = (tier: string) => {
-        const badges: Record<string, React.ReactElement> = {
-            'platinum': <Badge className="bg-gradient-to-r from-cyan-500 to-blue-500">铂金</Badge>,
-            'gold': <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500">黄金</Badge>,
-            'silver': <Badge className="bg-gradient-to-r from-gray-400 to-gray-500">白银</Badge>
-        };
-        return badges[tier] || <Badge>普通</Badge>;
-    };
-
-    const renderMissionCard = (mission: any, showProgress = true) => {
-        const progress = mission.target ? (mission.progress / mission.target) * 100 : 100;
+    const renderMissionCard = (mission: UIStoreMission, showProgress = true) => {
+        const progress = mission.target ? (mission.progress / mission.target) * 100 : 0;
         const canClaim = mission.completed && !mission.claimed;
         const isClaiming = claiming.has(mission.id);
 
         return (
-            <Card key={mission.id} className={canClaim ? 'border-2 border-primary' : ''}>
+            <Card key={`${mission.id}-${mission.title}`} className={canClaim ? 'border-2 border-primary shadow-md' : ''}>
                 <CardContent className="flex items-center gap-4 p-6">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${canClaim ? 'bg-primary text-primary-foreground' : mission.completed ? 'bg-green-100 dark:bg-green-950' : 'bg-muted'}`}>
-                        {mission.completed ? <CheckCircle2 className="h-6 w-6 text-green-600" /> : <Target className="h-6 w-6" />}
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-full ${canClaim ? 'bg-primary text-primary-foreground' : mission.completed ? 'bg-green-100 dark:bg-green-950 text-green-600' : 'bg-muted'}`}>
+                        {mission.completed ? <CheckCircle2 className="h-6 w-6" /> : <Target className="h-6 w-6" />}
                     </div>
 
                     <div className="flex-1">
@@ -164,7 +189,6 @@ export function MissionsPage() {
                                 <p className="text-sm text-muted-foreground">{mission.description}</p>
                             </div>
                             <div className="flex items-center gap-2">
-                                {mission.tier && getTierBadge(mission.tier)}
                                 {mission.completed && (
                                     <Badge variant={canClaim ? 'default' : 'secondary'}>
                                         {canClaim ? '可领取' : '已领取'}
@@ -173,7 +197,7 @@ export function MissionsPage() {
                             </div>
                         </div>
 
-                        {showProgress && mission.target && (
+                        {showProgress && mission.target > 0 && (
                             <div className="flex items-center gap-4 mt-3">
                                 <div className="flex-1">
                                     <Progress value={progress} />
@@ -184,32 +208,25 @@ export function MissionsPage() {
                             </div>
                         )}
 
-                        <div className="flex items-center gap-2 mt-3">
-                            <Gift className="h-4 w-4 text-muted-foreground" />
-                            <div className="flex gap-2 flex-wrap">
-                                {mission.rewards?.map((reward: any, idx: number) => (
-                                    <Badge key={idx} variant="outline" className="flex items-center gap-1">
-                                        {getRewardIcon(reward.type)}
-                                        {reward.amount.toLocaleString()}
-                                    </Badge>
-                                ))}
+                        {mission.rewards.length > 0 && (
+                            <div className="flex items-center gap-2 mt-3">
+                                <Gift className="h-4 w-4 text-muted-foreground" />
+                                <div className="flex gap-2 flex-wrap">
+                                    {mission.rewards.map((reward, idx) => (
+                                        <Badge key={idx} variant="outline" className="flex items-center gap-1">
+                                            {getRewardIcon(reward.type)}
+                                            {reward.amount.toLocaleString()}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {canClaim && (
                         <Button onClick={() => handleClaimMission(mission.id)} disabled={isClaiming}>
-                            {isClaiming ? (
-                                <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    领取中...
-                                </>
-                            ) : (
-                                <>
-                                    <Gift className="mr-2 h-4 w-4" />
-                                    领取
-                                </>
-                            )}
+                            {isClaiming ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
+                            领取
                         </Button>
                     )}
                 </CardContent>
@@ -217,90 +234,48 @@ export function MissionsPage() {
         );
     };
 
-    // 如果没有登录
     if (!currentAccountId) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
                 <Card className="w-full max-w-md">
                     <CardHeader>
                         <CardTitle>未登录</CardTitle>
-                        <CardDescription>
-                            请先登录账户以查看任务信息
-                        </CardDescription>
+                        <CardDescription>请先登录账户以查看任务信息</CardDescription>
                     </CardHeader>
                 </Card>
             </div>
         );
     }
 
-    // 加载中
     if (loading && !missionData) {
         return (
             <div className="flex items-center justify-center h-[60vh]">
                 <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                    <p className="text-muted-foreground">加载任务信息中...</p>
+                    <p className="text-muted-foreground">加载中...</p>
                 </div>
             </div>
         );
     }
 
-    // Mock数据供显示（真实API返回后会替换）
-    const dailyMissions = [
-        { id: 1, title: '完成3次高速战斗', description: '进行高速战斗获取资源', progress: 3, target: 3, completed: true, claimed: false, rewards: [{ type: 'gold', amount: 50000 }, { type: 'merit', amount: 20 }] },
-    ];
-
-    const weeklyMissions = [
-        { id: 2, title: '完成20次高速战斗', progress: 15, target: 20, completed: false, rewards: [{ type: 'gold', amount: 200000 }, { type: 'merit', amount: 100 }] },
-    ];
-
-    const mainMissions = [
-        { id: 3, title: '通关主线8-10', description: '推进主线冒险进度', completed: true, rewards: [{ type: 'diamond', amount: 300 }, { type: 'exp', amount: 5000 }] },
-    ];
-
-    const achievements = [
-        { id: 4, title: '角色收集家', description: '获得50个不同角色', progress: 42, target: 50, tier: 'gold', completed: false, rewards: [{ type: 'diamond', amount: 1000 }] },
-    ];
-
-    const totalMerit = 135;
-    const meritBoxes = [
-        { id: 1, required: 50, rewards: [{ type: 'gold', amount: 10000 }], claimed: false },
-        { id: 2, required: 100, rewards: [{ type: 'diamond', amount: 50 }], claimed: false },
-        { id: 3, required: 200, rewards: [{ type: 'gold', amount: 50000 }], claimed: true },
-        { id: 4, required: 300, rewards: [{ type: 'diamond', amount: 100 }], claimed: false }
-    ];
-
-    const completedDaily = dailyMissions.filter(m => m.completed).length;
-    const completedWeekly = weeklyMissions.filter(m => m.completed).length;
-
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">任务系统</h1>
-                    <p className="text-muted-foreground mt-1">
-                        完成任务获取丰厚奖励
-                    </p>
+                    <p className="text-muted-foreground mt-1">完成任务获取丰厚奖励</p>
                 </div>
                 <Button onClick={fetchMissionInfo} disabled={loading} variant="outline">
-                    {loading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            刷新中...
-                        </>
-                    ) : (
-                        '刷新任务'
-                    )}
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    刷新
                 </Button>
             </div>
 
-            {/* 帮助说明 */}
             <Alert>
                 <BookOpen className="h-4 w-4" />
                 <AlertDescription>
                     <strong>任务说明：</strong>
-                    每日任务每天4:00重置，每周任务周一4:00重置。完成任务获得功勋银币，累积功勋可开启宝箱奖励。
+                    每日任务每天4:00重置，每周任务周一4:00重置。
                 </AlertDescription>
             </Alert>
 
@@ -319,9 +294,9 @@ export function MissionsPage() {
                         <span className="text-2xl font-bold text-orange-600">{totalMerit}</span>
                     </div>
 
-                    <div className="grid gap-3 grid-cols-4">
+                    <div className="grid gap-3 grid-cols-5">
                         {meritBoxes.map((box) => {
-                            const canOpen = totalMerit >= box.required && !box.claimed;
+                            const canOpen = box.status === MissionActivityRewardStatusType.NotReceived;
                             return (
                                 <div
                                     key={box.id}
@@ -336,9 +311,7 @@ export function MissionsPage() {
                                     <div className="text-2xl mb-2">
                                         {box.claimed ? '✅' : canOpen ? '🎁' : '🔒'}
                                     </div>
-                                    <div className="text-xs font-semibold">
-                                        {box.required} 功勋
-                                    </div>
+                                    <div className="text-xs font-semibold">{box.required} 功勋</div>
                                     <div className="text-xs mt-1 opacity-75">
                                         {box.claimed ? '已领取' : canOpen ? '可开启' : '未解锁'}
                                     </div>
@@ -349,104 +322,35 @@ export function MissionsPage() {
                 </CardContent>
             </Card>
 
-            {/* 进度概览 */}
-            <div className="grid gap-6 md:grid-cols-3">
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Clock className="h-5 w-5 text-blue-500" />
-                            每日任务
-                        </CardTitle>
-                        <CardDescription>
-                            已完成 {completedDaily} / {dailyMissions.length} 个
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Progress value={(completedDaily / dailyMissions.length) * 100} />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Star className="h-5 w-5 text-purple-500" />
-                            每周任务
-                        </CardTitle>
-                        <CardDescription>
-                            已完成 {completedWeekly} / {weeklyMissions.length} 个
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Progress value={(completedWeekly / weeklyMissions.length) * 100} />
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-yellow-500" />
-                            成就
-                        </CardTitle>
-                        <CardDescription>
-                            已完成 {achievements.filter(a => a.completed).length} / {achievements.length} 个
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <Progress value={(achievements.filter(a => a.completed).length / achievements.length) * 100} />
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* 任务标签页 */}
             <Tabs defaultValue="daily">
-                <TabsList className="grid w-full max-w-md grid-cols-4">
+                <TabsList className="grid w-full max-w-md grid-cols-3">
                     <TabsTrigger value="daily">每日</TabsTrigger>
                     <TabsTrigger value="weekly">每周</TabsTrigger>
                     <TabsTrigger value="main">主线</TabsTrigger>
-                    <TabsTrigger value="achievement">成就</TabsTrigger>
                 </TabsList>
 
-                {/* 每日任务 */}
                 <TabsContent value="daily" className="space-y-4 mt-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="text-lg font-semibold">每日任务</h3>
-                            <p className="text-sm text-muted-foreground">每天4:00（服务器时间）重置</p>
-                        </div>
-                        <Button variant="outline" size="sm">
-                            一键领取
-                        </Button>
-                    </div>
-                    {dailyMissions.map(m => renderMissionCard(m))}
+                    {dailyMissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">暂无每日任务</div>
+                    ) : (
+                        dailyMissions.map(m => renderMissionCard(m))
+                    )}
                 </TabsContent>
 
-                {/* 每周任务 */}
                 <TabsContent value="weekly" className="space-y-4 mt-6">
-                    <div className="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 className="text-lg font-semibold">每周任务</h3>
-                            <p className="text-sm text-muted-foreground">每周一4:00（服务器时间）重置</p>
-                        </div>
-                    </div>
-                    {weeklyMissions.map(m => renderMissionCard(m))}
+                    {weeklyMissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">暂无每周任务</div>
+                    ) : (
+                        weeklyMissions.map(m => renderMissionCard(m))
+                    )}
                 </TabsContent>
 
-                {/* 主线任务 */}
                 <TabsContent value="main" className="space-y-4 mt-6">
-                    <div className="mb-4">
-                        <h3 className="text-lg font-semibold">主线任务</h3>
-                        <p className="text-sm text-muted-foreground">根据游戏进度解锁，一次性任务</p>
-                    </div>
-                    {mainMissions.map(m => renderMissionCard(m, false))}
-                </TabsContent>
-
-                {/* 成就任务 */}
-                <TabsContent value="achievement" className="space-y-4 mt-6">
-                    <div className="mb-4">
-                        <h3 className="text-lg font-semibold">成就系统</h3>
-                        <p className="text-sm text-muted-foreground">长期目标，挑战自我</p>
-                    </div>
-                    {achievements.map(a => renderMissionCard(a))}
+                    {mainMissions.length === 0 ? (
+                        <div className="text-center py-8 text-muted-foreground">暂无主线任务</div>
+                    ) : (
+                        mainMissions.map(m => renderMissionCard(m, false))
+                    )}
                 </TabsContent>
             </Tabs>
         </div>

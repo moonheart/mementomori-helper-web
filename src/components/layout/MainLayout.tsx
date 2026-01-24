@@ -1,8 +1,15 @@
 import { Sidebar } from './Sidebar';
 import { Header } from './Header';
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
+import { useAccountStore } from '@/store/accountStore';
 
 export function MainLayout() {
+    const currentAccountId = useAccountStore((state) => state.currentAccountId);
+
+    if (!currentAccountId) {
+        return <Navigate to="/accounts" replace />;
+    }
+
     return (
         <div className="flex h-screen overflow-hidden">
             <Sidebar />

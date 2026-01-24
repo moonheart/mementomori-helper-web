@@ -59,8 +59,10 @@ apiClient.interceptors.response.use(
         if (error.response?.status === 401) {
             // Clear current account
             useAccountStore.getState().setCurrentAccount(null);
-            // Redirect to accounts page
-            window.location.href = '/accounts';
+            // Redirect to accounts page if not already there
+            if (!window.location.pathname.startsWith('/accounts')) {
+                window.location.href = '/accounts';
+            }
         }
         return Promise.reject(error);
     }
