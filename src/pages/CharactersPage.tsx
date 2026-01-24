@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,78 +7,199 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { mockCharacters } from '@/mocks/data';
-import type { Character } from '@/mocks/types';
-import { Search, Grid, List, Swords, Zap, BookOpen, TrendingUp, Lock, Star, ArrowUp, Shield, Sparkles, Users, ChevronRight, Heart } from 'lucide-react';
+import { Search, Grid, List, Swords, Zap, BookOpen, TrendingUp, Star, ArrowUp, Shield, Sparkles, Users, ChevronRight, Loader2 } from 'lucide-react';
+import { useAccountStore } from '@/store/accountStore';
+import { ortegaApi } from '@/api/ortega-client';
+import { useMasterStore } from '@/store/masterStore';
+import { useLocalizationStore } from '@/store/localization-store';
+import { UserCharacterDtoInfo, CharacterRarityFlags, ElementType, JobFlags, CharacterMB } from '@/api/generated';
+
+// 扩展类型，用于在 UI 中合并数据
+interface UICharacter extends UserCharacterDtoInfo {
+    master?: CharacterMB;
+    name: string;
+    element: ElementType;
+    job: JobFlags;
+}
 
 export function CharactersPage() {
+    const { currentAccountId } = useAccountStore();
+    const t = useLocalizationStore(state => state.t);
+    const getTable = useMasterStore(state => state.getTable);
+
+    const [loading, setLoading] = useState(false);
+    const [userCharacters, setUserCharacters] = useState<UserCharacterDtoInfo[]>([]);
+    const [characterMasterMap, setCharacterMasterMap] = useState<Record<number, CharacterMB>>({});
+    
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
     const [search, setSearch] = useState('');
     const [selectedRarity, setSelectedRarity] = useState<string>('all');
     const [selectedElement, setSelectedElement] = useState<string>('all');
     const [selectedClass, setSelectedClass] = useState<string>('all');
-    const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
+    const [selectedCharacter, setSelectedCharacter] = useState<UICharacter | null>(null);
     const [detailDialogOpen, setDetailDialogOpen] = useState(false);
 
-    const filteredCharacters = mockCharacters.filter(char => {
-        const matchesSearch = char.name.toLowerCase().includes(search.toLowerCase());
-        const matchesRarity = selectedRarity === 'all' || char.rarity === selectedRarity;
-        const matchesElement = selectedElement === 'all' || char.element === selectedElement;
-        const matchesClass = selectedClass === 'all' || char.role === selectedClass;
-        return matchesSearch && matchesRarity && matchesElement && matchesClass;
-    });
+    // 获取数据
+    useEffect(() => {
+        if (!currentAccountId) return;
+
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // 1. 获取用户角色
+                const userData = await ortegaApi.user.getUserData({});
+                const chars = userData.userSyncData?.userCharacterDtoInfos || [];
+                setUserCharacters(chars);
+
+                // 2. 获取 Master 数据
+                const masterTable = await getTable<CharacterMB>('CharacterTable');
+                const masterMap: Record<number, CharacterMB> = {};
+                masterTable.forEach((m) => {
+                    masterMap[m.id] = m;
+                });
+                setCharacterMasterMap(masterMap);
+            } catch (error) {
+                console.error('Failed to fetch character data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [currentAccountId, getTable]);
+
+    // 合并数据并翻译
+    const characters: UICharacter[] = useMemo(() => {
+        return userCharacters.map(char => {
+            const master = characterMasterMap[char.characterId];
+            return {
+                ...char,
+                master,
+                name: master ? t(master.nameKey) : `Character ${char.characterId}`,
+                element: master?.elementType ?? ElementType.None,
+                job: master?.jobFlags ?? JobFlags.None
+            };
+        });
+    }, [userCharacters, characterMasterMap, t]);
+
+    // 过滤和排序逻辑
+    const filteredCharacters = useMemo(() => {
+        const filtered = characters.filter(char => {
+            const matchesSearch = char.name.toLowerCase().includes(search.toLowerCase());
+            
+            let matchesRarity = true;
+            if (selectedRarity !== 'all') {
+                const rarityValue = parseInt(selectedRarity);
+                matchesRarity = char.rarityFlags === rarityValue;
+            }
+
+            let matchesElement = true;
+            if (selectedElement !== 'all') {
+                const elementValue = parseInt(selectedElement);
+                matchesElement = char.element === elementValue;
+            }
+
+            let matchesClass = true;
+            if (selectedClass !== 'all') {
+                const classValue = parseInt(selectedClass);
+                // JobFlags 是位标志，但单角色通常只有一个职业
+                matchesClass = (char.job & classValue) !== 0;
+            }
+
+            return matchesSearch && matchesRarity && matchesElement && matchesClass;
+        });
+
+        // 排序方式: 等级优先 + 稀有度优先
+        return [...filtered].sort((a, b) => {
+            // 1. 等级降序
+            if (b.level !== a.level) {
+                return b.level - a.level;
+            }
+            // 2. 稀有度降序
+            return (b.rarityFlags || 0) - (a.rarityFlags || 0);
+        });
+    }, [characters, search, selectedRarity, selectedElement, selectedClass]);
 
     // 统计数据
-    const stats = {
-        total: mockCharacters.length,
-        lrCount: mockCharacters.filter(c => c.rarity === 'LR' || c.rarity === 'UR').length,
-        avgLevel: Math.round(mockCharacters.reduce((sum, c) => sum + c.level, 0) / mockCharacters.length),
-        maxPower: Math.max(...mockCharacters.map(c => c.stats.hp + c.stats.atk + c.stats.def))
+    const stats = useMemo(() => {
+        if (characters.length === 0) return { total: 0, highRarityCount: 0, avgLevel: 0, maxLevel: 0 };
+        return {
+            total: characters.length,
+            highRarityCount: characters.filter(c => c.rarityFlags >= CharacterRarityFlags.SSR).length,
+            avgLevel: Math.round(characters.reduce((sum, c) => sum + c.level, 0) / characters.length),
+            maxLevel: Math.max(...characters.map(c => c.level))
+        };
+    }, [characters]);
+
+    const getElementData = (element: ElementType) => {
+        const data: Record<number, { name: string, color: string, bg: string, icon: string }> = {
+            [ElementType.Red]: { name: '业红', color: 'text-red-500', bg: 'bg-red-500/10', icon: '🔥' },
+            [ElementType.Blue]: { name: '忧蓝', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '💧' },
+            [ElementType.Green]: { name: '苍翠', color: 'text-green-500', bg: 'bg-green-500/10', icon: '🍃' },
+            [ElementType.Yellow]: { name: '流金', color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: '⚡' },
+            [ElementType.Light]: { name: '天光', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: '☀️' },
+            [ElementType.Dark]: { name: '幽冥', color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🌙' }
+        };
+        return data[element] || { name: '无', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
     };
 
-    const getElementData = (element: string) => {
-        const data = {
-            fire: { name: '业红', color: 'text-red-500', bg: 'bg-red-500/10', icon: '🔥' },
-            water: { name: '忧蓝', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '💧' },
-            wind: { name: '苍翠', color: 'text-green-500', bg: 'bg-green-500/10', icon: '🍃' },
-            earth: { name: '流金', color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: '⚡' },
-            light: { name: '天光', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: '☀️' },
-            dark: { name: '幽冥', color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🌙' }
-        };
-        return data[element as keyof typeof data] || { name: element, color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
+    const getJobData = (job: JobFlags) => {
+        if (job & JobFlags.Warrior) return { name: '战士', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
+        if (job & JobFlags.Sniper) return { name: '射手', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
+        if (job & JobFlags.Sorcerer) return { name: '法师', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
+        return { name: '未知', color: 'text-gray-600', icon: Swords, desc: '' };
     };
 
-    const getClassData = (role: string) => {
-        const data = {
-            warrior: { name: '战士', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' },
-            mage: { name: '法师', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' },
-            ranger: { name: '射手', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' }
+    const getRarityData = (rarity: CharacterRarityFlags) => {
+        const data: Partial<Record<CharacterRarityFlags, { name: string, color: string, text: string, max: number }>> = {
+            [CharacterRarityFlags.N]: { name: 'N', color: 'bg-gray-400', text: 'text-gray-700', max: 20 },
+            [CharacterRarityFlags.R]: { name: 'R', color: 'bg-green-500', text: 'text-green-700', max: 40 },
+            [CharacterRarityFlags.RPlus]: { name: 'R+', color: 'bg-green-600', text: 'text-green-700', max: 60 },
+            [CharacterRarityFlags.SR]: { name: 'SR', color: 'bg-blue-500', text: 'text-blue-700', max: 80 },
+            [CharacterRarityFlags.SRPlus]: { name: 'SR+', color: 'bg-blue-600', text: 'text-blue-700', max: 100 },
+            [CharacterRarityFlags.SSR]: { name: 'SSR', color: 'bg-purple-500', text: 'text-purple-700', max: 120 },
+            [CharacterRarityFlags.SSRPlus]: { name: 'SSR+', color: 'bg-purple-600', text: 'text-purple-700', max: 140 },
+            [CharacterRarityFlags.UR]: { name: 'UR', color: 'bg-yellow-500', text: 'text-yellow-700', max: 160 },
+            [CharacterRarityFlags.URPlus]: { name: 'UR+', color: 'bg-yellow-600', text: 'text-yellow-700', max: 180 },
+            [CharacterRarityFlags.LR]: { name: 'LR', color: 'bg-orange-500', text: 'text-orange-700', max: 240 }
         };
-        return data[role as keyof typeof data] || { name: role, color: 'text-gray-600', icon: Swords, desc: '' };
+        // 简单处理 LR+
+        if (rarity >= CharacterRarityFlags.LR) {
+            return data[CharacterRarityFlags.LR]!;
+        }
+        return data[rarity] || { name: '?', color: 'bg-gray-500', text: 'text-gray-700', max: 1 };
     };
 
-    const getRarityData = (rarity: string) => {
-        const data = {
-            N: { color: 'bg-gray-400', text: 'text-gray-700', max: 1 },
-            R: { color: 'bg-green-500', text: 'text-green-700', max: 50 },
-            'R+': { color: 'bg-green-600', text: 'text-green-700', max: 60 },
-            SR: { color: 'bg-blue-500', text: 'text-blue-700', max: 80 },
-            'SR+': { color: 'bg-blue-600', text: 'text-blue-700', max: 100 },
-            SSR: { color: 'bg-purple-500', text: 'text-purple-700', max: 120 },
-            'SSR+': { color: 'bg-purple-600', text: 'text-purple-700', max: 140 },
-            UR: { color: 'bg-yellow-500', text: 'text-yellow-700', max: 180 },
-            'UR+': { color: 'bg-yellow-600', text: 'text-yellow-700', max: 200 },
-            LR: { color: 'bg-orange-500', text: 'text-orange-700', max: 240 }
-        };
-        return data[rarity as keyof typeof data] || { color: 'bg-gray-500', text: 'text-gray-700', max: 1 };
-    };
+    if (!currentAccountId) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <Card className="w-full max-w-md">
+                    <CardHeader>
+                        <CardTitle>未登录</CardTitle>
+                        <CardDescription>请先登录账户以查看角色信息</CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        );
+    }
+
+    if (loading && characters.length === 0) {
+        return (
+            <div className="flex items-center justify-center h-[60vh]">
+                <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    <p className="text-muted-foreground">加载角色数据中...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
             {/* Page Header */}
             <div>
                 <h1 className="text-3xl font-bold">角色管理</h1>
-                <p className="text-muted-foreground">管理和强化你的角色 • 稀有度: N → R → R+ → SR → SR+ → SSR → SSR+ → UR → UR+ → LR</p>
+                <p className="text-muted-foreground">管理和强化你的角色 • 稀有度: N → R → SR → SSR → UR → LR</p>
             </div>
 
             {/* Summary Stats */}
@@ -90,7 +211,7 @@ export function CharactersPage() {
                                 <p className="text-sm text-muted-foreground">持有角色</p>
                                 <p className="text-2xl font-bold">{stats.total}</p>
                             </div>
-                            <Star className="h-8 w-8 text-yellow-500" />
+                            <Users className="h-8 w-8 text-blue-500" />
                         </div>
                     </CardContent>
                 </Card>
@@ -98,10 +219,10 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">高稀有度</p>
-                                <p className="text-2xl font-bold">{stats.lrCount}</p>
+                                <p className="text-sm text-muted-foreground">SSR及以上</p>
+                                <p className="text-2xl font-bold">{stats.highRarityCount}</p>
                             </div>
-                            <TrendingUp className="h-8 w-8 text-orange-500" />
+                            <Star className="h-8 w-8 text-yellow-500" />
                         </div>
                     </CardContent>
                 </Card>
@@ -120,10 +241,10 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">最高战力</p>
-                                <p className="text-2xl font-bold">{stats.maxPower.toLocaleString()}</p>
+                                <p className="text-sm text-muted-foreground">最高等级</p>
+                                <p className="text-2xl font-bold">{stats.maxLevel}</p>
                             </div>
-                            <Swords className="h-8 w-8 text-red-500" />
+                            <TrendingUp className="h-8 w-8 text-orange-500" />
                         </div>
                     </CardContent>
                 </Card>
@@ -136,7 +257,7 @@ export function CharactersPage() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="搜索角色..."
+                                placeholder="搜索角色名称..."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="pl-10"
@@ -149,13 +270,11 @@ export function CharactersPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部稀有度</SelectItem>
-                                <SelectItem value="LR">LR</SelectItem>
-                                <SelectItem value="UR+">UR+</SelectItem>
-                                <SelectItem value="UR">UR</SelectItem>
-                                <SelectItem value="SSR+">SSR+</SelectItem>
-                                <SelectItem value="SSR">SSR</SelectItem>
-                                <SelectItem value="SR+">SR+</SelectItem>
-                                <SelectItem value="SR">SR</SelectItem>
+                                <SelectItem value={CharacterRarityFlags.LR.toString()}>LR</SelectItem>
+                                <SelectItem value={CharacterRarityFlags.UR.toString()}>UR</SelectItem>
+                                <SelectItem value={CharacterRarityFlags.SSR.toString()}>SSR</SelectItem>
+                                <SelectItem value={CharacterRarityFlags.SR.toString()}>SR</SelectItem>
+                                <SelectItem value={CharacterRarityFlags.R.toString()}>R</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -165,12 +284,12 @@ export function CharactersPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部属性</SelectItem>
-                                <SelectItem value="fire">🔥 业红</SelectItem>
-                                <SelectItem value="water">💧 忧蓝</SelectItem>
-                                <SelectItem value="wind">🍃 苍翠</SelectItem>
-                                <SelectItem value="earth">⚡ 流金</SelectItem>
-                                <SelectItem value="light">☀️ 天光</SelectItem>
-                                <SelectItem value="dark">🌙 幽冥</SelectItem>
+                                <SelectItem value={ElementType.Red.toString()}>🔥 业红</SelectItem>
+                                <SelectItem value={ElementType.Blue.toString()}>💧 忧蓝</SelectItem>
+                                <SelectItem value={ElementType.Green.toString()}>🍃 苍翠</SelectItem>
+                                <SelectItem value={ElementType.Yellow.toString()}>⚡ 流金</SelectItem>
+                                <SelectItem value={ElementType.Light.toString()}>☀️ 天光</SelectItem>
+                                <SelectItem value={ElementType.Dark.toString()}>🌙 幽冥</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -180,9 +299,9 @@ export function CharactersPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部类型</SelectItem>
-                                <SelectItem value="warrior">⚔️ 战士</SelectItem>
-                                <SelectItem value="ranger">🏹 射手</SelectItem>
-                                <SelectItem value="mage">📖 法师</SelectItem>
+                                <SelectItem value={JobFlags.Warrior.toString()}>⚔️ 战士</SelectItem>
+                                <SelectItem value={JobFlags.Sniper.toString()}>🏹 射手</SelectItem>
+                                <SelectItem value={JobFlags.Sorcerer.toString()}>📖 法师</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -218,9 +337,9 @@ export function CharactersPage() {
                 <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {filteredCharacters.map((character) => {
                         const elementData = getElementData(character.element);
-                        const classData = getClassData(character.role);
-                        const rarityData = getRarityData(character.rarity);
-                        const ClassIcon = classData.icon;
+                        const jobData = getJobData(character.job);
+                        const rarityData = getRarityData(character.rarityFlags);
+                        const JobIcon = jobData.icon;
 
                         const handleCardClick = () => {
                             setSelectedCharacter(character);
@@ -228,52 +347,39 @@ export function CharactersPage() {
                         };
 
                         return (
-                            <Card key={character.id} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={handleCardClick}>
+                            <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={handleCardClick}>
                                 <div className={`h-40 ${rarityData.color} bg-gradient-to-br flex items-center justify-center relative`}>
                                     <div className="absolute top-3 left-3">
-                                        <Badge className={rarityData.color}>{character.rarity}</Badge>
+                                        <Badge className={rarityData.color}>{rarityData.name}</Badge>
                                     </div>
                                     <div className="absolute top-3 right-3">
                                         <Badge variant="outline" className="bg-white/90">Lv.{character.level}</Badge>
                                     </div>
-                                    <div className="text-6xl">👤</div>
+                                    <div className="text-6xl opacity-80">👤</div>
                                     <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
                                         <span className="text-2xl">{elementData.icon}</span>
-                                        <ClassIcon className="h-5 w-5 text-white" />
+                                        <JobIcon className="h-5 w-5 text-white" />
                                     </div>
                                 </div>
                                 <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg">{character.name}</CardTitle>
+                                    <CardTitle className="text-lg truncate">{character.name}</CardTitle>
                                     <CardDescription>
-                                        <span className={classData.color}>{classData.name}</span> • <span className={elementData.color}>{elementData.name}</span>
+                                        <span className={jobData.color}>{jobData.name}</span> • <span className={elementData.color}>{elementData.name}</span>
                                     </CardDescription>
                                 </CardHeader>
                                 <CardContent className="space-y-3">
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div>
-                                            <div className="text-muted-foreground text-xs">生命值</div>
-                                            <div className="font-semibold">{character.stats.hp.toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-muted-foreground text-xs">攻击力</div>
-                                            <div className="font-semibold">{character.stats.atk.toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-muted-foreground text-xs">防御力</div>
-                                            <div className="font-semibold">{character.stats.def.toLocaleString()}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-muted-foreground text-xs">速度</div>
-                                            <div className="font-semibold">{character.stats.spd}</div>
-                                        </div>
-                                    </div>
                                     <div className="space-y-1">
                                         <div className="flex items-center justify-between text-xs">
                                             <span className="text-muted-foreground">等级进度</span>
                                             <span className="font-medium">{character.level}/{rarityData.max}</span>
                                         </div>
-                                        <Progress value={(character.level / rarityData.max) * 100} className="h-1.5" />
+                                        <Progress value={Math.min((character.level / rarityData.max) * 100, 100)} className="h-1.5" />
                                     </div>
+                                    {character.isLocked && (
+                                        <div className="flex justify-end">
+                                            <Shield className="h-4 w-4 text-muted-foreground" />
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         );
@@ -283,9 +389,9 @@ export function CharactersPage() {
                 <div className="space-y-4">
                     {filteredCharacters.map((character) => {
                         const elementData = getElementData(character.element);
-                        const classData = getClassData(character.role);
-                        const rarityData = getRarityData(character.rarity);
-                        const ClassIcon = classData.icon;
+                        const jobData = getJobData(character.job);
+                        const rarityData = getRarityData(character.rarityFlags);
+                        const JobIcon = jobData.icon;
 
                         const handleCardClick = () => {
                             setSelectedCharacter(character);
@@ -293,52 +399,32 @@ export function CharactersPage() {
                         };
 
                         return (
-                            <Card key={character.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
+                            <Card key={character.guid} className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
                                 <CardContent className="flex items-center gap-6 p-6">
-                                    <div className={`h-28 w-28 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-4xl shrink-0 relative`}>
-                                        <div className="absolute top-2 right-2">
-                                            <span className="text-lg">{elementData.icon}</span>
+                                    <div className={`h-20 w-20 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-3xl shrink-0 relative`}>
+                                        <div className="absolute top-1 right-1">
+                                            <span className="text-sm">{elementData.icon}</span>
                                         </div>
                                         👤
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-2 flex-wrap">
-                                            <h3 className="text-xl font-bold">{character.name}</h3>
-                                            <Badge className={rarityData.color}>{character.rarity}</Badge>
+                                        <div className="flex items-center gap-3 mb-1 flex-wrap">
+                                            <h3 className="text-xl font-bold truncate">{character.name}</h3>
+                                            <Badge className={rarityData.color}>{rarityData.name}</Badge>
                                             <Badge variant="outline">Lv.{character.level}/{rarityData.max}</Badge>
+                                        </div>
+                                        <div className="flex items-center gap-4">
                                             <div className="flex items-center gap-1.5">
-                                                <ClassIcon className={`h-4 w-4 ${classData.color}`} />
-                                                <span className={`text-sm ${classData.color}`}>{classData.name}</span>
+                                                <JobIcon className={`h-4 w-4 ${jobData.color}`} />
+                                                <span className={`text-sm ${jobData.color}`}>{jobData.name}</span>
                                             </div>
                                             <span className={`text-sm ${elementData.color}`}>
                                                 {elementData.icon} {elementData.name}
                                             </span>
-                                        </div>
-                                        <div className="grid grid-cols-5 gap-4 mt-3">
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">生命值</div>
-                                                <div className="text-lg font-semibold">{character.stats.hp.toLocaleString()}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">攻击力</div>
-                                                <div className="text-lg font-semibold">{character.stats.atk.toLocaleString()}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">防御力</div>
-                                                <div className="text-lg font-semibold">{character.stats.def.toLocaleString()}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">速度</div>
-                                                <div className="text-lg font-semibold">{character.stats.spd}</div>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-muted-foreground">进度</div>
-                                                <Progress value={(character.level / rarityData.max) * 100} className="h-2 mt-2" />
-                                            </div>
+                                            <span className="text-xs text-muted-foreground truncate">ID: {character.characterId}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2">
-                                        <Button size="sm">强化</Button>
+                                    <div className="flex gap-2">
                                         <Button size="sm" variant="outline">详情</Button>
                                     </div>
                                 </CardContent>
@@ -348,52 +434,53 @@ export function CharactersPage() {
                 </div>
             )}
 
-            {filteredCharacters.length === 0 && (
+            {filteredCharacters.length === 0 && !loading && (
                 <Card>
                     <CardContent className="text-center py-12">
-                        <p className="text-muted-foreground">未找到匹配的角色</p>
-                        <p className="text-sm text-muted-foreground mt-2">尝试调整筛选条件</p>
+                        <p className="text-muted-foreground">未找到符合条件的角色</p>
+                        <p className="text-sm text-muted-foreground mt-2">尝试清除搜索或筛选条件</p>
                     </CardContent>
                 </Card>
             )}
 
             {/* Character Detail Dialog */}
             <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-                <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                     {selectedCharacter && (() => {
                         const elementData = getElementData(selectedCharacter.element);
-                        const classData = getClassData(selectedCharacter.role);
-                        const rarityData = getRarityData(selectedCharacter.rarity);
-                        const ClassIcon = classData.icon;
+                        const jobData = getJobData(selectedCharacter.job);
+                        const rarityData = getRarityData(selectedCharacter.rarityFlags);
+                        const JobIcon = jobData.icon;
+                        const master = selectedCharacter.master;
 
                         return (
                             <>
                                 <DialogHeader>
                                     <div className="flex items-start gap-6">
-                                        <div className={`h-32 w-32 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-6xl shrink-0 relative`}>
-                                            <div className="absolute top-2 left-2">
-                                                <Badge className={rarityData.color}>{selectedCharacter.rarity}</Badge>
+                                        <div className={`h-24 w-24 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-5xl shrink-0 relative`}>
+                                            <div className="absolute top-1 left-1">
+                                                <Badge className={rarityData.color}>{rarityData.name}</Badge>
                                             </div>
-                                            <div className="absolute bottom-2 right-2">
-                                                <span className="text-2xl">{elementData.icon}</span>
+                                            <div className="absolute bottom-1 right-1">
+                                                <span className="text-xl">{elementData.icon}</span>
                                             </div>
                                             👤
                                         </div>
-                                        <div className="flex-1">
-                                            <DialogTitle className="text-3xl mb-2">{selectedCharacter.name}</DialogTitle>
+                                        <div className="flex-1 min-w-0">
+                                            <DialogTitle className="text-2xl mb-1 truncate">{selectedCharacter.name}</DialogTitle>
                                             <DialogDescription asChild>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-3 flex-wrap">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-3 flex-wrap text-sm">
                                                         <div className="flex items-center gap-1.5">
-                                                            <ClassIcon className={`h-5 w-5 ${classData.color}`} />
-                                                            <span className={classData.color}>{classData.name}</span>
+                                                            <JobIcon className={`h-4 w-4 ${jobData.color}`} />
+                                                            <span className={jobData.color}>{jobData.name}</span>
                                                         </div>
                                                         <span>•</span>
                                                         <span className={elementData.color}>{elementData.icon} {elementData.name}</span>
                                                         <span>•</span>
                                                         <Badge variant="outline">Lv.{selectedCharacter.level}/{rarityData.max}</Badge>
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground">{classData.desc}</p>
+                                                    <p className="text-xs text-muted-foreground">{jobData.desc}</p>
                                                 </div>
                                             </DialogDescription>
                                         </div>
@@ -401,126 +488,87 @@ export function CharactersPage() {
                                 </DialogHeader>
 
                                 <Tabs defaultValue="overview" className="mt-6">
-                                    <TabsList className="grid w-full grid-cols-4">
-                                        <TabsTrigger value="overview">概览</TabsTrigger>
-                                        <TabsTrigger value="equipment">装备</TabsTrigger>
+                                    <TabsList className="grid w-full grid-cols-3">
+                                        <TabsTrigger value="overview">能力</TabsTrigger>
+                                        <TabsTrigger value="skills">技能</TabsTrigger>
                                         <TabsTrigger value="evolution">进化</TabsTrigger>
-                                        <TabsTrigger value="bonding">羁绊</TabsTrigger>
                                     </TabsList>
 
                                     {/* Overview Tab */}
                                     <TabsContent value="overview" className="space-y-4">
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg">能力数值</CardTitle>
+                                            <CardHeader className="py-4">
+                                                <CardTitle className="text-base">基础数值系数</CardTitle>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="grid grid-cols-2 gap-4">
-                                                    <div>
-                                                        <div className="text-sm text-muted-foreground">生命值 (HP)</div>
-                                                        <div className="text-2xl font-bold">{selectedCharacter.stats.hp.toLocaleString()}</div>
+                                                {master?.baseParameterCoefficient ? (
+                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">肌肉 (Muscle)</div>
+                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.muscle || 0).toLocaleString()}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">能量 (Energy)</div>
+                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.energy || 0).toLocaleString()}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">智力 (Intelligence)</div>
+                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.intelligence || 0).toLocaleString()}</div>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-xs text-muted-foreground">健康 (Health)</div>
+                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.health || 0).toLocaleString()}</div>
+                                                        </div>
                                                     </div>
-                                                    <div>
-                                                        <div className="text-sm text-muted-foreground">攻击力 (ATK)</div>
-                                                        <div className="text-2xl font-bold">{selectedCharacter.stats.atk.toLocaleString()}</div>
+                                                ) : (
+                                                    <p className="text-sm text-muted-foreground">无法获取基础数值</p>
+                                                )}
+                                                <div className="mt-4 pt-4 border-t space-y-2">
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">当前经验值</span>
+                                                        <span className="font-medium">{selectedCharacter.exp.toLocaleString()}</span>
                                                     </div>
-                                                    <div>
-                                                        <div className="text-sm text-muted-foreground">防御力 (DEF)</div>
-                                                        <div className="text-2xl font-bold">{selectedCharacter.stats.def.toLocaleString()}</div>
-                                                    </div>
-                                                    <div>
-                                                        <div className="text-sm text-muted-foreground">速度 (SPD)</div>
-                                                        <div className="text-2xl font-bold">{selectedCharacter.stats.spd}</div>
+                                                    <div className="flex justify-between text-sm">
+                                                        <span className="text-muted-foreground">锁定状态</span>
+                                                        <span>{selectedCharacter.isLocked ? '🔒 已锁定' : '🔓 未锁定'}</span>
                                                     </div>
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    <Sparkles className="h-5 w-5 text-yellow-500" />
-                                                    技能
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-3">
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge>主动技能</Badge>
-                                                        <span className="font-semibold">神圣之光</span>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">对单体敌人造成150%攻击力的伤害,并附加3回合的灼烧效果。</p>
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant="outline">被动技能</Badge>
-                                                        <span className="font-semibold">元素精通</span>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">战斗开始时,提升全体友军{elementData.name}属性伤害15%。</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg">等级进度</CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-2">
-                                                <div className="flex items-center justify-between text-sm">
-                                                    <span className="text-muted-foreground">当前等级</span>
-                                                    <span className="font-medium">{selectedCharacter.level} / {rarityData.max}</span>
-                                                </div>
-                                                <Progress value={(selectedCharacter.level / rarityData.max) * 100} className="h-2" />
-                                                <p className="text-xs text-muted-foreground">
-                                                    提升等级可以增强角色的各项能力数值
-                                                </p>
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
 
-                                    {/* Equipment Tab */}
-                                    <TabsContent value="equipment" className="space-y-4">
+                                    {/* Skills Tab */}
+                                    <TabsContent value="skills" className="space-y-4">
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    <Shield className="h-5 w-5" />
-                                                    装备槽位
+                                            <CardHeader className="py-4">
+                                                <CardTitle className="text-base flex items-center gap-2">
+                                                    <Sparkles className="h-4 w-4 text-yellow-500" />
+                                                    技能列表
                                                 </CardTitle>
-                                                <CardDescription>装备武具可大幅提升角色战力</CardDescription>
                                             </CardHeader>
                                             <CardContent className="space-y-4">
-                                                <div className="grid gap-4">
-                                                    <div className="flex items-center gap-4 p-4 border rounded-lg">
-                                                        <div className="h-16 w-16 bg-gradient-to-br from-orange-400 to-red-500 rounded-lg flex items-center justify-center text-2xl">
-                                                            ⚔️
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="font-semibold">武器: {classData.name === '战士' ? '烈焰之剑' : classData.name === '法师' ? '元素魔导书' : '风暴长枪'}</div>
-                                                            <div className="text-sm text-muted-foreground">攻击力 +{Math.floor(selectedCharacter.stats.atk * 0.2)}</div>
-                                                            <Badge variant="outline" className="mt-1">Lv.{selectedCharacter.level}</Badge>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 p-4 border rounded-lg">
-                                                        <div className="h-16 w-16 bg-gradient-to-br from-blue-400 to-cyan-500 rounded-lg flex items-center justify-center text-2xl">
-                                                            🛡️
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="font-semibold">防具: 守护之铠</div>
-                                                            <div className="text-sm text-muted-foreground">防御力 +{Math.floor(selectedCharacter.stats.def * 0.2)}, 生命值 +{Math.floor(selectedCharacter.stats.hp * 0.1)}</div>
-                                                            <Badge variant="outline" className="mt-1">Lv.{selectedCharacter.level}</Badge>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex items-center gap-4 p-4 border rounded-lg">
-                                                        <div className="h-16 w-16 bg-gradient-to-br from-purple-400 to-pink-500 rounded-lg flex items-center justify-center text-2xl">
-                                                            💎
-                                                        </div>
-                                                        <div className="flex-1">
-                                                            <div className="font-semibold">饰品: {elementData.name}之护符</div>
-                                                            <div className="text-sm text-muted-foreground">{elementData.name}属性伤害 +15%, 速度 +{Math.floor(selectedCharacter.stats.spd * 0.1)}</div>
-                                                            <Badge variant="outline" className="mt-1">Lv.{selectedCharacter.level}</Badge>
-                                                        </div>
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Badge variant="outline">普通攻击</Badge>
+                                                        <span className="text-sm font-semibold">ID: {master?.normalSkillId}</span>
                                                     </div>
                                                 </div>
+                                                {master?.activeSkillIds?.map((id: number, index: number) => (
+                                                    <div key={`active-${id}`} className="space-y-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge>主动技能 {index + 1}</Badge>
+                                                            <span className="text-sm font-semibold">ID: {id}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                                {master?.passiveSkillIds?.map((id: number, index: number) => (
+                                                    <div key={`passive-${id}`} className="space-y-1">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge variant="secondary">被动技能 {index + 1}</Badge>
+                                                            <span className="text-sm font-semibold">ID: {id}</span>
+                                                        </div>
+                                                    </div>
+                                                ))}
                                             </CardContent>
                                         </Card>
                                     </TabsContent>
@@ -528,92 +576,44 @@ export function CharactersPage() {
                                     {/* Evolution Tab */}
                                     <TabsContent value="evolution" className="space-y-4">
                                         <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    <TrendingUp className="h-5 w-5 text-green-500" />
-                                                    进化路径
+                                            <CardHeader className="py-4">
+                                                <CardTitle className="text-base flex items-center gap-2">
+                                                    <TrendingUp className="h-4 w-4 text-green-500" />
+                                                    稀有度进度
                                                 </CardTitle>
-                                                <CardDescription>使用相同角色或同属性角色作为材料进行进化</CardDescription>
                                             </CardHeader>
                                             <CardContent>
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                                        <span>稀有度进化路径:</span>
-                                                    </div>
-                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                        {['N', 'R', 'R+', 'SR', 'SR+', 'SSR', 'SSR+', 'UR', 'UR+', 'LR'].map((rarity, idx) => {
-                                                            const isCurrentOrPast = ['N', 'R', 'R+', 'SR', 'SR+', 'SSR', 'SSR+', 'UR', 'UR+', 'LR'].indexOf(selectedCharacter.rarity) >= idx;
-                                                            const isCurrent = rarity === selectedCharacter.rarity;
-                                                            return (
-                                                                <div key={rarity} className="flex items-center gap-2">
-                                                                    <Badge
-                                                                        className={`${getRarityData(rarity).color} ${isCurrent ? 'ring-2 ring-offset-2 ring-yellow-500' : ''} ${!isCurrentOrPast && 'opacity-30'}`}
-                                                                    >
-                                                                        {rarity}
-                                                                    </Badge>
-                                                                    {idx < 9 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-                                                                </div>
-                                                            );
-                                                        })}
-                                                    </div>
-                                                    <div className="bg-muted p-4 rounded-lg mt-4">
-                                                        <div className="text-sm font-semibold mb-2">下一阶段进化需求</div>
-                                                        {selectedCharacter.rarity === 'LR' ? (
-                                                            <p className="text-sm text-muted-foreground">已达到最高稀有度</p>
-                                                        ) : (
-                                                            <div className="space-y-1 text-sm text-muted-foreground">
-                                                                <p>• 消耗1个相同{selectedCharacter.rarity}角色</p>
-                                                                <p>• 或消耗5个同属性{selectedCharacter.rarity}角色</p>
-                                                                <p>• 金币: 500,000</p>
+                                                <div className="flex flex-wrap items-center gap-2">
+                                                    {[
+                                                        CharacterRarityFlags.N,
+                                                        CharacterRarityFlags.R,
+                                                        CharacterRarityFlags.RPlus,
+                                                        CharacterRarityFlags.SR,
+                                                        CharacterRarityFlags.SRPlus,
+                                                        CharacterRarityFlags.SSR,
+                                                        CharacterRarityFlags.SSRPlus,
+                                                        CharacterRarityFlags.UR,
+                                                        CharacterRarityFlags.URPlus,
+                                                        CharacterRarityFlags.LR
+                                                    ].map((r, idx) => {
+                                                        const rData = getRarityData(r);
+                                                        const isCurrent = selectedCharacter.rarityFlags === r;
+                                                        const isAchieved = selectedCharacter.rarityFlags >= r;
+                                                        
+                                                        return (
+                                                            <div key={r} className="flex items-center gap-1">
+                                                                <Badge 
+                                                                    className={`${rData.color} ${isCurrent ? 'ring-2 ring-offset-2 ring-primary' : ''} ${!isAchieved ? 'opacity-30' : ''}`}
+                                                                >
+                                                                    {rData.name}
+                                                                </Badge>
+                                                                {idx < 9 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
                                                             </div>
-                                                        )}
-                                                    </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
-
-                                    {/* Bonding Tab */}
-                                    <TabsContent value="bonding" className="space-y-4">
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    <Users className="h-5 w-5 text-blue-500" />
-                                                    等级联结
-                                                </CardTitle>
-                                                <CardDescription>将角色放入等级联结栏位可快速强化</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                                                        <span className="text-sm text-muted-foreground">联结状态</span>
-                                                        <Badge variant="outline">未联结</Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        将角色设置为等级联结对象,可提升至基石角色的最低等级。
-                                                        基石角色为队伍中等级最高的5名角色。
-                                                    </p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        <Card>
-                                            <CardHeader>
-                                                <CardTitle className="text-lg flex items-center gap-2">
-                                                    <Heart className="h-5 w-5 text-pink-500" />
-                                                    最爱
-                                                </CardTitle>
-                                                <CardDescription>可将角色设为最爱,最多可设置5名</CardDescription>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="space-y-3">
-                                                    <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
-                                                        <span className="text-sm text-muted-foreground">最爱状态</span>
-                                                        <Badge variant="outline">未设置</Badge>
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        设为最爱的角色将出现在主页,并播放该角色的抒情诗作为主页BGM。
-                                                    </p>
+                                                <div className="mt-6 p-4 bg-muted rounded-lg border border-dashed">
+                                                    <p className="text-xs text-center text-muted-foreground">更多进化详情和所需材料功能开发中...</p>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -621,17 +621,11 @@ export function CharactersPage() {
                                 </Tabs>
 
                                 <div className="flex gap-3 mt-6">
-                                    <Button className="flex-1" size="lg">
-                                        <Star className="h-4 w-4 mr-2" />
-                                        强化
+                                    <Button className="flex-1" disabled>
+                                        强化 (开发中)
                                     </Button>
-                                    <Button className="flex-1" variant="outline" size="lg">
-                                        <TrendingUp className="h-4 w-4 mr-2" />
-                                        进化
-                                    </Button>
-                                    <Button className="flex-1" variant="outline" size="lg">
-                                        <Shield className="h-4 w-4 mr-2" />
-                                        装备
+                                    <Button className="flex-1" variant="outline" onClick={() => setDetailDialogOpen(false)}>
+                                        关闭
                                     </Button>
                                 </div>
                             </>

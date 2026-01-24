@@ -13,6 +13,9 @@ interface MasterState {
     
     // 获取单条数据 (带内存缓存)
     getRecord: <T>(tableName: string, id: number) => Promise<T | null>;
+
+    // 获取全表数据
+    getTable: <T>(tableName: string) => Promise<T[]>;
 }
 
 // 内存缓存以提高高频访问性能
@@ -70,5 +73,10 @@ export const useMasterStore = create<MasterState>((set, get) => ({
             memoryCache[cacheKey] = data;
         }
         return data;
+    },
+
+    getTable: async <T>(tableName: string): Promise<T[]> => {
+        // 先同步一次元数据（如果需要，这里简单起见假设已经同步或从 DB 取）
+        return await db.getFullTable<T>(tableName);
     }
 }));
