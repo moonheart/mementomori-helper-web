@@ -15,8 +15,8 @@ import {
 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { ortegaApi } from '@/api/ortega-client';
-import { MissionGroupType, MissionStatusType, GetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo } from '@/api/generated';
-import { useMasterData } from '@/hooks/useMasterData';
+import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo, TotalActivityMedalRewardMB } from '@/api/generated';
+import { useMasterData, useMasterTable } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
 
 interface UIStoreMission {
@@ -102,8 +102,10 @@ function MissionRow({ mission, onClaim, isClaiming }: {
 export function MissionsPage() {
     const { currentAccountId } = useAccountStore();
     const [loading, setLoading] = useState(false);
-    const [missionData, setMissionData] = useState<GetMissionInfoResponse | null>(null);
+    const [missionData, setMissionData] = useState<MissionGetMissionInfoResponse | null>(null);
     const [claiming, setClaiming] = useState<Set<number>>(new Set());
+    const [activeTab, setActiveTab] = useState('daily');
+    const { data: totalActivityMedalRewardTable } = useMasterTable<TotalActivityMedalRewardMB>('TotalActivityMedalRewardTable');
 
     // 获取任务信息
     const fetchMissionInfo = async () => {
@@ -152,9 +154,61 @@ export function MissionsPage() {
                 missionGroupType,
                 requiredCount
             });
-            await fetchMissionInfo();
         } catch (error) {
             console.error('Failed to claim activity reward:', error);
+        }
+    };
+
+    // 一键领取所有可领取的奖励
+    const handleClaimAll = async () => {
+        if (!missionData || loading) return;
+
+        setLoading(true);
+        try {
+            // 1. 领取普通任务奖励
+            const allClaimableMissions = [...dailyMissions, ...weeklyMissions, ...mainMissions]
+                .filter(m => m.status === MissionStatusType.NotReceived)
+                .map(m => m.id);
+
+            if (allClaimableMissions.length > 0) {
+                await ortegaApi.mission.rewardMission({
+                    targetMissionIdList: allClaimableMissions
+                });
+            }
+
+            // 2. 领取功勋奖励
+            const claimableMeritBoxes = meritBoxes.filter(box => box.status === MissionActivityRewardStatusType.NotReceived);
+            for (const box of claimableMeritBoxes) {
+                // 目前只处理 Daily 和 Weekly 的功勋
+                await handleClaimActivityReward(MissionGroupType.Daily, box.required);
+            }
+            
+            // 尝试领取周常功勋
+            const weeklyGroupInfo = getGroupInfo(MissionGroupType.Weekly);
+            if (weeklyGroupInfo?.userMissionActivityDtoInfo?.rewardStatusDict) {
+                const weeklyActivityInfo = weeklyGroupInfo.userMissionActivityDtoInfo;
+                const weeklyMeritBoxes = Object.entries(weeklyActivityInfo.rewardStatusDict)
+                    .map(([rewardIdStr, status]) => {
+                        const rewardId = Number(rewardIdStr);
+                        const rewardMb = Object.values(totalActivityMedalRewardTable || {}).find(mb => mb.id === rewardId);
+                        return {
+                            required: rewardMb?.requiredActivityMedalCount ?? 0,
+                            status: Number(status)
+                        };
+                    })
+                    .filter(box => box.status === MissionActivityRewardStatusType.NotReceived);
+                
+                for (const box of weeklyMeritBoxes) {
+                    await handleClaimActivityReward(MissionGroupType.Weekly, box.required);
+                }
+            }
+
+            // 刷新数据
+            await fetchMissionInfo();
+        } catch (error) {
+            console.error('Failed to claim all rewards:', error);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -231,22 +285,34 @@ export function MissionsPage() {
     const weeklyMissions = useMemo(() => mapMissions(MissionGroupType.Weekly), [missionData]);
     const mainMissions = useMemo(() => mapMissions(MissionGroupType.Main), [missionData]);
 
-    const activityInfo = useMemo(() => getGroupInfo(MissionGroupType.Daily)?.userMissionActivityDtoInfo, [missionData]);
+    const currentGroupType = activeTab === 'daily' ? MissionGroupType.Daily :
+                           activeTab === 'weekly' ? MissionGroupType.Weekly :
+                           MissionGroupType.Main;
+
+    const activityInfo = useMemo(() => getGroupInfo(currentGroupType)?.userMissionActivityDtoInfo, [missionData, currentGroupType]);
     const totalMerit = activityInfo?.progressCount || 0;
     
     // 功勋宝箱
     const meritBoxes = useMemo(() => {
-        if (!activityInfo?.rewardStatusDict) return [];
-        
+        if (!activityInfo?.rewardStatusDict || !totalActivityMedalRewardTable) return [];
+
+        const tableArray = Object.values(totalActivityMedalRewardTable);
+
         return Object.entries(activityInfo.rewardStatusDict)
-            .map(([count, status]) => ({
-                id: Number(count),
-                required: Number(count),
-                status: Number(status),
-                claimed: Number(status) === MissionActivityRewardStatusType.Received
-            }))
+            .map(([rewardIdStr, status]) => {
+                const rewardId = Number(rewardIdStr);
+                const rewardMb = tableArray.find(mb => mb.id === rewardId);
+                const required = rewardMb?.requiredActivityMedalCount ?? 0;
+
+                return {
+                    id: rewardId,
+                    required: required,
+                    status: Number(status),
+                    claimed: Number(status) === MissionActivityRewardStatusType.Received
+                };
+            })
             .sort((a, b) => a.required - b.required);
-    }, [activityInfo]);
+    }, [activityInfo, totalActivityMedalRewardTable]);
 
     if (!currentAccountId) {
         return (
@@ -280,7 +346,8 @@ export function MissionsPage() {
                     <p className="text-muted-foreground mt-1">完成任务获取丰厚奖励</p>
                 </div>
                 <div className="flex gap-2">
-                    <Button onClick={() => ortegaApi.mission.rewardMission({ targetMissionIdList: [] })} variant="secondary">
+                    <Button onClick={handleClaimAll} variant="secondary" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         一键领取
                     </Button>
                     <Button onClick={fetchMissionInfo} disabled={loading} variant="outline">
@@ -322,7 +389,12 @@ export function MissionsPage() {
                                             ? 'bg-yellow-100 border-yellow-400 text-yellow-800 cursor-pointer hover:scale-105'
                                             : 'bg-muted border-transparent'
                                         }`}
-                                    onClick={() => canOpen && handleClaimActivityReward(MissionGroupType.Daily, box.required)}
+                                    onClick={() => {
+                                        if (canOpen) {
+                                            handleClaimActivityReward(currentGroupType, box.required)
+                                                .then(() => fetchMissionInfo());
+                                        }
+                                    }}
                                 >
                                     <div className="text-xl mb-1">
                                         {box.claimed ? '✅' : canOpen ? '🎁' : '🔒'}
@@ -335,7 +407,7 @@ export function MissionsPage() {
                 </CardContent>
             </Card>
 
-            <Tabs defaultValue="daily">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full max-w-md grid-cols-3">
                     <TabsTrigger value="daily">每日</TabsTrigger>
                     <TabsTrigger value="weekly">每周</TabsTrigger>
