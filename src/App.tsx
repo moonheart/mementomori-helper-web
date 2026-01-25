@@ -31,6 +31,13 @@ function App() {
   useEffect(() => {
     fetchResources(currentLanguage);
     syncMasterData();
+    
+    // 清理旧的 translation 存储 (localStorage)
+    // 之前使用 useTranslationStore 时 persist 存储的名称是 'mementomori-translation'
+    if (localStorage.getItem('mementomori-translation')) {
+      console.log('Cleaning up legacy translation storage...');
+      localStorage.removeItem('mementomori-translation');
+    }
   }, [currentLanguage, fetchResources, syncMasterData]);
 
   return (

@@ -13,16 +13,43 @@ export interface MasterRecord {
     data: any;
 }
 
+export interface TranslationRecord {
+    lang: string;
+    resources: Record<string, string>;
+    lastUpdated: number;
+}
+
 export class MementoMoriDB extends Dexie {
     meta!: Table<MasterMeta>;
     masterData!: Table<MasterRecord>;
+    translations!: Table<TranslationRecord>;
 
     constructor() {
         super('MementoMoriDB');
-        this.version(1).stores({
+        this.version(2).stores({
             meta: 'tableName',
-            masterData: 'table_id, tableName, id'
+            masterData: 'table_id, tableName, id',
+            translations: 'lang'
         });
+    }
+
+    /**
+     * 保存翻译资源
+     */
+    async saveTranslations(lang: string, resources: Record<string, string>) {
+        await this.translations.put({
+            lang,
+            resources,
+            lastUpdated: Date.now()
+        });
+    }
+
+    /**
+     * 获取翻译资源
+     */
+    async getTranslations(lang: string): Promise<Record<string, string> | null> {
+        const record = await this.translations.get(lang);
+        return record ? record.resources : null;
     }
 
     /**

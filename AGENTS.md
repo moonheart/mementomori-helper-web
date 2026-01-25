@@ -10,6 +10,10 @@
 - **后端**: `api/MementoMori.Api` (ASP.NET Core)
 - **游戏数据**: `api/MementoMori.Ortega` (从 il2cpp 提取的游戏代码)
 
+## 游戏规则
+
+参考 `docs\提取的游戏内帮助文档.md`.
+
 ## 项目结构
 
 ```

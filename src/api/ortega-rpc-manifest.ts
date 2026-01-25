@@ -44,11 +44,13 @@ import type {
     BattleRewardAutoBattleRequest,
     BattleRewardAutoBattleResponse,
     BountyQuestGetListRequest,
+    BountyQuestGetListResponse,
     BountyQuestRemakeRequest,
     BountyQuestRemakeResponse,
     BountyQuestRewardRequest,
     BountyQuestRewardResponse,
     BountyQuestStartRequest,
+    BountyQuestStartResponse,
     CharacterGetCharacterStoryRewardRequest,
     CharacterGetCharacterStoryRewardResponse,
     CharacterGetDetailsInfoRequest,
@@ -130,6 +132,7 @@ import type {
     GachaDrawRequest,
     GachaDrawResponse,
     GachaGetListRequest,
+    GachaGetListResponse,
     GachaGetLotteryItemListRequest,
     GachaGetLotteryItemListResponse,
     GachaSetSelectListRequest,
@@ -205,6 +208,7 @@ import type {
     NoticeGetNoticeInfoListRequest,
     NoticeGetNoticeInfoListResponse,
     PresentGetListRequest,
+    PresentGetListResponse,
     PresentReceiveItemRequest,
     PresentReceiveItemResponse,
     QuestGetQuestInfoRequest,
@@ -218,6 +222,7 @@ import type {
     ShopBuyProductRequest,
     ShopBuyProductResponse,
     ShopGetListRequest,
+    ShopGetListResponse,
     ShopGetProductListRequest,
     ShopGetProductListResponse,
     ShopReceiveRewardRequest,
@@ -327,7 +332,7 @@ export interface OrtegaRpcMap {
     };
     "bountyQuest/getList": {
         request: BountyQuestGetListRequest;
-        response: TradeShopGetListResponse;
+        response: BountyQuestGetListResponse;
     };
     "bountyQuest/remake": {
         request: BountyQuestRemakeRequest;
@@ -339,7 +344,7 @@ export interface OrtegaRpcMap {
     };
     "bountyQuest/start": {
         request: BountyQuestStartRequest;
-        response: TowerBattleStartResponse;
+        response: BountyQuestStartResponse;
     };
     "character/getCharacterStoryReward": {
         request: CharacterGetCharacterStoryRewardRequest;
@@ -503,7 +508,7 @@ export interface OrtegaRpcMap {
     };
     "gacha/getList": {
         request: GachaGetListRequest;
-        response: TradeShopGetListResponse;
+        response: GachaGetListResponse;
     };
     "gacha/getLotteryItemList": {
         request: GachaGetLotteryItemListRequest;
@@ -655,7 +660,7 @@ export interface OrtegaRpcMap {
     };
     "present/getList": {
         request: PresentGetListRequest;
-        response: TradeShopGetListResponse;
+        response: PresentGetListResponse;
     };
     "present/receiveItem": {
         request: PresentReceiveItemRequest;
@@ -683,7 +688,7 @@ export interface OrtegaRpcMap {
     };
     "shop/getList": {
         request: ShopGetListRequest;
-        response: TradeShopGetListResponse;
+        response: ShopGetListResponse;
     };
     "shop/getProductList": {
         request: ShopGetProductListRequest;

@@ -1,45 +1,22 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { localizationApi } from '@/api/localization-service';
+import { useCallback } from 'react';
+import { useLocalizationStore } from '@/store/localization-store';
 
-interface TranslationState {
-    resources: Record<string, string>;
-    language: string;
-    loading: boolean;
-    setLanguage: (lang: string) => Promise<void>;
-    t: (key: string | undefined | null) => string;
-}
-
-export const useTranslationStore = create<TranslationState>()(
-    persist(
-        (set, get) => ({
-            resources: {},
-            language: 'zhCN',
-            loading: false,
-            setLanguage: async (lang: string) => {
-                set({ loading: true });
-                try {
-                    const resources = await localizationApi.getResources(lang);
-                    set({ resources, language: lang });
-                } catch (error) {
-                    console.error('Failed to load localization:', error);
-                } finally {
-                    set({ loading: false });
-                }
-            },
-            t: (key: string | undefined | null) => {
-                if (!key) return '';
-                return get().resources[key] || key;
-            }
-        }),
-        {
-            name: 'mementomori-translation',
-            partialize: (state) => ({ language: state.language, resources: state.resources }),
-        }
-    )
-);
-
+/**
+ * useTranslation Hook
+ * 统一封装 useLocalizationStore，为现有组件提供兼容接口
+ */
 export function useTranslation() {
-    const { t, language, loading, setLanguage } = useTranslationStore();
-    return { t, language, loading, setLanguage };
+    const t = useLocalizationStore(state => state.t);
+    const language = useLocalizationStore(state => state.currentLanguage);
+    const loading = useLocalizationStore(state => state.isLoading);
+    const setLanguage = useLocalizationStore(state => state.setLanguage);
+
+    const translate = useCallback((key: string | undefined | null, params?: unknown[]) => t(key, params), [t]);
+
+    return {
+        t: translate,
+        language,
+        loading,
+        setLanguage
+    };
 }
