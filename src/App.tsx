@@ -13,7 +13,7 @@ import { WishingFountainPage } from './pages/WishingFountainPage';
 import { MissionsPage } from './pages/MissionsPage';
 import { ShopPage } from './pages/ShopPage';
 import { GachaPage } from './pages/GachaPage';
-import { ArenaPage } from './pages/ArenaPage';
+import { PVPPage } from './pages/PVPPage';
 import { GuildPage } from './pages/GuildPage';
 import { DungeonPage } from './pages/DungeonPage';
 import { TimeSpaceCavePage } from './pages/TimeSpaceCavePage';
@@ -57,7 +57,7 @@ function App() {
           <Route path="/missions" element={<MissionsPage />} />
           <Route path="/shop" element={<ShopPage />} />
           <Route path="/gacha" element={<GachaPage />} />
-          <Route path="/pvp" element={<ArenaPage />} />
+          <Route path="/pvp" element={<PVPPage />} />
           <Route path="/guild" element={<GuildPage />} />
           <Route path="/dungeon" element={<DungeonPage />} />
           <Route path="/cave" element={<TimeSpaceCavePage />} />
