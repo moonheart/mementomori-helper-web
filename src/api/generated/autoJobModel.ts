@@ -17,6 +17,7 @@ export class AutoJobModel {
     autoDeployGuildDefense: boolean;
     autoChangeGachaRelic: boolean;
     autoDrawGachaRelic: boolean;
+    autoBuyShopItem: boolean;
     dailyJobCron: string = "0 50 4 ? * *";
     hourlyJobCron: string = "0 30 0,4,8,12,16,20 ? * *";
     pvpJobCron: string = "0 0 20 ? * *";

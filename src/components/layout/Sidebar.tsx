@@ -1,4 +1,4 @@
-import { Home, Users, Package, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost } from 'lucide-react';
+import { Home, Users, Package, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -13,6 +13,11 @@ const navItems: NavItem[] = [
         title: '每日清单',
         href: '/dashboard',
         icon: Home
+    },
+    {
+        title: '托管管理',
+        href: '/automation',
+        icon: Bot
     },
     {
         title: '角色',
