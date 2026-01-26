@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMasterStore } from '@/store/masterStore';
-import { getItemName, ItemMasterTables } from '@/lib/itemUtils';
+import { getItemName as getItemNameRaw, ItemMasterTables } from '@/lib/itemUtils';
 import { ItemType } from '@/api/generated/itemType';
 import {
     ItemMB,
@@ -75,14 +75,18 @@ export function useItemName() {
         loadTables();
     }, [getTable]);
 
-    const getName = (itemType: ItemType, itemId: number) => {
+    /**
+     * 获取道具名称
+     */
+    const getItemName = useCallback((itemType: ItemType, itemId: number) => {
         if (isLoading) return `道具 ${itemId}...`;
-        return getItemName(itemType, itemId, masterTables, t);
-    };
+        return getItemNameRaw(itemType, itemId, masterTables, t);
+    }, [isLoading, masterTables, t]);
 
     return {
-        getName,
+        getItemName,
         isLoading,
-        masterTables // 暴露出去以便其他用途
+        masterTables, // 暴露出去以便其他用途
+        t // 暴露 t 方便组件使用
     };
 }

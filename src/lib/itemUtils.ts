@@ -35,6 +35,18 @@ export function getItemName(
     masterTables: ItemMasterTables,
     t: (key: string | undefined | null, params?: unknown[]) => string
 ): string {
+    return formatItemName(itemType, itemId, masterTables, t);
+}
+
+/**
+ * 内部实现，用于格式化道具名称
+ */
+function formatItemName(
+    itemType: ItemType,
+    itemId: number,
+    masterTables: ItemMasterTables,
+    t: (key: string | undefined | null, params?: unknown[]) => string
+): string {
     switch (itemType) {
         case ItemType.CurrencyFree:
         case ItemType.CurrencyPaid:

@@ -1,186 +1,252 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Bell, User, Volume2, Info } from 'lucide-react';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { User, Settings, Swords, Users, ShoppingBag, Loader2 } from 'lucide-react';
+import { useAccountStore } from '@/store/accountStore';
+import { settingsApi } from '@/api/settings-service';
+import { useToast } from '@/hooks/use-toast';
+
+// 导入生成的配置类型
+import { AutoJobModel } from '@/api/generated/autoJobModel';
+import { PvpOption } from '@/api/generated/pvpOption';
+import { DungeonBattleConfig } from '@/api/generated/dungeonBattleConfig';
+import { FriendManageOption } from '@/api/generated/friendManageOption';
+import { LocalRaidConfig } from '@/api/generated/localRaidConfig';
+import { BountyQuestOption } from '@/api/generated/bountyQuestOption';
+import { BountyQuestAutoConfig } from '@/api/generated/bountyQuestAutoConfig';
+import { ShopConfig } from '@/api/generated/shopConfig';
+import { GachaConfigModel } from '@/api/generated/gachaConfigModel';
+import { ItemsConfig } from '@/api/generated/itemsConfig';
+import { GuildTowerOption } from '@/api/generated/guildTowerOption';
+
+// 导入子模块组件
+import { AutomationSection } from '@/components/settings/AutomationSection';
+import { BattleSection } from '@/components/settings/BattleSection';
+import { SocialSection } from '@/components/settings/SocialSection';
+import { ResourceSection } from '@/components/settings/ResourceSection';
+import { MiscSection } from '@/components/settings/MiscSection';
 
 export function SettingsPage() {
+    const { currentAccountId, accounts } = useAccountStore();
+    const { toast } = useToast();
+    const [loading, setLoading] = useState(false);
+    const [activeAccountName, setActiveAccountName] = useState('');
+
+    // 各模块配置状态
+    const [autoJob, setAutoJob] = useState<AutoJobModel>(() => ({ ...new AutoJobModel() }));
+    const [battleLeague, setBattleLeague] = useState<PvpOption>(() => ({ ...new PvpOption() }));
+    const [legendLeague, setLegendLeague] = useState<PvpOption>(() => ({ ...new PvpOption() }));
+    const [dungeonBattle, setDungeonBattle] = useState<DungeonBattleConfig>(() => ({ ...new DungeonBattleConfig() }));
+    const [friendManage, setFriendManage] = useState<FriendManageOption>(() => ({ ...new FriendManageOption() }));
+    const [localRaid, setLocalRaid] = useState<LocalRaidConfig>(() => ({ ...new LocalRaidConfig() }));
+    const [bountyQuest, setBountyQuest] = useState<BountyQuestOption>(() => ({ ...new BountyQuestOption() }));
+    const [bountyQuestAuto, setBountyQuestAuto] = useState<BountyQuestAutoConfig>(() => ({ ...new BountyQuestAutoConfig() }));
+    const [shop, setShop] = useState<ShopConfig>(() => ({ ...new ShopConfig() }));
+    const [gacha, setGacha] = useState<GachaConfigModel>(() => ({ ...new GachaConfigModel() }));
+    const [items, setItems] = useState<ItemsConfig>(() => ({ ...new ItemsConfig() }));
+    const [guildTower, setGuildTower] = useState<GuildTowerOption>(() => ({ ...new GuildTowerOption() }));
+
+    // 加载配置数据
+    const loadSettings = useCallback(async (userId: number) => {
+        setLoading(true);
+        try {
+            const [
+                autoJobData,
+                battleLeagueData,
+                legendLeagueData,
+                dungeonBattleData,
+                friendManageData,
+                localRaidData,
+                bountyQuestData,
+                bountyQuestAutoData,
+                shopData,
+                gachaData,
+                itemsData,
+                guildTowerData
+            ] = await Promise.all([
+                settingsApi.getSetting<AutoJobModel>(userId, 'autojob'),
+                settingsApi.getSetting<PvpOption>(userId, 'battleleague'),
+                settingsApi.getSetting<PvpOption>(userId, 'legendleague'),
+                settingsApi.getSetting<DungeonBattleConfig>(userId, 'dungeonbattle'),
+                settingsApi.getSetting<FriendManageOption>(userId, 'friendmanage'),
+                settingsApi.getSetting<LocalRaidConfig>(userId, 'localraid'),
+                settingsApi.getSetting<BountyQuestOption>(userId, 'bountyquest'),
+                settingsApi.getSetting<BountyQuestAutoConfig>(userId, 'bountyquestauto'),
+                settingsApi.getSetting<ShopConfig>(userId, 'shop'),
+                settingsApi.getSetting<GachaConfigModel>(userId, 'gachaconfig'),
+                settingsApi.getSetting<ItemsConfig>(userId, 'items'),
+                settingsApi.getSetting<GuildTowerOption>(userId, 'guildtower')
+            ]);
+
+            if (autoJobData) setAutoJob(autoJobData);
+            if (battleLeagueData) setBattleLeague(battleLeagueData);
+            if (legendLeagueData) setLegendLeague(legendLeagueData);
+            if (dungeonBattleData) setDungeonBattle(dungeonBattleData);
+            if (friendManageData) setFriendManage(friendManageData);
+            if (localRaidData) setLocalRaid(localRaidData);
+            if (bountyQuestData) setBountyQuest(bountyQuestData);
+            if (bountyQuestAutoData) setBountyQuestAuto(bountyQuestAutoData);
+            if (shopData) setShop(shopData);
+            if (gachaData) setGacha(gachaData);
+            if (itemsData) setItems(itemsData);
+            if (guildTowerData) setGuildTower(guildTowerData);
+
+            const account = accounts.find(a => a.userId === userId);
+            setActiveAccountName(account?.name || `账户 ${userId}`);
+        } catch (error) {
+            console.error('Failed to load settings:', error);
+            toast({
+                variant: 'destructive',
+                title: '获取配置失败',
+                description: '无法从服务器加载账户配置。'
+            });
+        } finally {
+            setLoading(false);
+        }
+    }, [accounts, toast]);
+
+    useEffect(() => {
+        if (currentAccountId) {
+            loadSettings(currentAccountId);
+        }
+    }, [currentAccountId, loadSettings]);
+
+    // 保存配置处理
+    const handleSave = async (key: string, value: unknown) => {
+        if (!currentAccountId) return;
+        try {
+            await settingsApi.saveSetting(currentAccountId, key, value);
+            toast({
+                title: '保存成功',
+                description: `配置项 [${key}] 已更新。`,
+            });
+        } catch (error) {
+            console.error(`Failed to save setting ${key}:`, error);
+            toast({
+                variant: 'destructive',
+                title: '保存失败',
+                description: `无法更新配置项 [${key}]。`
+            });
+        }
+    };
+
+    if (!currentAccountId) {
+        return (
+            <div className="flex h-[450px] items-center justify-center">
+                <Card className="w-[420px]">
+                    <CardHeader className="text-center">
+                        <CardTitle>未选择账户</CardTitle>
+                        <CardDescription>请先在账户页面选择一个要配置的账户</CardDescription>
+                    </CardHeader>
+                </Card>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
-            {/* Page Header */}
-            <div>
-                <h1 className="text-3xl font-bold">设置</h1>
-                <p className="text-muted-foreground">管理应用设置和偏好</p>
+        <div className="space-y-6 pb-12">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold">账户配置</h1>
+                    <p className="text-muted-foreground">正在配置账户: <span className="text-primary font-medium">{activeAccountName}</span></p>
+                </div>
+                {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
             </div>
 
-            {/* Settings Tabs */}
-            <Tabs defaultValue="account">
-                <TabsList className="grid w-full max-w-2xl grid-cols-4">
+            <Tabs defaultValue="automation" className="w-full">
+                <TabsList className="grid w-full max-w-3xl grid-cols-5">
+                    <TabsTrigger value="automation">
+                        <Settings className="mr-2 h-4 w-4" />
+                        自动化
+                    </TabsTrigger>
+                    <TabsTrigger value="battle">
+                        <Swords className="mr-2 h-4 w-4" />
+                        战斗策略
+                    </TabsTrigger>
+                    <TabsTrigger value="resources">
+                        <ShoppingBag className="mr-2 h-4 w-4" />
+                        资源获取
+                    </TabsTrigger>
+                    <TabsTrigger value="social">
+                        <Users className="mr-2 h-4 w-4" />
+                        社交管理
+                    </TabsTrigger>
                     <TabsTrigger value="account">
                         <User className="mr-2 h-4 w-4" />
-                        账号
-                    </TabsTrigger>
-                    <TabsTrigger value="notifications">
-                        <Bell className="mr-2 h-4 w-4" />
-                        通知
-                    </TabsTrigger>
-                    <TabsTrigger value="game">
-                        <Volume2 className="mr-2 h-4 w-4" />
-                        游戏
-                    </TabsTrigger>
-                    <TabsTrigger value="about">
-                        <Info className="mr-2 h-4 w-4" />
-                        关于
+                        基础设置
                     </TabsTrigger>
                 </TabsList>
 
-                {/* Account Settings */}
-                <TabsContent value="account" className="space-y-4 mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>账号信息</CardTitle>
-                            <CardDescription>管理你的账号设置</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <Button variant="outline" className="w-full justify-start">
-                                修改密码
-                            </Button>
-                            <Button variant="outline" className="w-full justify-start">
-                                绑定邮箱
-                            </Button>
-                            <Button variant="outline" className="w-full justify-start">
-                                账号安全设置
-                            </Button>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                <div className="mt-6">
+                    <TabsContent value="automation">
+                        <AutomationSection 
+                            config={autoJob} 
+                            onChange={(cfg) => { setAutoJob(cfg); handleSave('autojob', cfg); }}
+                            onResetCron={(key) => {
+                                const defaultModel = new AutoJobModel();
+                                const newCfg = { ...autoJob, [key]: defaultModel[key as keyof AutoJobModel] };
+                                setAutoJob(newCfg as AutoJobModel);
+                                handleSave('autojob', newCfg);
+                            }}
+                        />
+                    </TabsContent>
 
-                {/* Notification Settings */}
-                <TabsContent value="notifications" className="space-y-4 mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>通知设置</CardTitle>
-                            <CardDescription>管理通知偏好</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>体力恢复满提醒</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        当体力恢复满时通知你
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>任务完成提醒</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        任务完成时通知你
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>公会活动提醒</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        公会活动开始时通知你
-                                    </p>
-                                </div>
-                                <Switch />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>系统公告</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        接收游戏系统公告
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                    <TabsContent value="battle">
+                        <BattleSection 
+                            battleLeague={battleLeague}
+                            legendLeague={legendLeague}
+                            dungeonBattle={dungeonBattle}
+                            onUpdatePvp={(key, cfg) => {
+                                if (key === 'battleLeague') {
+                                    setBattleLeague(cfg);
+                                    handleSave('battleleague', cfg);
+                                } else {
+                                    setLegendLeague(cfg);
+                                    handleSave('legendleague', cfg);
+                                }
+                            }}
+                            onUpdateDungeon={(cfg) => {
+                                setDungeonBattle(cfg);
+                                handleSave('dungeonbattle', cfg);
+                            }}
+                        />
+                    </TabsContent>
 
-                {/* Game Settings */}
-                <TabsContent value="game" className="space-y-4 mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>游戏设置</CardTitle>
-                            <CardDescription>调整游戏体验</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>背景音乐</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        启用背景音乐
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>音效</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        启用游戏音效
-                                    </p>
-                                </div>
-                                <Switch defaultChecked />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>跳过动画</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        跳过战斗和技能动画
-                                    </p>
-                                </div>
-                                <Switch />
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>自动战斗</Label>
-                                    <p className="text-sm text-muted-foreground">
-                                        默认开启自动战斗
-                                    </p>
-                                </div>
-                                <Switch />
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                    <TabsContent value="resources">
+                        <ResourceSection 
+                            shop={shop}
+                            gacha={gacha}
+                            items={items}
+                            onUpdateShop={(cfg) => { setShop(cfg); handleSave('shop', cfg); }}
+                            onUpdateGacha={(cfg) => { setGacha(cfg); handleSave('gachaconfig', cfg); }}
+                            onUpdateItems={(cfg) => { setItems(cfg); handleSave('items', cfg); }}
+                        />
+                    </TabsContent>
 
-                {/* About */}
-                <TabsContent value="about" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>关于</CardTitle>
-                            <CardDescription>应用信息</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">版本</span>
-                                <span className="font-semibold">1.0.0</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-muted-foreground">最后更新</span>
-                                <span className="font-semibold">2026-01-20</span>
-                            </div>
-                            <div className="pt-4">
-                                <Button variant="outline" className="w-full">
-                                    检查更新
-                                </Button>
-                            </div>
-                            <div className="pt-4 border-t">
-                                <p className="text-sm text-muted-foreground text-center">
-                                    © 2026 MementoMori. All rights reserved.
-                                </p>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                    <TabsContent value="social">
+                        <SocialSection
+                            friendManage={friendManage}
+                            localRaid={localRaid}
+                            bountyQuest={bountyQuest}
+                            bountyQuestAuto={bountyQuestAuto}
+                            onUpdateFriends={(cfg) => { setFriendManage(cfg); handleSave('friendmanage', cfg); }}
+                            onUpdateLocalRaid={(cfg) => { setLocalRaid(cfg); handleSave('localraid', cfg); }}
+                            onUpdateBounty={(cfg) => {
+                                setBountyQuest(cfg.option);
+                                handleSave('bountyquest', cfg.option);
+                                setBountyQuestAuto(cfg.auto);
+                                handleSave('bountyquestauto', cfg.auto);
+                            }}
+                        />
+                    </TabsContent>
+
+                    <TabsContent value="account">
+                        <MiscSection
+                            guildTower={guildTower}
+                            onUpdateGuildTower={(cfg) => { setGuildTower(cfg); handleSave('guildtower', cfg); }}
+                        />
+                    </TabsContent>
+                </div>
             </Tabs>
         </div>
     );

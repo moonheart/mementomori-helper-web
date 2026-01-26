@@ -20,10 +20,10 @@ import {
 import { ortegaApi } from '@/api/ortega-client';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useMasterTable } from '@/hooks/useMasterData';
+import { useItemName } from '@/hooks/useItemName';
+import { ItemType } from '@/api/generated/itemType';
 import { BountyQuestType } from '@/api/generated/bountyQuestType';
 import { BountyQuestRarityFlags } from '@/api/generated/bountyQuestRarityFlags';
-import { ItemMB } from '@/api/generated/itemMB';
 import { ElementType } from '@/api/generated/elementType';
 import { CharacterRarityFlags } from '@/api/generated/characterRarityFlags';
 import { BountyQuestConditionType } from '@/api/generated/bountyQuestConditionType';
@@ -47,6 +47,7 @@ interface ProcessedQuest {
         count: number;
     }[];
     rewards: {
+        itemType: ItemType;
         itemId: number;
         count: number;
     }[];
@@ -63,7 +64,7 @@ export function WishingFountainPage() {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [now, setNow] = useState(Math.floor(Date.now() / 1000));
 
-    const { data: itemMaster } = useMasterTable<ItemMB[]>('ItemMB');
+    const { getItemName } = useItemName();
 
     const fetchQuests = useCallback(async (silent = false) => {
         try {
@@ -117,6 +118,7 @@ export function WishingFountainPage() {
                         count: c.requireCount
                     })),
                     rewards: tpl.rewardItems.map((r: UserItem) => ({
+                        itemType: r.itemType,
                         itemId: r.itemId,
                         count: r.itemCount
                     })),
@@ -217,10 +219,6 @@ export function WishingFountainPage() {
         return `${s}秒`;
     };
 
-    const getItemName = (id: number) => {
-        const item = itemMaster?.find(i => i.itemId === id);
-        return item ? (t(item.nameKey) || item.displayName) : `道具ID:${id}`;
-    };
 
     const renderQuestCard = (quest: ProcessedQuest) => (
         <Card key={quest.id} className={`hover:shadow-lg transition-shadow ${quest.type === BountyQuestType.Team ? 'border-2 border-primary/20' : ''}`}>
@@ -282,7 +280,7 @@ export function WishingFountainPage() {
                         {quest.rewards.map((reward, index) => (
                             <Badge key={index} variant="secondary">
                                 <Trophy className="h-3 w-3 mr-1" />
-                                {getItemName(reward.itemId)} x{reward.count}
+                                {getItemName(reward.itemType, reward.itemId)} x{reward.count}
                             </Badge>
                         ))}
                     </div>
@@ -447,7 +445,7 @@ export function WishingFountainPage() {
                                                 {q.rewards.map((reward, index) => (
                                                     <Badge key={index} variant="secondary" className="text-base py-1">
                                                         <Trophy className="h-4 w-4 mr-2" />
-                                                        {getItemName(reward.itemId)} x{reward.count}
+                                                        {getItemName(reward.itemType, reward.itemId)} x{reward.count}
                                                     </Badge>
                                                 ))}
                                             </div>
