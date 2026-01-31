@@ -41,7 +41,7 @@ export function DashboardPage() {
 
     const formatTimestamp = (timestamp: number) => {
         if (!timestamp) return '-';
-        return new Date(timestamp * 1000).toLocaleString('zh-CN', {
+        return new Date(timestamp).toLocaleString('zh-CN', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',

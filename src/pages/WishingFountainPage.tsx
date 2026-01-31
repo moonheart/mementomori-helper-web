@@ -15,12 +15,16 @@ import {
     Timer,
     Send,
     Loader2,
-    Star
+    CheckCircle2,
+    Flashlight
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
+import { bountyQuestService } from '@/api/bounty-quest-service';
 import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useItemName } from '@/hooks/useItemName';
+import { useMasterTable } from '@/hooks/useMasterData';
+import { timeManager } from '@/lib/time-manager';
 import { ItemType } from '@/api/generated/itemType';
 import { BountyQuestType } from '@/api/generated/bountyQuestType';
 import { BountyQuestRarityFlags } from '@/api/generated/bountyQuestRarityFlags';
@@ -31,6 +35,7 @@ import { BountyQuestInfo } from '@/api/generated/bountyQuestInfo';
 import { UserBountyQuestDtoInfo } from '@/api/generated/userBountyQuestDtoInfo';
 import { BountyQuestConditionInfo } from '@/api/generated/bountyQuestConditionInfo';
 import { UserItem } from '@/api/generated/userItem';
+import { TimeServerMB } from '@/api/generated/timeServerMB';
 
 interface ProcessedQuest {
     id: number;
@@ -39,6 +44,7 @@ interface ProcessedQuest {
     rarity: BountyQuestRarityFlags;
     startTime: number;
     endTime: number;
+    rewardEndTime: number;
     isReward: boolean;
     requirements: {
         type: BountyQuestConditionType;
@@ -51,20 +57,41 @@ interface ProcessedQuest {
         itemId: number;
         count: number;
     }[];
-    status: 'available' | 'ongoing' | 'completed';
-    remainingSeconds: number;
+    status: 'NotStarted' | 'OnGoing' | 'NotReceived' | 'Received';
+    remainingMs: number;
     progress: number;
-    durationSeconds: number;
+    durationMs: number;
 }
 
 export function WishingFountainPage() {
     const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
+    const [dispatching, setDispatching] = useState<number | string | null>(null);
     const [quests, setQuests] = useState<ProcessedQuest[]>([]);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const [now, setNow] = useState(Math.floor(Date.now() / 1000));
-
+    const [serverTime, setServerTime] = useState(timeManager.getServerNowMs());
+    
+    const { data: timeServers } = useMasterTable<TimeServerMB[]>('TimeServerMB');
     const { getItemName } = useItemName();
+
+    // 初始化服务器时间偏移
+    useEffect(() => {
+        const initTime = async () => {
+            try {
+                const res = await ortegaApi.user.getUserData({});
+                if (res.userSyncData && timeServers) {
+                    const ts = timeServers.find(s => s.timeServerType === res.userSyncData?.timeServerId);
+                    if (ts) {
+                        timeManager.setDiffFromUtc(ts.differenceDateTimeFromUtc);
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to init time manager:', error);
+            }
+        };
+        if (timeServers) {
+            initTime();
+        }
+    }, [timeServers]);
 
     const fetchQuests = useCallback(async (silent = false) => {
         try {
@@ -74,42 +101,49 @@ export function WishingFountainPage() {
             const templates: BountyQuestInfo[] = response.bountyQuestInfos || [];
             const userQuests: UserBountyQuestDtoInfo[] = response.userBountyQuestDtoInfos || [];
 
-            const currentTime = Math.floor(Date.now() / 1000);
+            const nowMs = timeManager.getServerNowMs();
 
             const processed = templates.map((tpl: BountyQuestInfo) => {
                 const instance = userQuests.find((uq: UserBountyQuestDtoInfo) => uq.bountyQuestId === tpl.bountyQuestId);
                 
-                let status: ProcessedQuest['status'] = 'available';
+                let status: ProcessedQuest['status'] = 'NotStarted';
                 let startTime = 0;
                 let endTime = 0;
+                let rewardEndTime = 0;
                 let isReward = false;
 
                 if (instance) {
                     startTime = instance.bountyQuestLimitStartTime;
                     endTime = instance.bountyQuestEndTime;
+                    rewardEndTime = instance.rewardEndTime;
                     isReward = instance.isReward;
 
-                    if (isReward) {
-                        status = 'available'; // 已领取完奖励的任务在UI上标记为可派遣（虽然实际上可能需要等到刷新）
-                    } else if (currentTime >= endTime) {
-                        status = 'completed';
-                    } else {
-                        status = 'ongoing';
+                    if (endTime > 0) {
+                        if (nowMs < endTime) {
+                            status = 'OnGoing';
+                        } else if (!isReward) {
+                            status = 'NotReceived';
+                        } else {
+                            status = 'Received';
+                        }
                     }
                 }
 
-                const durationSeconds = tpl.bountyQuestClearTime;
-                const remainingSeconds = Math.max(0, endTime - currentTime);
-                const progress = status === 'completed' ? 100 : 
-                           status === 'ongoing' ? Math.min(100, Math.floor(((durationSeconds - remainingSeconds) / durationSeconds) * 100)) : 0;
+                const durationMs = tpl.bountyQuestClearTime;
+                const remainingMs = status === 'OnGoing' ? Math.max(0, endTime - nowMs) :
+                                   status === 'NotReceived' ? Math.max(0, rewardEndTime - nowMs) : 0;
+                
+                const progress = status === 'Received' || status === 'NotReceived' ? 100 :
+                               status === 'OnGoing' ? Math.min(100, Math.floor(((durationMs - remainingMs) / durationMs) * 100)) : 0;
 
                 return {
                     id: tpl.bountyQuestId,
-                    name: t(`[BountyQuestName_${tpl.bountyQuestId}]`) || tpl.bountyQuestNameKey,
+                    name: t(tpl.bountyQuestNameKey),
                     type: tpl.bountyQuestType,
                     rarity: tpl.bountyQuestRarity,
                     startTime,
                     endTime,
+                    rewardEndTime,
                     isReward,
                     requirements: tpl.bountyQuestConditionInfos.map((c: BountyQuestConditionInfo) => ({
                         type: c.bountyQuestConditionType,
@@ -123,14 +157,13 @@ export function WishingFountainPage() {
                         count: r.itemCount
                     })),
                     status,
-                    remainingSeconds,
+                    remainingMs,
                     progress,
-                    durationSeconds
+                    durationMs
                 } as ProcessedQuest;
             });
 
-            // 过滤掉已领取的任务
-            setQuests(processed.filter((q: ProcessedQuest) => !q.isReward));
+            setQuests(processed);
         } catch (error) {
             console.error('Failed to fetch bounty quests:', error);
             toast({ title: '获取任务失败', description: '请检查网络连接或重试', variant: 'destructive' });
@@ -146,17 +179,21 @@ export function WishingFountainPage() {
     // 每秒更新当前时间，实现倒计时效果
     useEffect(() => {
         const timer = setInterval(() => {
-            const currentTime = Math.floor(Date.now() / 1000);
-            setNow(currentTime);
+            const nowMs = timeManager.getServerNowMs();
+            setServerTime(nowMs);
             
             setQuests(prev => prev.map(q => {
-                if (q.status === 'ongoing') {
-                    const rem = Math.max(0, q.endTime - currentTime);
+                if (q.status === 'OnGoing') {
+                    const rem = Math.max(0, q.endTime - nowMs);
                     if (rem === 0) {
-                        return { ...q, status: 'completed', remainingSeconds: 0, progress: 100 };
+                        return { ...q, status: 'NotReceived', remainingMs: Math.max(0, q.rewardEndTime - nowMs), progress: 100 };
                     }
-                    const prog = Math.min(100, Math.floor(((q.durationSeconds - rem) / q.durationSeconds) * 100));
-                    return { ...q, remainingSeconds: rem, progress: prog };
+                    const durationMs = q.durationMs;
+                    const prog = Math.min(100, Math.floor(((durationMs - rem) / durationMs) * 100));
+                    return { ...q, remainingMs: rem, progress: prog };
+                } else if (q.status === 'NotReceived') {
+                    const rem = Math.max(0, q.rewardEndTime - nowMs);
+                    return { ...q, remainingMs: rem };
                 }
                 return q;
             }));
@@ -166,7 +203,7 @@ export function WishingFountainPage() {
 
     const handleReward = async (id?: number) => {
         try {
-            const ids = id ? [id] : quests.filter(q => q.status === 'completed').map(q => q.id);
+            const ids = id ? [id] : quests.filter(q => q.status === 'NotReceived').map(q => q.id);
             if (ids.length === 0) return;
 
             await ortegaApi.bountyQuest.reward({
@@ -180,6 +217,43 @@ export function WishingFountainPage() {
         } catch (error) {
             console.error('Failed to claim rewards:', error);
             toast({ title: '领取失败', description: '请稍后再试', variant: 'destructive' });
+        }
+    };
+
+    const handleDispatch = async (id?: number, type?: BountyQuestType) => {
+        try {
+            const dispatchKey = id ? id : (type === BountyQuestType.Solo ? 'solo' : type === BountyQuestType.Team ? 'team' : 'guerrilla');
+            setDispatching(dispatchKey);
+            
+            const res = await bountyQuestService.dispatch({
+                bountyQuestId: id,
+                bountyQuestType: type
+            });
+
+            if (res.successCount > 0) {
+                toast({
+                    title: '派遣成功',
+                    description: `成功派遣 ${res.successCount} 个任务`
+                });
+                fetchQuests(true);
+            } else {
+                toast({
+                    title: '未派遣任何任务',
+                    description: '请检查角色是否充足或任务状态',
+                    variant: 'destructive'
+                });
+            }
+        } catch (error: unknown) {
+            console.error('Failed to dispatch quests:', error);
+            const axiosError = error as { response?: { data?: { message?: string } } };
+            const errorMessage = axiosError.response?.data?.message || (error instanceof Error ? error.message : '请重试');
+            toast({
+                title: '派遣失败',
+                description: errorMessage,
+                variant: 'destructive'
+            });
+        } finally {
+            setDispatching(null);
         }
     };
 
@@ -210,7 +284,8 @@ export function WishingFountainPage() {
         return 'R';
     };
 
-    const formatDuration = (seconds: number) => {
+    const formatDuration = (ms: number) => {
+        const seconds = Math.floor(ms / 1000);
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
@@ -219,95 +294,160 @@ export function WishingFountainPage() {
         return `${s}秒`;
     };
 
+    const getStatusInfo = (quest: ProcessedQuest) => {
+        switch (quest.status) {
+            case 'OnGoing':
+                return {
+                    label: t('进行中'),
+                    color: 'text-blue-500',
+                    badge: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20',
+                    timeLabel: timeManager.formatTimeSpan(quest.remainingMs)
+                };
+            case 'NotReceived':
+                return {
+                    label: t('待领取'),
+                    color: 'text-orange-500',
+                    badge: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
+                    timeLabel: timeManager.formatTimeSpan(quest.remainingMs)
+                };
+            case 'Received':
+                return {
+                    label: t('已领取'),
+                    color: 'text-green-500',
+                    badge: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+                    timeLabel: ''
+                };
+            default:
+                return {
+                    label: t('未开始'),
+                    color: 'text-muted-foreground',
+                    badge: 'bg-muted text-muted-foreground',
+                    timeLabel: ''
+                };
+        }
+    };
 
-    const renderQuestCard = (quest: ProcessedQuest) => (
-        <Card key={quest.id} className={`hover:shadow-lg transition-shadow ${quest.type === BountyQuestType.Team ? 'border-2 border-primary/20' : ''}`}>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        {quest.type === BountyQuestType.Team ? (
-                            <Users className="h-6 w-6 text-primary" />
-                        ) : (
-                            <Sparkles className="h-6 w-6 text-primary" />
-                        )}
-                        <div>
-                            <CardTitle className="text-lg">{quest.name}</CardTitle>
-                            <CardDescription>
-                                持续时间: {formatDuration(quest.durationSeconds)}
-                            </CardDescription>
-                        </div>
-                    </div>
-                    <Badge className={getRarityColor(quest.rarity)}>
-                        {getRarityName(quest.rarity)}
-                    </Badge>
-                </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-                {/* 进度 */}
-                {quest.status === 'ongoing' && (
-                    <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">进度</span>
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                <span className="font-semibold">{formatDuration(quest.remainingSeconds)} 剩余</span>
+    const renderQuestCard = (quest: ProcessedQuest) => {
+        const statusInfo = getStatusInfo(quest);
+        const isDispatching = dispatching === quest.id;
+
+        return (
+            <Card key={quest.id} className={`hover:shadow-lg transition-shadow ${quest.type === BountyQuestType.Team ? 'border-2 border-primary/20' : ''} ${quest.status === 'Received' ? 'opacity-70' : ''}`}>
+                <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            {quest.type === BountyQuestType.Team ? (
+                                <Users className="h-6 w-6 text-primary" />
+                            ) : (
+                                <Sparkles className="h-6 w-6 text-primary" />
+                            )}
+                            <div>
+                                <CardTitle className="text-lg flex items-center gap-2">
+                                    {quest.name}
+                                    {quest.status === 'Received' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                                </CardTitle>
+                                <CardDescription>
+                                    持续时间: {formatDuration(quest.durationMs)}
+                                </CardDescription>
                             </div>
                         </div>
-                        <Progress value={quest.progress} className="h-2" />
-                    </div>
-                )}
-
-                {/* 要求 */}
-                <div>
-                    <div className="text-sm font-medium mb-2">执行条件</div>
-                    <div className="flex flex-wrap gap-2">
-                        {quest.requirements.map((req, index) => (
-                            <Badge key={index} variant="outline">
-                                {req.type === BountyQuestConditionType.Rarity && req.rarity && getRarityName(req.rarity as unknown as BountyQuestRarityFlags) + '角色'}
-                                {req.type === BountyQuestConditionType.Element && req.element && (
-                                    t(`[ElementType${ElementType[req.element]}]`)
-                                )}
-                                {req.count > 1 ? ` x${req.count}` : ''}
+                        <div className="flex flex-col items-end gap-2">
+                            <Badge className={getRarityColor(quest.rarity)}>
+                                {getRarityName(quest.rarity)}
                             </Badge>
-                        ))}
-                    </div>
-                </div>
-
-                {/* 奖励 */}
-                <div>
-                    <div className="text-sm font-medium mb-2">任务奖励</div>
-                    <div className="flex flex-wrap gap-2">
-                        {quest.rewards.map((reward, index) => (
-                            <Badge key={index} variant="secondary">
-                                <Trophy className="h-3 w-3 mr-1" />
-                                {getItemName(reward.itemType, reward.itemId)} x{reward.count}
+                            <Badge variant="outline" className={statusInfo.badge}>
+                                {statusInfo.label} {statusInfo.timeLabel}
                             </Badge>
-                        ))}
+                        </div>
                     </div>
-                </div>
-
-                {/* 操作按钮 */}
-                <div className="flex gap-2 pt-2">
-                    {quest.status === 'completed' ? (
-                        <Button className="w-full" onClick={() => handleReward(quest.id)}>
-                            <Trophy className="mr-2 h-4 w-4" />
-                            领取奖励
-                        </Button>
-                    ) : quest.status === 'ongoing' ? (
-                        <Button variant="outline" className="w-full">
-                            <span className="mr-1">💎</span>
-                            高速完成
-                        </Button>
-                    ) : (
-                        <Button className="w-full" disabled>
-                            <Send className="mr-2 h-4 w-4" />
-                            派遣角色 (暂未开放)
-                        </Button>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {/* 进度 */}
+                    {quest.status === 'OnGoing' && (
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between text-sm">
+                                <span className="text-muted-foreground">执行进度</span>
+                                <div className="flex items-center gap-2">
+                                    <Clock className="h-4 w-4" />
+                                    <span className="font-semibold">{statusInfo.timeLabel} 剩余</span>
+                                </div>
+                            </div>
+                            <Progress value={quest.progress} className="h-2" />
+                        </div>
                     )}
-                </div>
-            </CardContent>
-        </Card>
-    );
+
+                    {/* 要求 */}
+                    <div>
+                        <div className="text-sm font-medium mb-2">执行条件</div>
+                        <div className="flex flex-wrap gap-2">
+                            {quest.requirements.map((req, index) => (
+                                <Badge key={index} variant="outline" className="text-xs">
+                                    {req.type === BountyQuestConditionType.Rarity && req.rarity && getRarityName(req.rarity as unknown as BountyQuestRarityFlags) + '角色'}
+                                    {req.type === BountyQuestConditionType.Element && req.element && (
+                                        t(`[ElementType${ElementType[req.element]}]`)
+                                    )}
+                                    {req.count > 1 ? ` x${req.count}` : ''}
+                                </Badge>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* 奖励 */}
+                    <div>
+                        <div className="text-sm font-medium mb-2">任务奖励</div>
+                        <div className="flex flex-wrap gap-2">
+                            {quest.type === BountyQuestType.Guerrilla ? (
+                                <Badge variant="secondary" className="text-xs">
+                                    <Zap className="h-3 w-3 mr-1 text-green-500" />
+                                    {t('[ItemRewardDetailDialogLotteryRateLabel]')}
+                                </Badge>
+                            ) : (
+                                quest.rewards.map((reward, index) => (
+                                    <Badge key={index} variant="secondary" className="text-xs">
+                                        <Trophy className="h-3 w-3 mr-1" />
+                                        {getItemName(reward.itemType, reward.itemId)} x{reward.count}
+                                    </Badge>
+                                ))
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 操作按钮 */}
+                    <div className="flex gap-2 pt-2">
+                        {quest.status === 'NotReceived' ? (
+                            <Button className="w-full" onClick={() => handleReward(quest.id)}>
+                                <Trophy className="mr-2 h-4 w-4" />
+                                领取奖励
+                            </Button>
+                        ) : quest.status === 'OnGoing' ? (
+                            <Button variant="outline" className="w-full">
+                                <span className="mr-1">💎</span>
+                                高速完成
+                            </Button>
+                        ) : quest.status === 'Received' ? (
+                            <Button className="w-full" disabled variant="ghost">
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                已领取
+                            </Button>
+                        ) : (
+                            <Button
+                                className="w-full"
+                                disabled={isDispatching || dispatching !== null}
+                                onClick={() => handleDispatch(quest.id)}
+                            >
+                                {isDispatching ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                    <Send className="mr-2 h-4 w-4" />
+                                )}
+                                自动派遣
+                            </Button>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        );
+    };
 
     if (loading) {
         return (
@@ -322,6 +462,10 @@ export function WishingFountainPage() {
     const teamQuests = quests.filter(q => q.type === BountyQuestType.Team);
     const guerrillaQuests = quests.filter(q => q.type === BountyQuestType.Guerrilla);
 
+    const hasAvailableSolo = soloQuests.some(q => q.status === 'NotStarted');
+    const hasAvailableTeam = teamQuests.some(q => q.status === 'NotStarted');
+    const hasAvailableGuerrilla = guerrillaQuests.some(q => q.status === 'NotStarted');
+
     return (
         <div className="space-y-6">
             {/* 页面标题 */}
@@ -329,13 +473,13 @@ export function WishingFountainPage() {
                 <div>
                     <h1 className="text-3xl font-bold">祈愿之泉</h1>
                     <p className="text-muted-foreground mt-1">
-                        派遣角色进行远征，获取丰厚奖励
+                        当前服务器时间: {new Date(serverTime).toLocaleTimeString()}
                     </p>
                 </div>
-                <Button 
-                    variant="outline" 
+                <Button
+                    variant="outline"
                     onClick={() => handleReward()}
-                    disabled={quests.every(q => q.status !== 'completed')}
+                    disabled={quests.every(q => q.status !== 'NotReceived')}
                 >
                     <Trophy className="mr-2 h-4 w-4" />
                     一键领取
@@ -365,13 +509,24 @@ export function WishingFountainPage() {
                         <div className="text-sm text-muted-foreground">
                             每天凌晨4:00更新 • 未执行任务将刷新
                         </div>
-                        <Button variant="outline" size="sm" onClick={handleRemake}>
-                            <span className="mr-1">💎</span>
-                            刷新列表
-                        </Button>
+                        <div className="flex gap-2">
+                            <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleDispatch(undefined, BountyQuestType.Solo)}
+                                disabled={!hasAvailableSolo || dispatching !== null}
+                            >
+                                {dispatching === 'solo' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
+                                一键派遣
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={handleRemake}>
+                                <span className="mr-1">💎</span>
+                                刷新列表
+                            </Button>
+                        </div>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 sm:grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4">
                         {soloQuests.length > 0 ? (
                             soloQuests.map(renderQuestCard)
                         ) : (
@@ -384,11 +539,22 @@ export function WishingFountainPage() {
 
                 {/* 联合任务 */}
                 <TabsContent value="joint" className="space-y-4">
-                    <div className="text-sm text-muted-foreground mb-4">
-                        联合任务需要支援角色参与 • 奖励更加丰厚
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            联合任务需要支援角色参与 • 奖励更加丰厚
+                        </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleDispatch(undefined, BountyQuestType.Team)}
+                            disabled={!hasAvailableTeam || dispatching !== null}
+                        >
+                            {dispatching === 'team' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
+                            一键派遣
+                        </Button>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 md:grid-cols-2 sm:grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4">
                         {teamQuests.length > 0 ? (
                             teamQuests.map(renderQuestCard)
                         ) : (
@@ -401,63 +567,23 @@ export function WishingFountainPage() {
 
                 {/* 游击任务 */}
                 <TabsContent value="guerrilla" className="space-y-4">
+                    <div className="flex items-center justify-between">
+                        <div className="text-sm text-muted-foreground">
+                            游击任务随机出现，奖励丰厚
+                        </div>
+                        <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => handleDispatch(undefined, BountyQuestType.Guerrilla)}
+                            disabled={!hasAvailableGuerrilla || dispatching !== null}
+                        >
+                            {dispatching === 'guerrilla' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
+                            一键派遣
+                        </Button>
+                    </div>
                     {guerrillaQuests.length > 0 ? (
-                        <div className="grid gap-4 md:grid-cols-2">
-                            {guerrillaQuests.map(q => (
-                                <Card key={q.id} className="border-2 border-green-500 shadow-lg">
-                                    <CardHeader>
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <Zap className="h-5 w-5 text-green-500" />
-                                            <Badge className="bg-green-500">特殊任务</Badge>
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="relative">
-                                                    <Sparkles className="h-8 w-8 text-green-500 animate-pulse" />
-                                                    <div className="absolute -top-1 -right-1">
-                                                        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                                                    </div>
-                                                </div>
-                                                <div>
-                                                    <CardTitle className="text-xl">{q.name}</CardTitle>
-                                                    <CardDescription>
-                                                        持续时间: {formatDuration(q.durationSeconds)}
-                                                    </CardDescription>
-                                                </div>
-                                            </div>
-                                            <Badge className={getRarityColor(q.rarity)}>
-                                                {getRarityName(q.rarity)}
-                                            </Badge>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <Alert className="bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800">
-                                            <Zap className="h-4 w-4 text-green-600" />
-                                            <AlertDescription className="text-green-800 dark:text-green-200">
-                                                游击任务随机出现，奖励受派遣角色的稀有度和属性一致性影响。
-                                            </AlertDescription>
-                                        </Alert>
-
-                                        {/* 奖励 */}
-                                        <div>
-                                            <div className="text-sm font-medium mb-2">基础奖励</div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {q.rewards.map((reward, index) => (
-                                                    <Badge key={index} variant="secondary" className="text-base py-1">
-                                                        <Trophy className="h-4 w-4 mr-2" />
-                                                        {getItemName(reward.itemType, reward.itemId)} x{reward.count}
-                                                    </Badge>
-                                                ))}
-                                            </div>
-                                        </div>
-
-                                        <Button className="w-full" size="lg" disabled>
-                                            <Send className="mr-2 h-5 w-5" />
-                                            派遣执行 (暂未开放)
-                                        </Button>
-                                    </CardContent>
-                                </Card>
-                            ))}
+                        <div className="grid gap-4 md:grid-cols-2 sm:grid-cols-1 lg:grid-cols-3 2xl:grid-cols-4">
+                            {guerrillaQuests.map(renderQuestCard)}
                         </div>
                     ) : (
                         <Card className="border-dashed">
