@@ -7,9 +7,12 @@ import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, User, S
 import { useNavigate } from 'react-router-dom';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserSyncData } from '@/api/generated/userSyncData';
-import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
-import { GetUserDataResponse } from '@/api/generated/getUserDataResponse';
+import { UserGetUserDataResponse } from '@/api/generated/UsergetUserDataResponse';
 import { useLocalizationStore } from '@/store/localization-store';
+import { MissionGroupType } from '@/api/generated/missionGroupType';
+import { ItemType } from '@/api/generated/itemType';
+import { TowerType } from '@/api/generated/towerType';
+import { getUserItemCount } from '@/lib/itemUtils';
 
 export function DashboardPage() {
     const navigate = useNavigate();
@@ -21,7 +24,7 @@ export function DashboardPage() {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const response = await ortegaApi.user.getUserData({}) as GetUserDataResponse;
+                const response = await ortegaApi.user.getUserData({}) as UserGetUserDataResponse;
                 if (response && response.userSyncData) {
                     setUserData(response.userSyncData);
                 }
@@ -34,11 +37,6 @@ export function DashboardPage() {
         fetchData();
     }, []);
 
-    const getItemCount = (items: UserItemDtoInfo[] | undefined, type: number, id: number) => {
-        if (!items) return 0;
-        return items.find(i => i.itemType === type && i.itemId === id)?.itemCount ?? 0;
-    };
-
     const formatTimestamp = (timestamp: number) => {
         if (!timestamp) return '-';
         return new Date(timestamp).toLocaleString('zh-CN', {
@@ -50,15 +48,20 @@ export function DashboardPage() {
         });
     };
 
-    // Mock数据 - 每日任务清单
+    // 从 UserSyncData 派生实时数据
+    const bossInfo = userData?.userBattleBossDtoInfo;
+    const pvpInfo = userData?.userBattlePvpDtoInfo;
+    const towerInfos = userData?.userTowerBattleDtoInfos || [];
+    const statusInfo = userData?.userStatusDtoInfo;
+
     const dailyChecklist = [
         {
             id: 'auto-battle',
             category: '自动战斗',
             icon: Zap,
             items: [
-                { name: '高速战斗', current: 2, max: 3, completed: false, link: '/missions' },
-                { name: '挑战首领', current: 1, max: 3, completed: false, link: '/missions' },
+                { name: '高速战斗', current: userData?.shopCurrencyMissionProgressMap?.['HighSpeedBattle'] || 0, max: statusInfo?.vip ? (statusInfo.vip >= 1 ? 5 : 3) : 3, completed: false, link: '/missions' },
+                { name: '挑战首领', current: bossInfo?.bossTodayWinCount || 0, max: 3, completed: (bossInfo?.bossTodayWinCount || 0) >= 3, link: '/missions' },
             ]
         },
         {
@@ -66,8 +69,8 @@ export function DashboardPage() {
             category: '竞技场',
             icon: Swords,
             items: [
-                { name: '古竞技场', current: 3, max: 5, completed: false, link: '/pvp' },
-                { name: '巅峰竞技', current: 0, max: 10, completed: true, link: '/pvp' },
+                { name: '古竞技场', current: pvpInfo?.pvpTodayCount || 0, max: 5, completed: (pvpInfo?.pvpTodayCount || 0) >= 5, link: '/pvp' },
+                { name: '巅峰竞技', current: 0, max: 10, completed: false, link: '/pvp' },
             ]
         },
         {
@@ -75,8 +78,8 @@ export function DashboardPage() {
             category: '爬塔',
             icon: MapPin,
             items: [
-                { name: '无穷之塔', current: 2, max: 3, completed: false, link: '/dungeon' },
-                { name: '属性塔(今日忧蓝)', current: 5, max: 10, completed: false, link: '/dungeon' },
+                { name: '无穷之塔', current: towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0, max: 3, completed: (towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0) >= 3, link: '/dungeon' },
+                { name: '属性塔', current: towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0), max: 3, completed: (towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0)) >= 3, link: '/dungeon' },
             ]
         },
         {
@@ -84,9 +87,9 @@ export function DashboardPage() {
             category: '公会',
             icon: Users,
             items: [
-                { name: '公会签到', current: 0, max: 1, completed: true, link: '/guild' },
-                { name: '公会讨伐战', current: 1, max: 2, completed: false, link: '/guild' },
-                { name: '公会树', current: 2, max: 3, completed: false, link: '/guild' },
+                { name: '公会签到', current: statusInfo?.isFirstVisitGuildAtDay ? 0 : 1, max: 1, completed: !statusInfo?.isFirstVisitGuildAtDay, link: '/guild' },
+                { name: '公会讨伐战', current: 0, max: 2, completed: false, link: '/guild' },
+                { name: '公会树', current: 0, max: 3, completed: false, link: '/guild' },
             ]
         },
         {
@@ -94,8 +97,8 @@ export function DashboardPage() {
             category: '任务',
             icon: Trophy,
             items: [
-                { name: '每日任务', current: 450, max: 500, completed: false, link: '/missions' },
-                { name: '每周任务', current: 1200, max: 2000, completed: false, link: '/missions' },
+                { name: '每日任务', current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Daily)?.progressCount || 0, max: 500, completed: false, link: '/missions' },
+                { name: '每周任务', current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Weekly)?.progressCount || 0, max: 2000, completed: false, link: '/missions' },
             ]
         },
         {
@@ -103,20 +106,39 @@ export function DashboardPage() {
             category: '其他',
             icon: Gift,
             items: [
-                { name: '签到奖励', current: 0, max: 1, completed: true, link: '/missions' },
-                { name: '祈愿之泉', current: 3, max: 5, completed: false, link: '/missions' },
-                { name: '幻影神殿', current: 4, max: 6, completed: false, link: '/dungeon' },
-                { name: '好友赠送', current: 15, max: 20, completed: false, link: '/missions' },
+                { name: '补签次数', current: 0, max: statusInfo?.vip || 0, completed: false, link: '/missions' },
+                { name: '祈愿之泉', current: 0, max: 5, completed: false, link: '/missions' },
+                { name: '好友对战', current: userData?.todayChallengeFriendBattleCount || 0, max: statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50, completed: (userData?.todayChallengeFriendBattleCount || 0) >= (statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50), link: '/missions' },
             ]
         }
     ];
 
-    // 重要提醒
-    const alerts = [
-        { type: 'warning', message: '体力将在2小时后溢出' },
-        { type: 'info', message: '幻影神殿活跃时段: 12:30-13:30, 19:30-20:30' },
-        { type: 'success', message: '公会战备战期间，记得部署防守队伍' },
-    ];
+    // 重要提醒逻辑
+    const alerts = [];
+    if (userData?.existVipDailyGift) {
+        alerts.push({ type: 'success', message: '有可领取的 VIP 每日福利' });
+    }
+    
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentTimeMinutes = currentHour * 60 + currentMinute;
+
+    // 幻影神殿活跃时段: 12:30-13:30, 19:30-20:30
+    const isInPhantomTime = (currentTimeMinutes >= 12 * 60 + 30 && currentTimeMinutes <= 13 * 60 + 30) ||
+                             (currentTimeMinutes >= 19 * 60 + 30 && currentTimeMinutes <= 20 * 60 + 30);
+    
+    if (isInPhantomTime) {
+        alerts.push({ type: 'info', message: '幻影神殿当前正处于活跃时段 (报酬增加)' });
+    } else {
+        alerts.push({ type: 'info', message: '幻影神殿活跃时段: 12:30-13:30, 19:30-20:30' });
+    }
+
+    // 公会战备战期间提醒: 7:45～20:30
+    const isInGvgPrepareTime = currentTimeMinutes >= 7 * 60 + 45 && currentTimeMinutes <= 20 * 60 + 30;
+    if (isInGvgPrepareTime) {
+        alerts.push({ type: 'warning', message: '公会战备战期间，记得部署防守部队 (7:45-20:30)' });
+    }
 
 
     const getProgressColor = (current: number, max: number) => {
@@ -140,34 +162,34 @@ export function DashboardPage() {
 
     const resourcesReal = [
         {
-            name: t('[ItemName4]'),
-            current: getItemCount(items, 1, 1) + getItemCount(items, 2, 1),
-            free: getItemCount(items, 1, 1),
-            paid: getItemCount(items, 2, 1),
+            name: t('[ItemName4]'), // 钻石
+            current: getUserItemCount(items, ItemType.CurrencyFree, 1, true),
+            free: getUserItemCount(items, ItemType.CurrencyFree, 1),
+            paid: getUserItemCount(items, ItemType.CurrencyPaid, 0),
             icon: <Diamond className="h-5 w-5 text-blue-500" />,
             color: 'text-blue-500'
         },
         {
-            name: t('[ItemName5]'),
-            current: getItemCount(items, 3, 1),
+            name: t('[ItemName5]'), // 金币
+            current: getUserItemCount(items, ItemType.Gold, 1),
             icon: <Coins className="h-5 w-5 text-yellow-500" />,
             color: 'text-yellow-500'
         },
         {
             name: t('[ItemName9]'), // 友谊点
-            current: getItemCount(items, 23, 1),
+            current: getUserItemCount(items, ItemType.FriendPoint, 1),
             icon: <Heart className="h-5 w-5 text-pink-500" />,
             color: 'text-pink-500'
         },
         {
             name: t('[ItemName11]'), // 经验珠
-            current: getItemCount(items, 11, 2),
+            current: getUserItemCount(items, ItemType.CharacterTrainingMaterial, 2),
             icon: <FlaskConical className="h-5 w-5 text-purple-500" />,
             color: 'text-purple-500'
         },
         {
             name: t('[ItemName10]'), // 潜能果
-            current: getItemCount(items, 11, 1),
+            current: getUserItemCount(items, ItemType.CharacterTrainingMaterial, 1),
             icon: <Package className="h-5 w-5 text-orange-500" />,
             color: 'text-orange-500'
         },

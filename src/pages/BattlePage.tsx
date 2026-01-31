@@ -36,8 +36,8 @@ export function BattlePage() {
     const [currentTime, setCurrentTime] = useState(Date.now());
 
     // 加载 Master 数据
-    const { data: questTable } = useMasterTable<QuestMB[]>('Quest');
-    const { data: chapterTable } = useMasterTable<ChapterMB[]>('Chapter');
+    const { data: questTable } = useMasterTable<QuestMB[]>('QuestTable');
+    const { data: chapterTable } = useMasterTable<ChapterMB[]>('ChapterTable');
 
     const loadUserData = async () => {
         try {

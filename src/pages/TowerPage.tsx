@@ -27,8 +27,8 @@ import { useMasterTable } from '@/hooks/useMasterData';
 import { TowerBattleQuestMB } from '@/api/generated/towerBattleQuestMB';
 import { TowerType } from '@/api/generated/towerType';
 import { UserTowerBattleDtoInfo } from '@/api/generated/userTowerBattleDtoInfo';
-import { useTranslation } from '@/hooks/useTranslation';
 import { UserItem } from '@/api/generated/userItem';
+import { useItemName } from '@/hooks/useItemName';
 
 // 塔类型配置
 const TOWER_CONFIGS = {
@@ -71,14 +71,15 @@ const TOWER_CONFIGS = {
 };
 
 export function TowerPage() {
-    const { t } = useTranslation();
+    const { getItemName } = useItemName();
     const [userTowerProgress, setUserTowerProgress] = useState<UserTowerBattleDtoInfo[]>([]);
     const [loading, setLoading] = useState(true);
-    const { data: towerQuests, loading: masterLoading } = useMasterTable<TowerBattleQuestMB[]>('TowerBattleQuestMB');
+    const { data: towerQuests, loading: masterLoading } = useMasterTable<TowerBattleQuestMB[]>('TowerBattleQuestTable');
 
     // 获取各塔的所有楼层并按 Floor 升序排列
     const allTowerQuests = useMemo(() => {
         const map: Record<number, TowerBattleQuestMB[]> = {};
+        console.log('towerQuests', towerQuests);
         (towerQuests || []).forEach(q => {
             const typeNum = Number(q.towerType);
             if (!map[typeNum]) map[typeNum] = [];
@@ -175,7 +176,7 @@ export function TowerPage() {
         if (!rewards || rewards.length === 0) return null;
         return rewards.map((item, idx) => (
             <span key={idx}>
-                {t(`[ItemName_${item.itemId}]`) || `道具ID:${item.itemId}`} x{item.itemCount}
+                {getItemName(item.itemType, item.itemId,) || `道具ID:${item.itemId}`} x{item.itemCount}
                 {idx < rewards.length - 1 ? ' • ' : ''}
             </span>
         ));
@@ -197,6 +198,9 @@ export function TowerPage() {
     const currentInfiniteFloor = infiniteProgress?.maxTowerBattleId || 0;
     const infiniteQuests = allTowerQuests[TowerType.Infinite] || [];
     
+    // 快速挑战次数
+    const remainingQuickCount = Math.max(0, 3 - (infiniteProgress?.todayBattleCount || 0));
+
     // 下一关 Master 数据
     const nextInfiniteQuest = infiniteQuests.find(q => q.floor === currentInfiniteFloor + 1);
 
@@ -255,12 +259,12 @@ export function TowerPage() {
                                                 {currentInfiniteFloor}
                                             </span>
                                             <span className="text-sm text-muted-foreground">
-                                                / {infiniteQuests[0]?.floor || '???'}
+                                                / {infiniteQuests[infiniteQuests.length - 1]?.floor || '???'}
                                             </span>
                                         </div>
                                     </div>
                                     <Progress
-                                        value={(currentInfiniteFloor / (infiniteQuests[0]?.floor || 1)) * 100}
+                                        value={(currentInfiniteFloor / (infiniteQuests[infiniteQuests.length - 1]?.floor || 1)) * 100}
                                         className="h-3"
                                     />
                                 </div>
@@ -310,6 +314,7 @@ export function TowerPage() {
                                     <Button
                                         className="w-full"
                                         variant="outline"
+                                        disabled={remainingQuickCount <= 0}
                                         onClick={() => {
                                             const currentQuest = infiniteQuests.find(q => q.floor === currentInfiniteFloor);
                                             if (currentQuest) {
@@ -318,7 +323,7 @@ export function TowerPage() {
                                         }}
                                     >
                                         <Zap className="mr-2 h-4 w-4" />
-                                        快速挑战 (3次可用)
+                                        快速挑战 ({remainingQuickCount}次可用)
                                     </Button>
                                 </div>
                             </CardContent>

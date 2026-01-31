@@ -40,7 +40,7 @@ export function PVPPage() {
     } | null>(null);
     const [userLegendDto, setUserLegendDto] = useState<UserBattleLegendLeagueDtoInfo | null>(null);
 
-    const { data: rewardsMaster } = useMasterTable<PvpRankingRewardMB[]>('PvpRankingRewardMB');
+    const { data: rewardsMaster } = useMasterTable<PvpRankingRewardMB[]>('PvpRankingRewardTable');
 
     const fetchPvpData = async (silent = false) => {
         try {

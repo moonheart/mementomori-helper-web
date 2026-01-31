@@ -1,6 +1,7 @@
 import { ItemType } from '@/api/generated/itemType';
-import { 
-    ItemMB, 
+import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
+import {
+    ItemMB,
     EquipmentMB, 
     CharacterMB, 
     EquipmentCompositeMB, 
@@ -36,6 +37,29 @@ export function getItemName(
     t: (key: string | undefined | null, params?: unknown[]) => string
 ): string {
     return formatItemName(itemType, itemId, masterTables, t);
+}
+
+/**
+ * 获取玩家持有的道具数量
+ * 参考 api\MementoMori.Api\Extensions\UserSyncDataExtensions.cs
+ */
+export function getUserItemCount(
+    items: UserItemDtoInfo[] | undefined | null,
+    itemType: ItemType,
+    itemId: number = 0,
+    isAnyCurrency: boolean = false
+): number {
+    if (!items) return 0;
+
+    if (isAnyCurrency && (itemType === ItemType.CurrencyFree || itemType === ItemType.CurrencyPaid)) {
+        return items
+            .filter(x => x.itemType === ItemType.CurrencyFree || x.itemType === ItemType.CurrencyPaid)
+            .reduce((sum, d) => sum + d.itemCount, 0);
+    }
+
+    return items
+        .filter(x => x.itemType === itemType && (itemId === 0 || x.itemId === itemId))
+        .reduce((sum, d) => sum + d.itemCount, 0);
 }
 
 /**
