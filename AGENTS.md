@@ -161,3 +161,217 @@ function cn(...inputs: (string | undefined | null | false)[]) {
 - 类型定义通过 `pnpm generate-types` 从 C# 自动生成
 - 文档统一使用中文
 - 游戏接口实现在 `api/MementoMori.Api\Controllers\OrtegaProxyController.cs`
+
+---
+
+## Master 数据管理
+
+### 概述
+
+Master 数据是游戏的静态配置数据（角色、装备、道具等定义），存储在 `src/api/generated/` 目录下，以 `MB` (MasterBook) 结尾的类表示。
+
+### 数据获取方式
+
+#### 1. 使用 Hook 获取单条数据
+
+```typescript
+import { useMasterData } from '@/hooks/useMasterData';
+
+export function CharacterDetail({ characterId }: { characterId: number }) {
+    const { data: character, loading } = useMasterData<CharacterMB>('CharacterTable', characterId);
+    
+    if (loading) return <div>加载中...</div>;
+    if (!character) return <div>未找到角色</div>;
+    
+    return <div>{character.nameKey}</div>;
+}
+```
+
+#### 2. 使用 Hook 获取全表数据
+
+```typescript
+import { useMasterTable } from '@/hooks/useMasterData';
+
+export function CharacterList() {
+    const { data: characters, loading } = useMasterTable<CharacterMB[]>('CharacterTable');
+    
+    if (loading) return <div>加载中...</div>;
+    
+    return (
+        <ul>
+            {characters?.map(c => <li key={c.id}>{c.nameKey}</li>)}
+        </ul>
+    );
+}
+```
+
+#### 3. 直接使用 Store
+
+```typescript
+import { useMasterStore } from '@/store/masterStore';
+
+const getRecord = useMasterStore(state => state.getRecord);
+const getTable = useMasterStore(state => state.getTable);
+
+// 获取单条记录
+const character = await getRecord<CharacterMB>('CharacterTable', 1001);
+
+// 获取全表
+const allCharacters = await getTable<CharacterMB[]>('CharacterTable');
+```
+
+### 常用数据表
+
+| 表名 | 类型 | 用途 |
+|------|------|------|
+| `CharacterTable` | `CharacterMB[]` | 角色配置 |
+| `EquipmentTable` | `EquipmentMB[]` | 装备配置 |
+| `ItemTable` | `ItemMB[]` | 道具配置 |
+| `EquipmentCompositeTable` | `EquipmentCompositeMB[]` | 装备碎片配置 |
+| `SphereTable` | `SphereMB[]` | 宝石配置 |
+| `TreasureChestTable` | `TreasureChestMB[]` | 宝箱配置 |
+
+---
+
+## src/api/generated 使用指南
+
+### 概述
+
+`src/api/generated/` 目录包含从 C# 后端自动生成的 TypeScript 类型定义和 DTO 类。
+
+### 导入方式
+
+```typescript
+// 单个类型导入
+import { CharacterMB } from '@/api/generated/characterMB';
+import { ItemType } from '@/api/generated/itemType';
+
+// 批量导入
+export {
+    CharacterMB,
+    EquipmentMB,
+    ItemMB,
+    UserItemDtoInfo
+} from '@/api/generated';
+```
+
+### 常用类型
+
+| 文件 | 类型 | 说明 |
+|------|------|------|
+| `characterMB.ts` | `CharacterMB` | 角色配置数据 |
+| `equipmentMB.ts` | `EquipmentMB` | 装备配置数据 |
+| `itemType.ts` | `ItemType` | 道具类型枚举 |
+| `userItemDtoInfo.ts` | `UserItemDtoInfo` | 用户持有道具信息 |
+| `userStatusDtoInfo.ts` | `UserStatusDtoInfo` | 用户状态信息 |
+
+### 重新生成类型
+
+```bash
+pnpm generate-types
+```
+
+---
+
+## TimeManager 时间管理器
+
+### 概述
+
+`TimeManager` 用于处理服务器时间与本地时间的差异，确保活动时间计算准确。
+
+### 获取实例
+
+```typescript
+import { timeManager } from '@/lib/time-manager';
+```
+
+### 常用方法
+
+```typescript
+// 设置时区偏移量 (从用户配置或服务器获取)
+timeManager.setDiffFromUtc("+09:00:00");
+
+// 获取当前服务器时间 (毫秒)
+const serverNowMs = timeManager.getServerNowMs();
+
+// 获取当前服务器时间 (秒)
+const serverNowSeconds = timeManager.getServerNowSeconds();
+
+// 格式化时间间隔
+const formatted = timeManager.formatTimeSpan(3600000); // "01:00:00"
+```
+
+### 使用场景
+
+- 计算活动剩余时间
+- 处理限时商店倒计时
+- 同步服务器时间相关的业务逻辑
+
+---
+
+## 道具名称解析
+
+### 概述
+
+推荐使用 `useItemName` Hook 自动加载所有需要的 Master 数据表并提供道具名称解析功能。
+
+### 导入方式
+
+```typescript
+import { useItemName } from '@/hooks/useItemName';
+```
+
+### 使用方式
+
+```typescript
+export function ItemDisplay({ itemType, itemId }: { itemType: ItemType; itemId: number }) {
+    const { getItemName, isLoading } = useItemName();
+    
+    return <span>{isLoading ? '加载中...' : getItemName(itemType, itemId)}</span>;
+}
+```
+
+### 返回值
+
+| 属性 | 类型 | 说明 |
+|------|------|------|
+| `getItemName` | `(itemType: ItemType, itemId: number) => string` | 获取道具名称 |
+| `isLoading` | `boolean` | 是否正在加载 |
+| `masterTables` | `ItemMasterTables` | 原始 Master 数据表 (按需使用) |
+| `t` | `TFunction` | 翻译函数 (按需使用) |
+
+### 支持的道具类型
+
+- 普通道具 (ItemType.CurrencyFree, ItemType.Gold 等)
+- 装备 (ItemType.Equipment)
+- 装备碎片 (ItemType.EquipmentFragment)
+- 角色 (ItemType.Character)
+- 角色碎片 (ItemType.CharacterFragment)
+- 圣遗物 (ItemType.DungeonBattleRelic)
+- 套装材料 (ItemType.EquipmentSetMaterial)
+- 宝石 (ItemType.Sphere)
+- 宝箱 (ItemType.TreasureChest)
+- 套装材料箱 (ItemType.EquipmentSetMaterialBox)
+
+### 获取用户持有数量
+
+使用 `getUserItemCount` 函数获取用户持有道具数量：
+
+```typescript
+import { getUserItemCount } from '@/lib/itemUtils';
+
+const count = getUserItemCount(
+    userItems,            // 用户道具列表
+    ItemType.Gold,        // 道具类型
+    0,                    // 道具 ID (0 表示任意)
+    false                 // 是否为任意货币类型
+);
+
+// 示例: 获取所有货币数量
+const allCurrency = getUserItemCount(
+    userItems,
+    ItemType.CurrencyFree,
+    0,
+    true  // 同时计算 CurrencyFree 和 CurrencyPaid
+);
+```
