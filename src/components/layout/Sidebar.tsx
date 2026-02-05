@@ -70,6 +70,11 @@ const navItems: NavItem[] = [
         icon: ListTodo
     },
     {
+        title: '抽卡',
+        href: '/gacha',
+        icon: Sparkles
+    },
+    {
         title: '商店',
         href: '/shop',
         icon: ShoppingCart
