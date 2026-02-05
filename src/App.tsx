@@ -7,6 +7,7 @@ import { MainLayout } from './components/layout/MainLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { CharactersPage } from './pages/CharactersPage';
 import { EquipmentPage } from './pages/EquipmentPage';
+import { ItemsPage } from './pages/ItemsPage';
 import { BattlePage } from './pages/BattlePage';
 import { TowerPage } from './pages/TowerPage';
 import { WishingFountainPage } from './pages/WishingFountainPage';
@@ -32,7 +33,7 @@ function App() {
   useEffect(() => {
     fetchResources(currentLanguage);
     syncMasterData();
-    
+
     // 清理旧的 translation 存储 (localStorage)
     // 之前使用 useTranslationStore 时 persist 存储的名称是 'mementomori-translation'
     if (localStorage.getItem('mementomori-translation')) {
@@ -52,6 +53,7 @@ function App() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/characters" element={<CharactersPage />} />
           <Route path="/equipment" element={<EquipmentPage />} />
+          <Route path="/items" element={<ItemsPage />} />
           <Route path="/battle" element={<BattlePage />} />
           <Route path="/tower" element={<TowerPage />} />
           <Route path="/fountain" element={<WishingFountainPage />} />

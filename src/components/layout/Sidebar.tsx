@@ -1,4 +1,4 @@
-import { Home, Users, Package, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot } from 'lucide-react';
+import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -28,6 +28,11 @@ const navItems: NavItem[] = [
         title: '装备',
         href: '/equipment',
         icon: Package
+    },
+    {
+        title: '道具',
+        href: '/items',
+        icon: Boxes
     },
     {
         title: '战斗',
