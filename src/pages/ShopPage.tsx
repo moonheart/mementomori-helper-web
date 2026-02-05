@@ -30,7 +30,7 @@ export function ShopPage() {
     const { toast } = useToast();
     const currentAccount = useAccountStore(state => state.accounts.find(a => a.userId === state.currentAccountId));
     const getTable = useMasterStore(state => state.getTable);
-    const { getName } = useItemName();
+    const { getItemName } = useItemName();
 
     const [loading, setLoading] = useState(false);
     const [tradeShopTabMasterMap, setTradeShopTabMasterMap] = useState<Record<number, TradeShopTabMB>>({});
@@ -128,7 +128,7 @@ export function ShopPage() {
 
             toast({
                 title: '购买成功',
-                description: `已获得 ${getName(item.giveItem.itemType, item.giveItem.itemId)}`,
+                description: `已获得 ${getItemName(item.giveItem.itemType, item.giveItem.itemId)}`,
             });
 
             // 重新加载数据以更新余额和库存
@@ -317,7 +317,7 @@ export function ShopPage() {
                                             <CardContent className="p-4">
                                                 <div className="flex items-center justify-between mb-3">
                                                     <div>
-                                                        <div className="font-semibold">{getName(item.giveItem.itemType, item.giveItem.itemId)}</div>
+                                                        <div className="font-semibold">{getItemName(item.giveItem.itemType, item.giveItem.itemId)}</div>
                                                         <div className="text-sm text-muted-foreground">
                                                             ×{item.giveItem.itemCount}
                                                         </div>
