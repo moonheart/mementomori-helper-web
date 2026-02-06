@@ -2,25 +2,17 @@ import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search, Grid, List, Swords, Zap, BookOpen, TrendingUp, Star, ArrowUp, Shield, Sparkles, Users, ChevronRight, Loader2 } from 'lucide-react';
+import { Search, Grid, List, Swords, Zap, BookOpen, TrendingUp, Star, ArrowUp, Shield, Users, Loader2 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { ortegaApi } from '@/api/ortega-client';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
 import { UserCharacterDtoInfo, CharacterRarityFlags, ElementType, JobFlags, CharacterMB } from '@/api/generated';
-
-// 扩展类型，用于在 UI 中合并数据
-interface UICharacter extends UserCharacterDtoInfo {
-    master?: CharacterMB;
-    name: string;
-    element: ElementType;
-    job: JobFlags;
-}
+import { CharacterDetailDialog } from '@/components/characters/CharacterDetailDialog';
+import type { UICharacter } from '@/components/characters/types';
 
 export function CharactersPage() {
     const { currentAccountId } = useAccountStore();
@@ -443,196 +435,11 @@ export function CharactersPage() {
                 </Card>
             )}
 
-            {/* Character Detail Dialog */}
-            <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
-                <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-                    {selectedCharacter && (() => {
-                        const elementData = getElementData(selectedCharacter.element);
-                        const jobData = getJobData(selectedCharacter.job);
-                        const rarityData = getRarityData(selectedCharacter.rarityFlags);
-                        const JobIcon = jobData.icon;
-                        const master = selectedCharacter.master;
-
-                        return (
-                            <>
-                                <DialogHeader>
-                                    <div className="flex items-start gap-6">
-                                        <div className={`h-24 w-24 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-5xl shrink-0 relative`}>
-                                            <div className="absolute top-1 left-1">
-                                                <Badge className={rarityData.color}>{rarityData.name}</Badge>
-                                            </div>
-                                            <div className="absolute bottom-1 right-1">
-                                                <span className="text-xl">{elementData.icon}</span>
-                                            </div>
-                                            👤
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <DialogTitle className="text-2xl mb-1 truncate">{selectedCharacter.name}</DialogTitle>
-                                            <DialogDescription asChild>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-3 flex-wrap text-sm">
-                                                        <div className="flex items-center gap-1.5">
-                                                            <JobIcon className={`h-4 w-4 ${jobData.color}`} />
-                                                            <span className={jobData.color}>{jobData.name}</span>
-                                                        </div>
-                                                        <span>•</span>
-                                                        <span className={elementData.color}>{elementData.icon} {elementData.name}</span>
-                                                        <span>•</span>
-                                                        <Badge variant="outline">Lv.{selectedCharacter.level}/{rarityData.max}</Badge>
-                                                    </div>
-                                                    <p className="text-xs text-muted-foreground">{jobData.desc}</p>
-                                                </div>
-                                            </DialogDescription>
-                                        </div>
-                                    </div>
-                                </DialogHeader>
-
-                                <Tabs defaultValue="overview" className="mt-6">
-                                    <TabsList className="grid w-full grid-cols-3">
-                                        <TabsTrigger value="overview">能力</TabsTrigger>
-                                        <TabsTrigger value="skills">技能</TabsTrigger>
-                                        <TabsTrigger value="evolution">进化</TabsTrigger>
-                                    </TabsList>
-
-                                    {/* Overview Tab */}
-                                    <TabsContent value="overview" className="space-y-4">
-                                        <Card>
-                                            <CardHeader className="py-4">
-                                                <CardTitle className="text-base">基础数值系数</CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                {master?.baseParameterCoefficient ? (
-                                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                                                        <div>
-                                                            <div className="text-xs text-muted-foreground">肌肉 (Muscle)</div>
-                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.muscle || 0).toLocaleString()}</div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs text-muted-foreground">能量 (Energy)</div>
-                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.energy || 0).toLocaleString()}</div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs text-muted-foreground">智力 (Intelligence)</div>
-                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.intelligence || 0).toLocaleString()}</div>
-                                                        </div>
-                                                        <div>
-                                                            <div className="text-xs text-muted-foreground">健康 (Health)</div>
-                                                            <div className="text-lg font-bold">{(master.baseParameterCoefficient.health || 0).toLocaleString()}</div>
-                                                        </div>
-                                                    </div>
-                                                ) : (
-                                                    <p className="text-sm text-muted-foreground">无法获取基础数值</p>
-                                                )}
-                                                <div className="mt-4 pt-4 border-t space-y-2">
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">当前经验值</span>
-                                                        <span className="font-medium">{selectedCharacter.exp.toLocaleString()}</span>
-                                                    </div>
-                                                    <div className="flex justify-between text-sm">
-                                                        <span className="text-muted-foreground">锁定状态</span>
-                                                        <span>{selectedCharacter.isLocked ? '🔒 已锁定' : '🔓 未锁定'}</span>
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
-
-                                    {/* Skills Tab */}
-                                    <TabsContent value="skills" className="space-y-4">
-                                        <Card>
-                                            <CardHeader className="py-4">
-                                                <CardTitle className="text-base flex items-center gap-2">
-                                                    <Sparkles className="h-4 w-4 text-yellow-500" />
-                                                    技能列表
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent className="space-y-4">
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Badge variant="outline">普通攻击</Badge>
-                                                        <span className="text-sm font-semibold">ID: {master?.normalSkillId}</span>
-                                                    </div>
-                                                </div>
-                                                {master?.activeSkillIds?.map((id: number, index: number) => (
-                                                    <div key={`active-${id}`} className="space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge>主动技能 {index + 1}</Badge>
-                                                            <span className="text-sm font-semibold">ID: {id}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                                {master?.passiveSkillIds?.map((id: number, index: number) => (
-                                                    <div key={`passive-${id}`} className="space-y-1">
-                                                        <div className="flex items-center gap-2">
-                                                            <Badge variant="secondary">被动技能 {index + 1}</Badge>
-                                                            <span className="text-sm font-semibold">ID: {id}</span>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
-
-                                    {/* Evolution Tab */}
-                                    <TabsContent value="evolution" className="space-y-4">
-                                        <Card>
-                                            <CardHeader className="py-4">
-                                                <CardTitle className="text-base flex items-center gap-2">
-                                                    <TrendingUp className="h-4 w-4 text-green-500" />
-                                                    稀有度进度
-                                                </CardTitle>
-                                            </CardHeader>
-                                            <CardContent>
-                                                <div className="flex flex-wrap items-center gap-2">
-                                                    {[
-                                                        CharacterRarityFlags.N,
-                                                        CharacterRarityFlags.R,
-                                                        CharacterRarityFlags.RPlus,
-                                                        CharacterRarityFlags.SR,
-                                                        CharacterRarityFlags.SRPlus,
-                                                        CharacterRarityFlags.SSR,
-                                                        CharacterRarityFlags.SSRPlus,
-                                                        CharacterRarityFlags.UR,
-                                                        CharacterRarityFlags.URPlus,
-                                                        CharacterRarityFlags.LR
-                                                    ].map((r, idx) => {
-                                                        const rData = getRarityData(r);
-                                                        const isCurrent = selectedCharacter.rarityFlags === r;
-                                                        const isAchieved = selectedCharacter.rarityFlags >= r;
-                                                        
-                                                        return (
-                                                            <div key={r} className="flex items-center gap-1">
-                                                                <Badge 
-                                                                    className={`${rData.color} ${isCurrent ? 'ring-2 ring-offset-2 ring-primary' : ''} ${!isAchieved ? 'opacity-30' : ''}`}
-                                                                >
-                                                                    {rData.name}
-                                                                </Badge>
-                                                                {idx < 9 && <ChevronRight className="h-3 w-3 text-muted-foreground" />}
-                                                            </div>
-                                                        );
-                                                    })}
-                                                </div>
-                                                <div className="mt-6 p-4 bg-muted rounded-lg border border-dashed">
-                                                    <p className="text-xs text-center text-muted-foreground">更多进化详情和所需材料功能开发中...</p>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </TabsContent>
-                                </Tabs>
-
-                                <div className="flex gap-3 mt-6">
-                                    <Button className="flex-1" disabled>
-                                        强化 (开发中)
-                                    </Button>
-                                    <Button className="flex-1" variant="outline" onClick={() => setDetailDialogOpen(false)}>
-                                        关闭
-                                    </Button>
-                                </div>
-                            </>
-                        );
-                    })()}
-                </DialogContent>
-            </Dialog>
+            <CharacterDetailDialog
+                character={selectedCharacter}
+                open={detailDialogOpen}
+                onOpenChange={setDetailDialogOpen}
+            />
         </div>
     );
 }
