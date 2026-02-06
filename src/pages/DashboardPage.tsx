@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, User, Star, Calendar, MessageSquare, Diamond, Coins, Heart, FlaskConical, Package, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserSyncData } from '@/api/generated/userSyncData';
@@ -36,17 +36,6 @@ export function DashboardPage() {
         }
         fetchData();
     }, []);
-
-    const formatTimestamp = (timestamp: number) => {
-        if (!timestamp) return '-';
-        return new Date(timestamp).toLocaleString('zh-CN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    };
 
     // 从 UserSyncData 派生实时数据
     const bossInfo = userData?.userBattleBossDtoInfo;
@@ -157,7 +146,6 @@ export function DashboardPage() {
         );
     }
 
-    const status = userData?.userStatusDtoInfo;
     const items = userData?.userItemDtoInfo;
 
     const resourcesReal = [
@@ -197,36 +185,6 @@ export function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            {/* Player Profile Header */}
-            <Card>
-                <CardHeader className="pb-4">
-                    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                        <div className="flex items-center gap-4">
-                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                <User className="h-10 w-10" />
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-2">
-                                    <CardTitle className="text-2xl">{t('[CommonPlayerNameFormat]', [status?.name])}</CardTitle>
-                                    <Badge variant="outline" className="font-mono">{t('[PlayerId]')}: {status?.playerId}</Badge>
-                                </div>
-                                <CardDescription className="mt-1 flex flex-wrap gap-x-4 gap-y-1">
-                                    <span className="flex items-center gap-1"><Star className="h-3.5 w-3.5" /> {t('[CommonPlayerRankLabel]')}: {status?.rank}</span>
-                                    <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5" /> {t('[CommonVipWithSpaceFormat]', [status?.vip])}</span>
-                                    <span className="flex items-center gap-1"><Calendar className="h-3.5 w-3.5" /> 创建于: {formatTimestamp(status?.createAt || 0)}</span>
-                                </CardDescription>
-                            </div>
-                        </div>
-                        {status?.comment && (
-                            <div className="flex items-start gap-2 rounded-lg bg-muted p-3 text-sm italic">
-                                <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
-                                <span>{t('[MyPagePlayerInformationCommentLabel]')}: {status.comment}</span>
-                            </div>
-                        )}
-                    </div>
-                </CardHeader>
-            </Card>
-
             {/* Resources Grid */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
                 {resourcesReal.map((resource) => (

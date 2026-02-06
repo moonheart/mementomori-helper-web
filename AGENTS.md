@@ -220,6 +220,31 @@ const character = await getRecord<CharacterMB>('CharacterTable', 1001);
 const allCharacters = await getTable<CharacterMB[]>('CharacterTable');
 ```
 
+### 游戏文本资源 Key 查询方式
+
+"E:\Git_Github\MementoMoriData\Master\TextResourceZhCnMB.json" 此文件是游戏文本资源 Key 的字典，文件很大, 不要直接读取, 使用搜索来查询.
+
+示例格式
+
+``` json
+[
+  {
+    "Id": 350,
+    "IsIgnore": false,
+    "Memo": "",
+    "StringKey": "[CharacterSortTypeBattlePower]",
+    "Text": "战斗力"
+  },
+  {
+    "Id": 351,
+    "IsIgnore": false,
+    "Memo": "",
+    "StringKey": "[CharacterSortTypeRootCharacterId]",
+    "Text": "角色ID"
+  }
+]
+```
+
 ### 常用数据表
 
 | 表名 | 类型 | 用途 |
