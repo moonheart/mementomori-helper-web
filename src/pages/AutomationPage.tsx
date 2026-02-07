@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,14 +12,12 @@ import {
     Loader2,
     RefreshCcw,
     Play,
-    Terminal,
     Clock
 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { settingsApi } from '@/api/settings-service';
 import { jobsApi } from '@/api/jobs-service';
 import { useToast } from '@/hooks/use-toast';
-import { useJobLogs } from '@/hooks/useJobLogs';
 import dayjs from 'dayjs';
 
 // 导入生成的配置类型
@@ -49,7 +47,6 @@ export function AutomationPage() {
     const [loading, setLoading] = useState(false);
     const [activeAccountName, setActiveAccountName] = useState('');
     const [status, setStatus] = useState<JobStatusDto[]>([]);
-    const { logs, isConnected, clearLogs } = useJobLogs(currentAccountId);
 
     // 各模块配置状态
     const [autoJob, setAutoJob] = useState<AutoJobModel>(() => ({ ...new AutoJobModel() }));
@@ -230,81 +227,44 @@ export function AutomationPage() {
                 {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
             </div>
 
-            {/* 活跃任务和执行日志 - 独立显示在顶部 */}
-            <div className="grid gap-6 md:grid-cols-2">
-                {/* 任务列表 */}
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                        <div>
-                            <CardTitle className="text-lg">活跃任务</CardTitle>
-                            <CardDescription>当前后台调度的定时任务</CardDescription>
-                        </div>
-                        <Button variant="ghost" size="icon" onClick={refreshJobStatus} disabled={loading}>
-                            <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                        </Button>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {status.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-4">暂无活跃任务，请检查配置或是否已禁用所有任务。</p>
-                            ) : (
-                                status.map((job) => (
-                                    <div key={job.jobType} className="flex items-center justify-between p-3 border rounded-lg bg-card">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-sm">{job.description}</span>
-                                                <Badge variant="outline" className="text-[10px]">{job.jobType}</Badge>
-                                            </div>
-                                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                                <Clock className="h-3 w-3" />
-                                                <span>下次运行: {job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : '未计划'}</span>
-                                            </div>
+            {/* 活跃任务 */}
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                        <CardTitle className="text-lg">活跃任务</CardTitle>
+                        <CardDescription>当前后台调度的定时任务</CardDescription>
+                    </div>
+                    <Button variant="ghost" size="icon" onClick={refreshJobStatus} disabled={loading}>
+                        <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    {status.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">暂无活跃任务，请检查配置或是否已禁用所有任务。</p>
+                    ) : (
+                        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {status.map((job) => (
+                                <div key={job.jobType} className="flex flex-col p-3 border rounded-lg bg-card">
+                                    <div className="flex items-start justify-between gap-2">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <span className="font-medium text-sm truncate">{job.description}</span>
                                         </div>
-                                        <Button size="sm" variant="outline" onClick={() => handleTriggerJob(job.jobType)}>
-                                            <Play className="h-3 w-3 mr-1" />
-                                            执行
-                                        </Button>
+                                        <Badge variant="outline" className="text-[10px] shrink-0">{job.jobType}</Badge>
                                     </div>
-                                ))
-                            )}
-                        </div>
-                    </CardContent>
-                </Card>
-
-                {/* 控制台日志 */}
-                <Card className="flex flex-col h-[400px]">
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <div className="flex items-center gap-2">
-                            <Terminal className="h-4 w-4" />
-                            <CardTitle className="text-sm font-medium">执行日志</CardTitle>
-                            {isConnected ? (
-                                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px]">已连接</Badge>
-                            ) : (
-                                <Badge variant="destructive" className="text-[10px]">未连接</Badge>
-                            )}
-                        </div>
-                        <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={clearLogs}>
-                            清空
-                        </Button>
-                    </CardHeader>
-                    <CardContent className="flex-1 overflow-auto bg-black rounded-b-lg p-3 font-mono text-[11px]">
-                        <div className="space-y-1">
-                            {logs.length === 0 ? (
-                                <p className="text-zinc-500 italic">等待任务执行日志...</p>
-                            ) : (
-                                logs.map((log, i) => (
-                                    <div key={i} className="flex gap-2">
-                                        <span className="text-zinc-500 shrink-0">[{log.time.split(' ')[1]}]</span>
-                                        <span className={log.level === 'Error' ? 'text-red-400' : log.level === 'Warning' ? 'text-yellow-400' : 'text-zinc-300'}>
-                                            {log.message}
-                                        </span>
+                                    <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
+                                        <Clock className="h-3 w-3 shrink-0" />
+                                        <span className="truncate">{job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : '未计划'}</span>
                                     </div>
-                                ))
-                            )}
+                                    <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => handleTriggerJob(job.jobType)}>
+                                        <Play className="h-3 w-3 mr-1" />
+                                        执行
+                                    </Button>
+                                </div>
+                            ))}
                         </div>
-                    </CardContent>
-                </Card>
-            </div>
+                    )}
+                </CardContent>
+            </Card>
 
             {/* 配置管理 - Tab 区域 */}
             <Tabs defaultValue="automation" className="w-full">

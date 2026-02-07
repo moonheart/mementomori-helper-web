@@ -2,6 +2,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAccountStore } from '@/store/accountStore';
+import { GlobalLogConsole } from '@/components/GlobalLogConsole';
 
 export function MainLayout() {
     const currentAccountId = useAccountStore((state) => state.currentAccountId);
@@ -19,6 +20,7 @@ export function MainLayout() {
                     <Outlet />
                 </main>
             </div>
+            <GlobalLogConsole />
         </div>
     );
 }
