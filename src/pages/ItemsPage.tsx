@@ -99,7 +99,7 @@ export function ItemsPage() {
 
             {/* Tab导航和内容 */}
             <Card className="p-6">
-                <Tabs defaultValue="material" className="space-y-6">
+                <Tabs defaultValue="equipment" className="space-y-6">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="equipment">
                             {t('[ItemBoxTabEquipment]') || '装备'}

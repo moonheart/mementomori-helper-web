@@ -69,13 +69,10 @@ export class EquipmentIconManager {
     /**
      * 获取装备图标URL
      * @param equipmentId 装备ID
-     * @param options 图标选项
      */
-    static getUrl(equipmentId: number, options: IconOptions = {}): string {
-        const { size = 'm' } = options;
-        // 装备ID格式: ITM_Equipment_000001
+    static getUrl(equipmentId: number): string {
         const paddedId = equipmentId.toString().padStart(6, '0');
-        return `${BASE_URL}/EquipmentIcon/ITM_Equipment_${paddedId}/ITM_Equipment_${paddedId}_${size}.png`;
+        return `${BASE_URL}/Icon/Equipment/EQP_${paddedId}.png`;
     }
 }
 
@@ -86,12 +83,10 @@ export class ItemIconManager {
     /**
      * 获取道具图标URL
      * @param itemId 道具ID
-     * @param options 图标选项
      */
-    static getUrl(itemId: number, options: IconOptions = {}): string {
-        const { size = 'm' } = options;
-        const paddedId = itemId.toString().padStart(6, '0');
-        return `${BASE_URL}/ItemIcon/ITM_${paddedId}/ITM_${paddedId}_${size}.png`;
+    static getUrl(itemId: number): string {
+        const paddedId = itemId.toString().padStart(4, '0');
+        return `${BASE_URL}/Icon/Item/Item_${paddedId}.png`;
     }
 }
 
@@ -115,15 +110,46 @@ export class RelicIconManager {
  * 宝石图标管理
  */
 export class SphereIconManager {
+    private static readonly BASE_URL_LOCAL = 'https://list.moonheart.dev/d/public/mmtm/AddressableLocalAssets';
+
     /**
      * 获取宝石图标URL
-     * @param sphereId 宝石ID
-     * @param options 图标选项
+     * @param categoryId 符石分类ID (2位)
+     * @param sphereLv 符石等级 (1-20+)
+     * @returns 图标URL，根据等级自动选择尺寸后缀
+     *
+     * URL格式: SPH_{categoryId}{suffix}.png
+     * - categoryId: 2位分类ID
+     * - suffix: 根据等级选择
+     *   - 等级1-5: 01 (128*128)
+     *   - 等级6-9: 02 (128*128)
+     *   - 等级10+: 03 (128*128)
+     *   - 00: 超小图标 (19*19)
      */
-    static getUrl(sphereId: number, options: IconOptions = {}): string {
-        const { size = 'm' } = options;
-        const paddedId = sphereId.toString().padStart(6, '0');
-        return `${BASE_URL}/SphereIcon/ITM_Sphere_${paddedId}/ITM_Sphere_${paddedId}_${size}.png`;
+    static getUrl(categoryId: number, sphereLv?: number): string {
+        let suffix: string;
+
+        if (sphereLv === undefined) {
+            // 默认使用中等尺寸 (等级1-5)
+            suffix = '01';
+        } else if (sphereLv >= 10) {
+            suffix = '03';
+        } else if (sphereLv >= 6) {
+            suffix = '02';
+        } else {
+            suffix = '01';
+        }
+
+        const paddedCategoryId = categoryId.toString().padStart(2, '0');
+        return `${this.BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}${suffix}.png`;
+    }
+
+    /**
+     * 获取超小尺寸宝石图标 (19*19)
+     */
+    static getTinyUrl(categoryId: number): string {
+        const paddedCategoryId = categoryId.toString().padStart(2, '0');
+        return `${this.BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}00.png`;
     }
 }
 

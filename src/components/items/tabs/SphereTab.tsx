@@ -4,6 +4,7 @@ import { UserItemDtoInfo, ItemType, SphereMB } from '@/api/generated';
 import { getItemName } from '@/lib/itemUtils';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
+import { SphereIconManager } from '@/lib/asset-manager';
 
 interface SphereTabProps {
     items: UserItemDtoInfo[];
@@ -16,6 +17,7 @@ interface SphereItem {
     playerId: number;
     name: string;
     rarity: string;
+    iconUrl: string;
 }
 
 export function SphereTab({ items }: SphereTabProps) {
@@ -39,11 +41,16 @@ export function SphereTab({ items }: SphereTabProps) {
                 // 过滤和格式化数据
                 const formattedItems = items
                     .filter((item) => item.itemType === ItemType.Sphere && item.itemCount > 0)
-                    .map((item) => ({
-                        ...item,
-                        name: getItemName(item.itemType, item.itemId, masterTables, t),
-                        rarity: '',
-                    }))
+                    .map((item) => {
+                        // 查找对应的符石配置，获取等级和分类ID
+                        const sphereData = sphereTable.find((s) => s.id === item.itemId);
+                        return {
+                            ...item,
+                            name: getItemName(item.itemType, item.itemId, masterTables, t),
+                            rarity: '',
+                            iconUrl: SphereIconManager.getUrl(sphereData?.categoryId ?? item.itemId, sphereData?.lv),
+                        };
+                    })
                     .sort((a, b) => b.itemCount - a.itemCount);
 
                 setSphereItems(formattedItems);
@@ -82,6 +89,7 @@ export function SphereTab({ items }: SphereTabProps) {
                     name={item.name}
                     rarity={item.rarity}
                     count={item.itemCount}
+                    iconUrl={item.iconUrl}
                 />
             ))}
         </div>

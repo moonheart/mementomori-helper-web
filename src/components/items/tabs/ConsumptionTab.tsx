@@ -4,6 +4,7 @@ import { UserItemDtoInfo, ItemType, ItemMB, TreasureChestMB, CharacterMB } from 
 import { getItemName } from '@/lib/itemUtils';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
+import { ItemIconManager } from '@/lib/asset-manager';
 
 interface ConsumptionTabProps {
     items: UserItemDtoInfo[];
@@ -24,6 +25,7 @@ interface ConsumptionItem {
     playerId: number;
     name: string;
     rarity: string;
+    iconUrl: string;
 }
 
 export function ConsumptionTab({ items, onUseItem }: ConsumptionTabProps) {
@@ -55,6 +57,7 @@ export function ConsumptionTab({ items, onUseItem }: ConsumptionTabProps) {
                         ...item,
                         name: getItemName(item.itemType, item.itemId, masterTables, t),
                         rarity: '',
+                        iconUrl: ItemIconManager.getUrl(item.itemId),
                     }))
                     .sort((a, b) => {
                         if (a.itemType !== b.itemType) {
@@ -99,6 +102,7 @@ export function ConsumptionTab({ items, onUseItem }: ConsumptionTabProps) {
                     name={item.name}
                     rarity={item.rarity}
                     count={item.itemCount}
+                    iconUrl={item.iconUrl}
                     canUse={item.itemType === ItemType.QuestQuickTicket}
                     onUse={() => {
                         const originalItem = items.find(

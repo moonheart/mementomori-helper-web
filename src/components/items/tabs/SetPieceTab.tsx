@@ -4,6 +4,7 @@ import { UserItemDtoInfo, ItemType, EquipmentCompositeMB, EquipmentMB } from '@/
 import { getItemName } from '@/lib/itemUtils';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
+import { EquipmentIconManager } from '@/lib/asset-manager';
 
 interface SetPieceTabProps {
     items: UserItemDtoInfo[];
@@ -16,6 +17,7 @@ interface SetPieceItem {
     playerId: number;
     name: string;
     rarity: string;
+    iconUrl: string;
 }
 
 export function SetPieceTab({ items }: SetPieceTabProps) {
@@ -41,11 +43,17 @@ export function SetPieceTab({ items }: SetPieceTabProps) {
                 // 过滤和格式化数据
                 const formattedItems = items
                     .filter((item) => item.itemType === ItemType.EquipmentFragment && item.itemCount > 0)
-                    .map((item) => ({
-                        ...item,
-                        name: getItemName(item.itemType, item.itemId, masterTables, t),
-                        rarity: '',
-                    }))
+                    .map((item) => {
+                        // 查找对应的装备碎片配置，获取装备ID
+                        const composite = equipmentCompositeTable.find((c) => c.id === item.itemId);
+                        const equipmentId = composite?.equipmentId ?? item.itemId;
+                        return {
+                            ...item,
+                            name: getItemName(item.itemType, item.itemId, masterTables, t),
+                            rarity: '',
+                            iconUrl: EquipmentIconManager.getUrl(equipmentId),
+                        };
+                    })
                     .sort((a, b) => b.itemCount - a.itemCount);
 
                 setSetPieceItems(formattedItems);
@@ -84,6 +92,7 @@ export function SetPieceTab({ items }: SetPieceTabProps) {
                     name={item.name}
                     rarity={item.rarity}
                     count={item.itemCount}
+                    iconUrl={item.iconUrl}
                 />
             ))}
         </div>

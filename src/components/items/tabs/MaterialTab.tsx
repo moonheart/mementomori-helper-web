@@ -4,6 +4,7 @@ import { UserItemDtoInfo, ItemType, ItemMB, EquipmentSetMaterialMB } from '@/api
 import { getItemName } from '@/lib/itemUtils';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
+import { ItemIconManager } from '@/lib/asset-manager';
 
 interface MaterialTabProps {
     items: UserItemDtoInfo[];
@@ -31,6 +32,7 @@ interface MaterialItem {
     playerId: number;
     name: string;
     rarity: string;
+    iconUrl: string;
 }
 
 export function MaterialTab({ items }: MaterialTabProps) {
@@ -60,6 +62,7 @@ export function MaterialTab({ items }: MaterialTabProps) {
                         ...item,
                         name: getItemName(item.itemType, item.itemId, masterTables, t),
                         rarity: '',
+                        iconUrl: ItemIconManager.getUrl(item.itemId),
                     }))
                     .sort((a, b) => b.itemCount - a.itemCount);
 
@@ -99,6 +102,7 @@ export function MaterialTab({ items }: MaterialTabProps) {
                     name={item.name}
                     rarity={item.rarity}
                     count={item.itemCount}
+                    iconUrl={item.iconUrl}
                 />
             ))}
         </div>

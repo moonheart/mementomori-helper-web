@@ -7,11 +7,12 @@ export interface ItemCardProps {
     name: string;
     rarity: string;
     count: number;
+    iconUrl?: string;
     canUse?: boolean;
     onUse?: () => void;
 }
 
-export function ItemCard({ name, rarity, count, canUse, onUse }: ItemCardProps) {
+export function ItemCard({ name, rarity, count, iconUrl, canUse, onUse }: ItemCardProps) {
     const getRarityColor = (rarityStr: string) => {
         const upper = rarityStr.toUpperCase();
         if (upper.includes('LR')) return 'bg-yellow-100 text-yellow-800 border-yellow-300';
@@ -27,8 +28,21 @@ export function ItemCard({ name, rarity, count, canUse, onUse }: ItemCardProps) 
             <CardContent className="p-4">
                 <div className="flex flex-col items-center gap-2">
                     {/* 图标 */}
-                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                        <Package className="w-8 h-8 text-gray-600" />
+                    <div className="w-16 h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center overflow-hidden">
+                        {iconUrl ? (
+                            <img
+                                src={iconUrl}
+                                alt={name}
+                                className="w-full h-full object-contain"
+                                loading="lazy"
+                                decoding="async"
+                                onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                }}
+                            />
+                        ) : (
+                            <Package className="w-8 h-8 text-gray-600" />
+                        )}
                     </div>
 
                     {/* 名称 */}
