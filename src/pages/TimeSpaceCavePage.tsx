@@ -1,404 +1,746 @@
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
     MapPin,
     Sparkles,
-    Shield,
     Heart,
     Clock,
     Trophy,
     Users,
     Skull,
     BookOpen,
-    ChevronRight,
-    Star,
-    Swords
+    Loader2
 } from 'lucide-react';
-
-// Mock数据 - 当前进度
-const caveProgress = {
-    currentLayer: 2,
-    currentPlatform: 5,
-    totalLayers: 3,
-    refreshIn: '26小时30分',
-    hardModeUnlocked: true,
-    hardModeSelected: false,
-    recoveryFruitsUsed: 8,
-    maxRecoveryFruits: 20
-};
-
-// Mock数据 - 增援角色
-const reinforcements = [
-    { id: 1, name: '暗影刺客', rarity: 'SSR', selected: true },
-    { id: 2, name: '光明牧师', rarity: 'UR', selected: true },
-    { id: 3, name: '火焰法师', rarity: 'SR', selected: false }
-];
-
-// Mock数据 - 已获得加护
-const blessings = [
-    { id: 1, name: '战士之力', effect: '攻击力 +15%', tier: 'common', count: 2 },
-    { id: 2, name: '生命祝福', effect: '最大生命值 +20%', tier: 'rare', count: 1 },
-    { id: 3, name: '暴击强化', effect: '暴击伤害 +30%', tier: 'epic', count: 1 },
-    { id: 4, name: '护盾守护', effect: '战斗开始时获得护盾', tier: 'legendary', count: 1 }
-];
-
-// Mock数据 - 当前层的石台选择
-const platformChoices = [
-    { id: 1, type: 'battle', difficulty: 'normal', enemy: '暗影守卫', power: 135000, rewards: ['金币x5000', '加护选择'] },
-    { id: 2, type: 'battle', difficulty: 'hard', enemy: '精英战士', power: 148000, rewards: ['金币x8000', '稀有加护选择'] },
-    { id: 3, type: 'treasure', difficulty: 'unknown', content: '神秘宝箱', rewards: ['随机奖励'] }
-];
-
-// Mock数据 - 未探索补偿
-const compensationBonus = {
-    active: true,
-    missedTimes: 2,
-    bonusPercentage: 160,  // 80% x 2
-    hasCovenantPrivilege: false
-};
+import { ortegaApi } from '@/api/ortega-client';
+import { useMasterStore } from '@/store/masterStore';
+import { useLocalizationStore } from '@/store/localization-store';
+import { useAccountStore } from '@/store/accountStore';
+import { timeManager } from '@/lib/time-manager';
+import { useItemName } from '@/hooks/useItemName';
+import {
+    DungeonBattleGetDungeonBattleInfoResponse,
+    DungeonBattleRelicMB,
+    DungeonBattleGridMB,
+    DungeonBattleGridType,
+    CharacterMB,
+    DungeonBattleRelicRarityType,
+    DungeonBattleGetBattleGridDataResponse
+} from '@/api/generated';
 
 export function TimeSpaceCavePage() {
-    const getBlessingTierColor = (tier: string) => {
-        const colors: Record<string, string> = {
-            'common': 'bg-gray-500',
-            'rare': 'bg-blue-500',
-            'epic': 'bg-purple-500',
-            'legendary': 'bg-orange-500'
+    const [loading, setLoading] = useState(true);
+    const [battleInfo, setBattleInfo] = useState<DungeonBattleGetDungeonBattleInfoResponse | null>(null);
+    const [error, setError] = useState<string | null>(null);
+    const [relicTable, setRelicTable] = useState<DungeonBattleRelicMB[]>([]);
+    const [gridTable, setGridTable] = useState<DungeonBattleGridMB[]>([]);
+    const [characterTable, setCharacterTable] = useState<CharacterMB[]>([]);
+    const [refreshTimeLeft, setRefreshTimeLeft] = useState<string>('');
+
+    // 石台详情弹窗状态
+    const [selectedPlatform, setSelectedPlatform] = useState<typeof platformChoices[0] | null>(null);
+    const [platformDetails, setPlatformDetails] = useState<DungeonBattleGetBattleGridDataResponse | null>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+
+    const { currentAccountId } = useAccountStore();
+    const sync = useMasterStore(state => state.sync);
+    const getTable = useMasterStore(state => state.getTable);
+    const t = useLocalizationStore(state => state.t);
+    const { getItemName } = useItemName();
+
+    // 加载数据
+    const loadData = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // 确保 Master 数据已加载
+            await sync();
+
+            // 获取时空洞窟信息
+            const response = await ortegaApi.dungeonBattle.getDungeonBattleInfo({});
+            setBattleInfo(response);
+
+            // 加载 Master 数据表
+            const [relics, grids, characters] = await Promise.all([
+                getTable('DungeonBattleRelicTable'),
+                getTable('DungeonBattleGridTable'),
+                getTable('CharacterTable')
+            ]);
+
+            setRelicTable((relics as any) || []);
+            setGridTable((grids as any) || []);
+            setCharacterTable((characters as any) || []);
+        } catch (err) {
+            console.error('Failed to load dungeon battle info:', err);
+            setError('加载时空洞窟数据失败');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        if (!currentAccountId) {
+            setLoading(false);
+            return;
+        }
+        loadData();
+    }, [currentAccountId]);
+
+    // 更新刷新倒计时
+    useEffect(() => {
+        if (!battleInfo) return;
+
+        const updateTimer = () => {
+            const now = timeManager.getServerNowMs();
+            const remaining = battleInfo.utcEndTimeStamp - now;
+            if (remaining > 0) {
+                setRefreshTimeLeft(timeManager.formatTimeSpan(remaining));
+            } else {
+                setRefreshTimeLeft('已刷新');
+            }
+        };
+
+        updateTimer();
+        const interval = setInterval(updateTimer, 1000);
+        return () => clearInterval(interval);
+    }, [battleInfo]);
+
+    // 获取加护稀有度颜色
+    const getBlessingTierColor = (tier: DungeonBattleRelicRarityType) => {
+        const colors: Record<number, string> = {
+            [DungeonBattleRelicRarityType.None]: 'bg-gray-500',
+            [DungeonBattleRelicRarityType.R]: 'bg-blue-500',
+            [DungeonBattleRelicRarityType.SR]: 'bg-purple-500',
+            [DungeonBattleRelicRarityType.SSR]: 'bg-orange-500'
         };
         return colors[tier] || 'bg-gray-500';
     };
 
-    const getDifficultyColor = (difficulty: string) => {
-        const colors: Record<string, string> = {
-            'normal': 'text-green-500',
-            'hard': 'text-red-500',
-            'unknown': 'text-purple-500'
-        };
-        return colors[difficulty] || 'text-gray-500';
+    // 获取石台类型颜色
+    const getGridTypeColor = (type: DungeonBattleGridType) => {
+        if (type === DungeonBattleGridType.EventBattleNormal ||
+            type === DungeonBattleGridType.EventBattleElite ||
+            type === DungeonBattleGridType.EventBattleSpecial) {
+            return 'text-yellow-500';
+        }
+        if (type === DungeonBattleGridType.BattleBoss || type === DungeonBattleGridType.BattleBossNoRelic) {
+            return 'text-red-500';
+        }
+        if (type === DungeonBattleGridType.BattleElite) {
+            return 'text-orange-500';
+        }
+        return 'text-green-500';
     };
 
+
+    // 判断是否是战斗类型石台
+    const isBattleGrid = (type: DungeonBattleGridType) => {
+        return [
+            DungeonBattleGridType.BattleNormal,
+            DungeonBattleGridType.BattleElite,
+            DungeonBattleGridType.BattleBoss,
+            DungeonBattleGridType.BattleBossNoRelic,
+            DungeonBattleGridType.BattleAndRelicReinforce,
+            DungeonBattleGridType.EventBattleNormal,
+            DungeonBattleGridType.EventBattleElite,
+            DungeonBattleGridType.EventBattleSpecial
+        ].includes(type);
+    };
+
+    // 处理石台点击
+    const handlePlatformClick = async (platform: typeof platformChoices[0]) => {
+        setSelectedPlatform(platform);
+        setPlatformDetails(null);
+
+        // 如果是战斗石台，获取详细数据
+        if (isBattleGrid(platform.type) && battleInfo) {
+            setLoadingDetails(true);
+            try {
+                const data = await ortegaApi.dungeonBattle.getBattleGridData({
+                    dungeonGridGuid: platform.guid,
+                    currentTermId: battleInfo.currentTermId
+                });
+                setPlatformDetails(data);
+            } catch (err) {
+                console.error('Failed to load platform details:', err);
+            } finally {
+                setLoadingDetails(false);
+            }
+        }
+    };
+
+    // 计算当前进度数据
+    const progressData = useMemo(() => {
+        if (!battleInfo) return null;
+
+        const currentLayer = battleInfo.currentDungeonBattleLayer?.layerCount || 0;
+        const recoveryUsed = battleInfo.userDungeonDtoInfo?.useDungeonRecoveryItemCount || 0;
+        const missedCount = battleInfo.userDungeonBattleMissedCount || 0;
+
+        return {
+            currentLayer,
+            totalLayers: 3,
+            refreshIn: refreshTimeLeft,
+            recoveryFruitsUsed: recoveryUsed,
+            maxRecoveryFruits: 20,
+            missedCount,
+            bonusPercentage: missedCount * 80
+        };
+    }, [battleInfo, refreshTimeLeft]);
+
+    // 转换加护数据
+    const blessings = useMemo(() => {
+        if (!battleInfo || !relicTable.length) return [];
+
+        const relicIds = battleInfo.userDungeonDtoInfo?.relicIds || [];
+        const relicMap: Record<number, number> = {};
+
+        // 统计每个加护的数量
+        relicIds.forEach(id => {
+            relicMap[id] = (relicMap[id] || 0) + 1;
+        });
+
+        return Object.entries(relicMap).map(([id, count]) => {
+            const relicMB = relicTable.find(r => r.id === parseInt(id));
+            return {
+                id: parseInt(id),
+                name: relicMB ? t(relicMB.nameKey) : '未知加护',
+                effect: relicMB ? t(relicMB.descriptionKey) : '',
+                tier: relicMB?.dungeonRelicRarityType || DungeonBattleRelicRarityType.None,
+                count
+            };
+        });
+    }, [battleInfo, relicTable, t]);
+
+    // 转换增援角色数据
+    const reinforcements = useMemo(() => {
+        if (!battleInfo || !characterTable.length) return [];
+
+        return (battleInfo.userDungeonBattleGuestCharacterDtoInfos || []).map(char => {
+            const characterMB = characterTable.find(c => c.id === char.characterId);
+            const isSelected = Object.values(battleInfo.userDungeonDtoInfo?.guestCharacterMap || {}).includes(char.guid);
+
+            return {
+                id: char.guid,
+                characterId: char.characterId,
+                name: characterMB ? t(characterMB.nameKey) : '未知角色',
+                rarity: characterMB?.rarityFlags || 0,
+                battlePower: char.battlePower,
+                selected: isSelected
+            };
+        });
+    }, [battleInfo, characterTable, t]);
+
+    // 转换石台选择数据
+    const platformChoices = useMemo(() => {
+        if (!battleInfo || !gridTable.length) return [];
+
+        const grids = battleInfo.currentDungeonBattleLayer?.dungeonGrids || [];
+        return grids.map(grid => {
+            const gridMB = gridTable.find(g => g.id === grid.dungeonGridId);
+            const power = battleInfo.gridBattlePowerDict?.[grid.dungeonGridGuid] || 0;
+
+            return {
+                id: grid.dungeonGridId,
+                guid: grid.dungeonGridGuid,
+                type: gridMB?.dungeonGridType || DungeonBattleGridType.BattleNormal,
+                typeName: t(gridMB?.dungeonGridNameKey || ''),
+                power,
+                x: grid.x,
+                y: grid.y
+            };
+        });
+    }, [battleInfo, gridTable]);
+
+    // 加载中
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
+    // 错误状态
+    if (error) {
+        return (
+            <div className="container mx-auto p-6">
+                <Alert variant="destructive">
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
+
+    // 未登录状态
+    if (!currentAccountId || !battleInfo) {
+        return (
+            <div className="container mx-auto p-6">
+                <Alert>
+                    <AlertDescription>请先登录账号</AlertDescription>
+                </Alert>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
+        <div className="container mx-auto p-6 space-y-6">
             {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">时空洞窟</h1>
-                <p className="text-muted-foreground mt-1">
-                    探索3层洞窟，选择路线获取加护和奖励
+            <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                    <MapPin className="w-8 h-8 text-primary" />
+                    <h1 className="text-3xl font-bold">时空洞窟</h1>
+                </div>
+                <p className="text-muted-foreground">
+                    探索神秘洞窟，获得强大加护
                 </p>
             </div>
 
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>时空洞窟说明：</strong>
-                    共有3层，每48小时刷新。移动到新石台后，同列其他石台会崩塌。
-                    战斗后可选择加护提升能力，最多使用20颗回复果实。
-                </AlertDescription>
-            </Alert>
-
-            {/* 刷新倒计时和进度 */}
-            <div className="grid gap-6 md:grid-cols-2">
+            {/* 当前进度概览 */}
+            {progressData && (
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
-                            <Clock className="h-6 w-6 text-primary" />
-                            刷新倒计时
+                            <Trophy className="w-5 h-5" />
+                            探索进度
                         </CardTitle>
-                        <CardDescription>每48小时刷新一次</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-center py-4">
-                            <div className="text-4xl font-bold text-primary mb-2">
-                                {caveProgress.refreshIn}
-                            </div>
-                            <div className="text-sm text-muted-foreground">
-                                刷新后进度、加护、增援全部重置
-                            </div>
-                        </div>
-                    </CardContent>
-                </Card>
-
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <MapPin className="h-6 w-6" />
-                            当前进度
-                        </CardTitle>
-                        <CardDescription>探索进度</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
+                        {/* 层数进度 */}
                         <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">当前层数</span>
-                                <Badge variant="secondary" className="text-base">
-                                    第 {caveProgress.currentLayer} / {caveProgress.totalLayers} 层
-                                </Badge>
+                            <div className="flex justify-between text-sm">
+                                <span>第 {progressData.currentLayer} / {progressData.totalLayers} 层</span>
+                                <span>{Math.round((progressData.currentLayer / progressData.totalLayers) * 100)}%</span>
                             </div>
                             <Progress
-                                value={(caveProgress.currentLayer / caveProgress.totalLayers) * 100}
-                                className="h-2"
+                                value={(progressData.currentLayer / progressData.totalLayers) * 100}
+                                className="h-3"
                             />
                         </div>
-                        <div className="p-3 bg-muted rounded-lg">
-                            <div className="text-sm text-muted-foreground mb-1">当前石台</div>
-                            <div className="font-semibold">第 {caveProgress.currentPlatform} 号石台</div>
+
+                        {/* 刷新倒计时 */}
+                        <div className="flex items-center justify-between p-2 bg-secondary/50 rounded">
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-muted-foreground" />
+                                <span className="text-sm">刷新倒计时</span>
+                            </div>
+                            <Badge variant="outline">{progressData.refreshIn}</Badge>
+                        </div>
+
+                        {/* 未探索补偿 */}
+                        {progressData.missedCount > 0 && (
+                            <Alert>
+                                <Trophy className="h-4 w-4" />
+                                <AlertDescription>
+                                    你有 {progressData.missedCount} 次未探索，获得{' '}
+                                    <span className="font-semibold text-orange-500">
+                                        {progressData.bonusPercentage}%
+                                    </span>{' '}
+                                    额外奖励加成
+                                </AlertDescription>
+                            </Alert>
+                        )}
+
+                        {/* 回复果实 */}
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Heart className="w-4 h-4 text-red-500" />
+                                <span className="text-sm">回复果实使用次数</span>
+                            </div>
+                            <span className="text-sm">
+                                {progressData.recoveryFruitsUsed} / {progressData.maxRecoveryFruits}
+                            </span>
                         </div>
                     </CardContent>
                 </Card>
-            </div>
-
-            {/* 未探索补偿 */}
-            {compensationBonus.active && (
-                <Alert className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-200">
-                    <Trophy className="h-4 w-4 text-yellow-600" />
-                    <AlertDescription className="text-yellow-800 dark:text-yellow-200">
-                        <strong>未探索补偿激活！</strong>
-                        错过 {compensationBonus.missedTimes} 次探索，本轮奖励增加 <strong>{compensationBonus.bonusPercentage}%</strong>
-                        {!compensationBonus.hasCovenantPrivilege && ' (购买盟约特权可提升至200%)'}
-                    </AlertDescription>
-                </Alert>
             )}
 
-            <Tabs defaultValue="explore" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-4">
-                    <TabsTrigger value="explore">探索</TabsTrigger>
-                    <TabsTrigger value="blessings">加护</TabsTrigger>
-                    <TabsTrigger value="reinforcements">增援</TabsTrigger>
-                    <TabsTrigger value="items">道具</TabsTrigger>
-                </TabsList>
+            {/* 标签页内容 */}
+            <Card>
+                <Tabs defaultValue="explore" className="p-6">
+                    <TabsList className="grid w-full grid-cols-3">
+                        <TabsTrigger value="explore">探索</TabsTrigger>
+                        <TabsTrigger value="blessings">加护</TabsTrigger>
+                        <TabsTrigger value="reinforcements">增援</TabsTrigger>
+                    </TabsList>
 
-                {/* 探索选项 */}
-                <TabsContent value="explore" className="space-y-6">
-                    {/* 困难模式选择 */}
-                    {caveProgress.currentLayer === 2 && caveProgress.hardModeUnlocked && (
-                        <Card className="border-2 border-orange-500">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <Skull className="h-6 w-6 text-orange-500" />
-                                    <CardTitle className="text-orange-600 dark:text-orange-400">
-                                        困难模式
-                                    </CardTitle>
-                                </div>
-                                <CardDescription>
-                                    第3层可选择困难模式，敌人更强，奖励更多
-                                </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200">
-                                    <div className="text-sm mb-2">
-                                        • 敌人难度大幅提升<br />
-                                        • 获得更多战斗奖励<br />
-                                        • 主线冒险8-14通关后解锁
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <Button
-                                        variant={!caveProgress.hardModeSelected ? "default" : "outline"}
-                                        className="w-full"
-                                    >
-                                        普通模式
-                                    </Button>
-                                    <Button
-                                        variant={caveProgress.hardModeSelected ? "default" : "outline"}
-                                        className="w-full bg-orange-600 hover:bg-orange-700"
-                                    >
-                                        <Skull className="mr-2 h-4 w-4" />
-                                        困难模式
-                                    </Button>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* 石台选择 */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>选择下一个石台</CardTitle>
+                    {/* 探索石台 */}
+                    <TabsContent value="explore" className="space-y-4">
+                        <CardHeader className="px-0">
+                            <CardTitle>可选择的石台</CardTitle>
                             <CardDescription>
-                                移动到新石台后，同列其他石台将崩塌
+                                选择下一个要探索的石台，每个石台拥有不同的奖励
                             </CardDescription>
                         </CardHeader>
-                        <CardContent>
-                            <div className="grid gap-4 md:grid-cols-3">
-                                {platformChoices.map((platform) => (
-                                    <Card
-                                        key={platform.id}
-                                        className="hover:shadow-lg transition-all cursor-pointer hover:border-primary"
-                                    >
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <Badge variant={platform.type === 'battle' ? 'destructive' : 'default'}>
-                                                    {platform.type === 'battle' ? '战斗' : '宝箱'}
-                                                </Badge>
-                                                {platform.type === 'battle' && (
-                                                    <span className={`text-sm font-semibold ${getDifficultyColor(platform.difficulty)}`}>
-                                                        {platform.difficulty === 'normal' ? '普通' : '困难'}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <CardTitle className="text-lg">
-                                                {platform.type === 'battle' ? platform.enemy : platform.content}
-                                            </CardTitle>
-                                            {platform.power && (
-                                                <CardDescription>
-                                                    推荐战力: {platform.power.toLocaleString()}
-                                                </CardDescription>
-                                            )}
-                                        </CardHeader>
-                                        <CardContent className="space-y-3">
-                                            <div>
-                                                <div className="text-xs text-muted-foreground mb-2">奖励</div>
-                                                <div className="space-y-1">
-                                                    {platform.rewards.map((reward, index) => (
-                                                        <div key={index} className="text-sm flex items-center gap-2">
-                                                            <Star className="h-3 w-3 text-yellow-500" />
-                                                            {reward}
+
+                        {platformChoices.length > 0 ? (
+                            <div className="bg-gradient-to-b from-secondary/10 to-secondary/5 p-8 rounded-lg relative">
+                                {(() => {
+                                    const currentGridGuid = battleInfo.userDungeonDtoInfo?.currentGridGuid;
+                                    const doneGridGuids = battleInfo.userDungeonDtoInfo?.doneGridGuids || [];
+
+                                    // 按Y坐标分组
+                                    const groupedByY = platformChoices.reduce((acc, platform) => {
+                                        if (!acc[platform.y]) {
+                                            acc[platform.y] = [];
+                                        }
+                                        acc[platform.y].push(platform);
+                                        return acc;
+                                    }, {} as Record<number, typeof platformChoices>);
+
+                                    // 获取所有Y坐标并排序（从小到大）
+                                    const yLevels = Object.keys(groupedByY).map(Number).sort((a, b) => a - b);
+
+                                    // 找到当前石台的Y坐标
+                                    const currentPlatform = platformChoices.find(p => p.guid === currentGridGuid);
+                                    const currentY = currentPlatform?.y ?? -1;
+
+                                    // 判断石台是否可选择（当前石台的下一层，且未完成）
+                                    const isSelectable = (platform: typeof platformChoices[0]) => {
+                                        if (doneGridGuids.includes(platform.guid)) return false;
+                                        if (platform.guid === currentGridGuid) return false;
+                                        // 如果没有当前石台（开始状态），第0层可选
+                                        if (!currentGridGuid) return platform.y === 0;
+                                        // 否则下一层可选
+                                        return platform.y === currentY + 1;
+                                    };
+
+                                    return (
+                                        <div className="relative">
+                                            {/* SVG连接线层 */}
+                                            <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ zIndex: 0 }}>
+                                                {yLevels.map((y, yIndex) => {
+                                                    if (yIndex === yLevels.length - 1) return null;
+
+                                                    const currentRow = groupedByY[y];
+                                                    const nextY = yLevels[yIndex + 1];
+                                                    const nextRow = groupedByY[nextY];
+
+                                                    return currentRow.map((platform, pIndex) => {
+                                                        return nextRow.map((nextPlatform, nIndex) => {
+                                                            const fromX = (pIndex + 1) / (currentRow.length + 1) * 100;
+                                                            const fromY = (yIndex * 180 + 90);
+                                                            const toX = (nIndex + 1) / (nextRow.length + 1) * 100;
+                                                            const toY = ((yIndex + 1) * 180 + 90);
+
+                                                            return (
+                                                                <line
+                                                                    key={`${platform.guid}-${nextPlatform.guid}`}
+                                                                    x1={`${fromX}%`}
+                                                                    y1={fromY}
+                                                                    x2={`${toX}%`}
+                                                                    y2={toY}
+                                                                    stroke="currentColor"
+                                                                    strokeWidth="2"
+                                                                    strokeDasharray="4 4"
+                                                                    className="text-muted-foreground/30"
+                                                                />
+                                                            );
+                                                        });
+                                                    });
+                                                })}
+                                            </svg>
+
+                                            {/* 石台层 */}
+                                            <div className="relative space-y-6" style={{ zIndex: 1 }}>
+                                                {yLevels.map((y) => {
+                                                    const platforms = groupedByY[y].sort((a, b) => a.x - b.x);
+
+                                                    return (
+                                                        <div key={y} className="flex justify-center items-center" style={{ minHeight: '160px' }}>
+                                                            <div className="flex gap-12 justify-center items-center">
+                                                                {platforms.map((platform) => {
+                                                                    const isCurrent = platform.guid === currentGridGuid;
+                                                                    const isDone = doneGridGuids.includes(platform.guid);
+                                                                    const canSelect = isSelectable(platform);
+
+                                                                    return (
+                                                                        <div
+                                                                            key={platform.guid}
+                                                                            className="flex flex-col items-center gap-2"
+                                                                        >
+                                                                            {/* 石台卡片 */}
+                                                                            <div className="relative">
+                                                                                <div
+                                                                                    className={`w-28 h-28 border-3 rounded-full flex flex-col items-center justify-center cursor-pointer transition-all ${isCurrent
+                                                                                        ? 'border-primary bg-primary/10 shadow-xl shadow-primary/50 scale-110'
+                                                                                        : isDone
+                                                                                            ? 'border-muted bg-muted/20 opacity-60'
+                                                                                            : canSelect
+                                                                                                ? `hover:scale-110 hover:shadow-xl ${getGridTypeColor(platform.type).replace('text-', 'border-')} bg-card shadow-lg`
+                                                                                                : 'border-muted-foreground/20 bg-muted/10 opacity-40'
+                                                                                        }`}
+                                                                                    onClick={() => handlePlatformClick(platform)}
+                                                                                >
+                                                                                    <Skull className={`w-8 h-8 ${isCurrent
+                                                                                        ? 'text-primary'
+                                                                                        : isDone
+                                                                                            ? 'text-muted-foreground'
+                                                                                            : getGridTypeColor(platform.type)
+                                                                                        }`} />
+                                                                                    <div className="text-[10px] font-medium text-center line-clamp-1 px-1 mt-0.5">
+                                                                                        {platform.typeName}
+                                                                                    </div>
+                                                                                    <div className="text-[9px] text-muted-foreground font-semibold">
+                                                                                        {(platform.power / 1000).toFixed(0)}K
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                {/* 当前位置标识 */}
+                                                                                {isCurrent && (
+                                                                                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] px-2 py-0.5 rounded-full shadow-lg whitespace-nowrap font-semibold">
+                                                                                        当前位置
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {/* 已完成标识 */}
+                                                                                {isDone && !isCurrent && (
+                                                                                    <div className="absolute -top-2 left-1/2 -translate-x-1/2 bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full shadow-sm">
+                                                                                        已完成
+                                                                                    </div>
+                                                                                )}
+
+                                                                                {/* 坐标标签 */}
+                                                                                <div className="absolute -bottom-2 -right-2 bg-secondary text-secondary-foreground text-[9px] px-1.5 py-0.5 rounded-full shadow-sm">
+                                                                                    {platform.x},{platform.y}
+                                                                                </div>
+                                                                            </div>
+
+                                                                            {/* 选择按钮 - 只在可选择的石台显示 */}
+                                                                            {canSelect && (
+                                                                                <Button
+                                                                                    size="sm"
+                                                                                    className="h-7 text-xs px-3"
+                                                                                    variant="default"
+                                                                                >
+                                                                                    选择
+                                                                                </Button>
+                                                                            )}
+                                                                        </div>
+                                                                    );
+                                                                })}
+                                                            </div>
                                                         </div>
-                                                    ))}
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+                        ) : (
+                            <p className="text-center text-muted-foreground py-8">
+                                暂无可选择的石台
+                            </p>
+                        )}
+                    </TabsContent>
+
+                    {/* 加护列表 */}
+                    <TabsContent value="blessings" className="space-y-4">
+                        <CardHeader className="px-0">
+                            <CardTitle>已获得的加护</CardTitle>
+                            <CardDescription>
+                                加护会在战斗中提供各种增益效果
+                            </CardDescription>
+                        </CardHeader>
+                        <div className="grid gap-3">
+                            {blessings.map((blessing) => (
+                                <Card key={blessing.id} className="relative overflow-hidden">
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${getBlessingTierColor(blessing.tier)}`} />
+                                    <CardContent className="pt-6 pl-6">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex items-start gap-3 flex-1">
+                                                <Sparkles className={`w-5 h-5 mt-0.5 ${getBlessingTierColor(blessing.tier).replace('bg-', 'text-')}`} />
+                                                <div className="space-y-1 flex-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-semibold">{blessing.name}</h4>
+                                                        {blessing.count > 1 && (
+                                                            <Badge variant="secondary" className="text-xs">
+                                                                x{blessing.count}
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">{blessing.effect}</p>
                                                 </div>
                                             </div>
-                                            <Button className="w-full" size="sm">
-                                                <ChevronRight className="mr-1 h-4 w-4" />
-                                                前往
-                                            </Button>
-                                        </CardContent>
-                                    </Card>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-
-                {/* 加护列表 */}
-                <TabsContent value="blessings" className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-2">
-                        {blessings.map((blessing) => (
-                            <Card key={blessing.id}>
-                                <CardHeader>
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`p-2 rounded-lg ${getBlessingTierColor(blessing.tier)}`}>
-                                                <Sparkles className="h-5 w-5 text-white" />
-                                            </div>
-                                            <div>
-                                                <CardTitle className="text-lg">{blessing.name}</CardTitle>
-                                                <CardDescription>{blessing.effect}</CardDescription>
-                                            </div>
                                         </div>
-                                        {blessing.count > 1 && (
-                                            <Badge>x{blessing.count}</Badge>
-                                        )}
-                                    </div>
-                                </CardHeader>
-                            </Card>
-                        ))}
-                    </div>
-                    <Alert>
-                        <Sparkles className="h-4 w-4" />
-                        <AlertDescription>
-                            加护仅在时空洞窟内有效，洞窟刷新后将全部重置
-                        </AlertDescription>
-                    </Alert>
-                </TabsContent>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            {blessings.length === 0 && (
+                                <p className="text-center text-muted-foreground py-8">
+                                    还未获得任何加护
+                                </p>
+                            )}
+                        </div>
+                    </TabsContent>
 
-                {/* 增援角色 */}
-                <TabsContent value="reinforcements" className="space-y-4">
-                    <div className="grid gap-4 md:grid-cols-3">
-                        {reinforcements.map((char) => (
-                            <Card
-                                key={char.id}
-                                className={char.selected ? 'border-2 border-primary' : ''}
-                            >
-                                <CardHeader>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <Badge className={
-                                            char.rarity === 'UR' ? 'bg-yellow-500' :
-                                                char.rarity === 'SSR' ? 'bg-purple-500' :
-                                                    'bg-blue-500'
-                                        }>
-                                            {char.rarity}
-                                        </Badge>
-                                        {char.selected && (
-                                            <Badge variant="outline" className="border-primary">
-                                                已选择
-                                            </Badge>
-                                        )}
-                                    </div>
-                                    <CardTitle className="text-lg">{char.name}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Button
-                                        className="w-full"
-                                        variant={char.selected ? "outline" : "default"}
-                                        size="sm"
-                                    >
-                                        {char.selected ? '取消选择' : '选择增援'}
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                    <Alert>
-                        <Users className="h-4 w-4" />
-                        <AlertDescription>
-                            增援角色仅在时空洞窟内可用，洞窟刷新后消失
-                        </AlertDescription>
-                    </Alert>
-                </TabsContent>
-
-                {/* 道具 */}
-                <TabsContent value="items" className="space-y-4">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Heart className="h-6 w-6 text-red-500" />
-                                回复的果实
-                            </CardTitle>
+                    {/* 增援角色 */}
+                    <TabsContent value="reinforcements" className="space-y-4">
+                        <CardHeader className="px-0">
+                            <CardTitle>可选增援角色</CardTitle>
                             <CardDescription>
-                                使用后复活并治愈所有角色
+                                最多可以选择 3 名增援角色协助战斗
                             </CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-muted-foreground">使用次数</span>
-                                    <Badge variant={caveProgress.recoveryFruitsUsed >= 15 ? "destructive" : "secondary"} className="text-base">
-                                        {caveProgress.recoveryFruitsUsed} / {caveProgress.maxRecoveryFruits}
-                                    </Badge>
-                                </div>
-                                <Progress
-                                    value={(caveProgress.recoveryFruitsUsed / caveProgress.maxRecoveryFruits) * 100}
-                                    className="h-3"
-                                />
-                                <div className="text-xs text-muted-foreground">
-                                    剩余 {caveProgress.maxRecoveryFruits - caveProgress.recoveryFruitsUsed} 颗 • 洞窟刷新后重置
-                                </div>
-                            </div>
-
-                            <div className="p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950 dark:to-pink-950 rounded-lg border">
-                                <div className="flex items-center gap-3 mb-3">
-                                    <Heart className="h-8 w-8 text-red-500" />
-                                    <div>
-                                        <div className="font-semibold">回复效果</div>
-                                        <div className="text-sm text-muted-foreground">
-                                            复活所有倒下的角色并恢复全部生命值
+                        <div className="grid gap-3">
+                            {reinforcements.map((char) => (
+                                <Card
+                                    key={char.id}
+                                    className={char.selected ? 'border-primary bg-primary/5' : ''}
+                                >
+                                    <CardContent className="pt-6">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-3">
+                                                <Users className="w-5 h-5 text-muted-foreground" />
+                                                <div>
+                                                    <div className="flex items-center gap-2">
+                                                        <h4 className="font-semibold">{char.name}</h4>
+                                                        {char.selected && (
+                                                            <Badge variant="default" className="text-xs">
+                                                                已选择
+                                                            </Badge>
+                                                        )}
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground">
+                                                        战力: {char.battlePower.toLocaleString()}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            <Button variant={char.selected ? 'outline' : 'default'} size="sm">
+                                                {char.selected ? '取消' : '选择'}
+                                            </Button>
                                         </div>
+                                    </CardContent>
+                                </Card>
+                            ))}
+                            {reinforcements.length === 0 && (
+                                <p className="text-center text-muted-foreground py-8">
+                                    暂无可选增援角色
+                                </p>
+                            )}
+                        </div>
+                    </TabsContent>
+                </Tabs>
+            </Card>
+
+            {/* 战斗说明 */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <BookOpen className="w-5 h-5" />
+                        玩法说明
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm text-muted-foreground space-y-2">
+                    <p>• 时空洞窟每天重置一次，共3层</p>
+                    <p>• 每层结束后可以选择进入困难模式获得更高奖励</p>
+                    <p>• 获得的加护会在本次探索中一直生效</p>
+                    <p>• 回复果实可以恢复角色HP,每日最多使用20次</p>
+                    <p>• 未探索的次数会累积,并提供额外奖励加成</p>
+                </CardContent>
+            </Card>
+
+            {/* 石台详情弹窗 */}
+            <Dialog open={!!selectedPlatform} onOpenChange={() => setSelectedPlatform(null)}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    {selectedPlatform && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <Skull className={`w-5 h-5 ${getGridTypeColor(selectedPlatform.type)}`} />
+                                    {selectedPlatform.typeName}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    坐标: ({selectedPlatform.x}, {selectedPlatform.y}) | 推荐战力: {selectedPlatform.power.toLocaleString()}
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                                {/* 战斗石台显示敌人信息 */}
+                                {isBattleGrid(selectedPlatform.type) && (
+                                    <div className="space-y-3">
+                                        {loadingDetails ? (
+                                            <div className="flex items-center justify-center py-8">
+                                                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                                            </div>
+                                        ) : platformDetails ? (
+                                            <>
+                                                {/* 敌人列表 */}
+                                                {platformDetails.enemyInfos && platformDetails.enemyInfos.length > 0 && (
+                                                    <div>
+                                                        <h4 className="text-sm font-semibold mb-2">敌人信息</h4>
+                                                        <div className="grid gap-2">
+                                                            {platformDetails.enemyInfos.map((enemy, idx) => (
+                                                                <Card key={idx}>
+                                                                    <CardContent className="pt-4 pb-3">
+                                                                        <div className="flex items-center justify-between">
+                                                                            <div className="flex items-center gap-2">
+                                                                                <Badge variant="outline">Lv.{enemy.level}</Badge>
+                                                                                <span className="text-sm">战力: {enemy.battlePower.toLocaleString()}</span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </CardContent>
+                                                                </Card>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* 奖励列表 */}
+                                                {(platformDetails.normalRewardItemList?.length > 0 || platformDetails.specialRewardItemList?.length > 0) && (
+                                                    <div>
+                                                        <h4 className="text-sm font-semibold mb-2">奖励</h4>
+                                                        <div className="space-y-2">
+                                                            {platformDetails.normalRewardItemList && platformDetails.normalRewardItemList.length > 0 && (
+                                                                <div>
+                                                                    <p className="text-xs text-muted-foreground mb-1">普通奖励</p>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {platformDetails.normalRewardItemList.map((item, idx) => (
+                                                                            <Badge key={idx} variant="secondary">
+                                                                                {getItemName(item.itemType, item.itemId)} ×{item.itemCount}
+                                                                            </Badge>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                            {platformDetails.specialRewardItemList && platformDetails.specialRewardItemList.length > 0 && (
+                                                                <div>
+                                                                    <p className="text-xs text-muted-foreground mb-1">特殊奖励</p>
+                                                                    <div className="flex flex-wrap gap-2">
+                                                                        {platformDetails.specialRewardItemList.map((item, idx) => (
+                                                                            <Badge key={idx} variant="default">
+                                                                                {getItemName(item.itemType, item.itemId)} ×{item.itemCount}
+                                                                            </Badge>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : null}
                                     </div>
-                                </div>
-                                <Button className="w-full" variant="destructive">
-                                    <Heart className="mr-2 h-4 w-4" />
-                                    使用回复果实
-                                </Button>
+                                )}
+
+                                {/* 非战斗石台显示说明 */}
+                                {!isBattleGrid(selectedPlatform.type) && (
+                                    <div className="text-sm text-muted-foreground py-4 text-center">
+                                        此石台为非战斗类型，暂无详细信息
+                                    </div>
+                                )}
                             </div>
-                        </CardContent>
-                    </Card>
-                </TabsContent>
-            </Tabs>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
