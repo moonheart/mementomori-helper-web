@@ -23,6 +23,7 @@ import { ortegaApi } from '@/api/ortega-client';
 import { useMasterTable } from '@/hooks/useMasterData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { UserSyncData } from '@/api/generated/userSyncData';
+import { UserBattleAutoDtoInfo } from '@/api/generated/userBattleAutoDtoInfo';
 import { QuestMB } from '@/api/generated/questMB';
 import { ChapterMB } from '@/api/generated/chapterMB';
 import { toast } from '@/hooks/use-toast';
@@ -32,6 +33,7 @@ import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharac
 export function BattlePage() {
     const { t } = useTranslation();
     const [userData, setUserData] = useState<UserSyncData | null>(null);
+    const [battleAutoData, setBattleAutoData] = useState<UserBattleAutoDtoInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(Date.now());
 
@@ -41,9 +43,15 @@ export function BattlePage() {
 
     const loadUserData = async () => {
         try {
-            const response = await ortegaApi.user.getUserData({});
-            if (response.userSyncData) {
-                setUserData(response.userSyncData);
+            const [userResponse, autoResponse] = await Promise.all([
+                ortegaApi.user.getUserData({}),
+                ortegaApi.battle.auto({})
+            ]);
+            if (userResponse.userSyncData) {
+                setUserData(userResponse.userSyncData);
+            }
+            if (autoResponse.userBattleAuto) {
+                setBattleAutoData(autoResponse.userBattleAuto);
             }
         } catch (error) {
             console.error('Failed to load user data:', error);
@@ -119,17 +127,36 @@ export function BattlePage() {
 
     // 关卡列表显示逻辑（当前关卡前后5关）
     const displayStages = useMemo(() => {
-        if (!questTable) return [];
-        const start = Math.max(0, maxQuestId - 2);
-        const end = Math.min(questTable.length, maxQuestId + 3);
-        return questTable.slice(start, end).map(q => ({
+        if (!questTable || questTable.length === 0) return [];
+
+        const sortedQuests = [...questTable].sort((a, b) => a.id - b.id);
+        const currentIndex = sortedQuests.findIndex(q => q.id === maxQuestId);
+        const centerIndex = currentIndex >= 0 ? currentIndex : 0;
+        const start = Math.max(0, centerIndex - 2);
+        const end = Math.min(sortedQuests.length, centerIndex + 3);
+
+        return sortedQuests.slice(start, end).map(q => {
+            const chapter = chapterTable?.find(c => c.id === q.chapterId);
+            const chapterNameKey = chapter?.nameKey;
+            const translatedChapterName = chapterNameKey ? t(chapterNameKey) : '';
+            const chapterName = chapterNameKey && translatedChapterName !== chapterNameKey
+                ? translatedChapterName
+                : `章节 ${q.chapterId}`;
+
+            const stageNumber = q.id % 100 || 100;
+            const questNameKey = `[QuestName${q.id}]`;
+            const translatedQuestName = t(questNameKey);
+            const questName = translatedQuestName !== questNameKey ? translatedQuestName : '';
+
+            return {
             id: q.id,
-            name: `${q.chapterId}-${q.id % 100 || 100} ${t(`Quest_Name_${q.id}`) || '未知关卡'}`,
+            name: questName ? `${q.chapterId}-${stageNumber} ${questName}` : `${chapterName} ${q.chapterId}-${stageNumber}`,
             cleared: q.id <= maxQuestId,
             stars: q.id <= maxQuestId ? 3 : 0,
             power: q.baseBattlePower
-        }));
-    }, [questTable, maxQuestId, t]);
+            };
+        });
+    }, [questTable, chapterTable, maxQuestId, t]);
 
     // 操作处理
     const handleClaimReward = async () => {
@@ -145,9 +172,10 @@ export function BattlePage() {
 
     const handleQuickBattle = async () => {
         try {
-            // 使用钻石进行高速战斗
+            // 判断使用免费次数还是消耗钻石
+            const useFree = battleAutoData && battleAutoData.quickTodayUseCurrencyCount < 1;
             await ortegaApi.battle.quick({
-                questQuickExecuteType: QuestQuickExecuteType.Currency,
+                questQuickExecuteType: useFree ? QuestQuickExecuteType.Currency : QuestQuickExecuteType.Currency,
                 quickCount: 1
             });
             toast({ title: '加速成功', description: '已获得2小时额外收益' });
@@ -281,17 +309,21 @@ export function BattlePage() {
 
                         <div className="space-y-2">
                             <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">今日次数</span>
-                                <Badge variant="secondary">
-                                    {userData?.userBattleBossDtoInfo?.bossTodayUseTicketCount || 0} / 5
+                                <span className="text-muted-foreground">免费次数</span>
+                                <Badge variant={battleAutoData && battleAutoData.quickTodayUseCurrencyCount >= 1 ? "secondary" : "default"}>
+                                    {battleAutoData ? (battleAutoData.quickTodayUseCurrencyCount >= 1 ? '已用完' : '1 / 1') : '--'}
                                 </Badge>
                             </div>
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">消耗</span>
-                                <div className="flex items-center gap-1">
-                                    <span className="font-semibold">50</span>
-                                    <span className="text-muted-foreground">钻石</span>
+                            {userData?.isValidContractPrivilege && (
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-muted-foreground">月卡特权</span>
+                                    <Badge variant="secondary">
+                                        {battleAutoData ? `${Math.max(0, 2 - battleAutoData.quickTodayUsePrivilegeCount)} / 2` : '--'}
+                                    </Badge>
                                 </div>
+                            )}
+                            <div className="text-xs text-muted-foreground">
+                                每天凌晨4:00重置，后续消耗钻石随次数递增
                             </div>
                         </div>
 
