@@ -107,7 +107,7 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
         if (params && params.length > 0) {
             params.forEach((param, index) => {
                 const placeholder = `{${index}}`;
-                text = text.replace(placeholder, String(param));
+                text = text.replaceAll(placeholder, String(param));
             });
         }
 

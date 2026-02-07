@@ -27,6 +27,7 @@ import { useItemName } from '@/hooks/useItemName';
 import { GachaCaseInfo } from '@/api/generated/gachaCaseInfo';
 import { GachaCaseUiMB } from '@/api/generated/gachaCaseUiMB';
 import { GachaCaseMB } from '@/api/generated/gachaCaseMB';
+import { GachaCategoryType } from '@/api/generated/gachaCategoryType';
 import { ItemType } from '@/api/generated/itemType';
 import { GachaDrawResponse } from '@/api/generated/GachadrawResponse';
 import { GachaGetLotteryItemListResponse } from '@/api/generated/GachagetLotteryItemListResponse';
@@ -240,26 +241,27 @@ export function GachaPage() {
 
                         return (
                             <Card key={gachaCase.gachaCaseId} className="overflow-hidden">
-                                {/* 抽卡池banner */}
-                                <div className="h-32 bg-gradient-to-br from-purple-600 via-pink-600 to-orange-500 flex items-center justify-center relative">
-                                    <div className="text-white text-center">
-                                        <Sparkles className="h-12 w-12 mx-auto mb-2" />
-                                    </div>
-                                    {gachaCase.endTime > 0 && (
+                                <CardHeader className="relative">
+                                    {gachaCase.endTime > 0 && gachaCase.endTime < 4102441200000 && (
                                         <Badge variant="destructive" className="absolute top-2 right-2">
                                             限时
                                         </Badge>
                                     )}
-                                </div>
-
-                                <CardHeader>
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
                                             <CardTitle className="text-lg">
                                                 {uiMb ? t(uiMb.nameKey) : `抽卡池 #${gachaCase.gachaCaseId}`}
                                             </CardTitle>
                                             <CardDescription className="mt-1">
-                                                {uiMb ? t(uiMb.explanationKey) : ''}
+                                                {uiMb ? (
+                                                    (() => {
+                                                        if (gachaCase.gachaCategoryType === GachaCategoryType.Character && uiMb.pickUpCharacterId > 0) {
+                                                            const charName = getItemName(ItemType.Character, uiMb.pickUpCharacterId);
+                                                            return t(uiMb.explanationKey, [charName]);
+                                                        }
+                                                        return t(uiMb.explanationKey);
+                                                    })()
+                                                ) : ''}
                                             </CardDescription>
                                         </div>
                                         <Button
@@ -477,7 +479,12 @@ export function GachaPage() {
                                                         ? `${startTimeStr.replace(' ', ' ')} ~ ${endTimeStr.replace(' ', ' ')}`
                                                         : '';
 
-                                                    return t(uiMb.detailDialogHeadingKey || '', [periodInfo]).replace(/\n/g, '<br/>');
+                                                    // 如果是角色卡池，获取 PickUp 角色名称作为第3个参数
+                                                    const charName = (selectedGachaCase.gachaCategoryType === GachaCategoryType.Character && uiMb.pickUpCharacterId > 0)
+                                                        ? getItemName(ItemType.Character, uiMb.pickUpCharacterId)
+                                                        : '';
+
+                                                    return t(uiMb.detailDialogHeadingKey || '', [periodInfo, 'xxxxxxxxxxxxxx', charName]).replace(/\n/g, '<br/>');
                                                 })()
                                             }}
                                         />
@@ -490,7 +497,11 @@ export function GachaPage() {
                                             dangerouslySetInnerHTML={{
                                                 __html: (() => {
                                                     const uiMb = gachaCaseUiMap[selectedGachaCase.gachaCaseUiId];
-                                                    return t(uiMb.detailDialogDetailKey || '', [selectedGachaCase.gachaDrawCount]).replace(/\n/g, '<br/>');
+                                                    // 如果是角色卡池，获取 PickUp 角色名称作为第2个参数
+                                                    const charName = (selectedGachaCase.gachaCategoryType === GachaCategoryType.Character && uiMb.pickUpCharacterId > 0)
+                                                        ? getItemName(ItemType.Character, uiMb.pickUpCharacterId)
+                                                        : '';
+                                                    return t(uiMb.detailDialogDetailKey || '', [selectedGachaCase.gachaDrawCount, charName]).replace(/\n/g, '<br/>');
                                                 })()
                                             }}
                                         />
