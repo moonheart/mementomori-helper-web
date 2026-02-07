@@ -39,7 +39,8 @@ import {
     DungeonBattleGetBattleGridDataResponse,
     DungeonBattleGuestMB,
     ElementType,
-    CharacterRarityFlags
+    CharacterRarityFlags,
+    DungeonBattleGridState
 } from '@/api/generated';
 
 export function TimeSpaceCavePage() {
@@ -57,9 +58,12 @@ export function TimeSpaceCavePage() {
     const [platformDetails, setPlatformDetails] = useState<DungeonBattleGetBattleGridDataResponse | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
+    // 当前石台操作弹窗状态
+    const [currentGridAction, setCurrentGridAction] = useState<typeof platformChoices[0] | null>(null);
+    const [isActionSubmitting, setIsActionSubmitting] = useState(false);
+
     // 增援角色选择状态
     const [selectedGuestCharacterId, setSelectedGuestCharacterId] = useState<number | null>(null);
-    const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
 
     const { currentAccountId } = useAccountStore();
     const sync = useMasterStore(state => state.sync);
@@ -136,6 +140,141 @@ export function TimeSpaceCavePage() {
             [DungeonBattleRelicRarityType.SSR]: 'bg-orange-500'
         };
         return colors[tier] || 'bg-gray-500';
+    };
+
+    // 获取石台状态名称
+    const getGridStateName = (state?: DungeonBattleGridState) => {
+        switch (state) {
+            case DungeonBattleGridState.Done:
+                return '已完成，请选择下一石台';
+            case DungeonBattleGridState.Selected:
+                return '已选择，等待操作';
+            case DungeonBattleGridState.Reward:
+                return '等待选择奖励';
+            case DungeonBattleGridState.SkipShop:
+                return '跳过商店';
+            default:
+                return '未知状态';
+        }
+    };
+
+    // 处理当前石台动作
+    const handleCurrentGridAction = async (action: string) => {
+        if (!battleInfo) return;
+
+        setIsActionSubmitting(true);
+        try {
+            const currentGridGuid = battleInfo.userDungeonDtoInfo?.currentGridGuid;
+            const currentTermId = battleInfo.currentTermId;
+
+            switch (action) {
+                case 'battle':
+                    // TODO: 实现战斗逻辑
+                    console.log('开始战斗', currentGridGuid);
+                    break;
+                case 'recovery':
+                    await ortegaApi.dungeonBattle.execRecovery({
+                        dungeonGridGuid: currentGridGuid,
+                        currentTermId,
+                        isHealed: true
+                    });
+                    break;
+                case 'reinforce':
+                    await ortegaApi.dungeonBattle.execReinforceRelic({
+                        dungeonGridGuid: currentGridGuid,
+                        currentTermId
+                    });
+                    break;
+                case 'revive':
+                    await ortegaApi.dungeonBattle.execRevive({
+                        dungeonGridGuid: currentGridGuid,
+                        currentTermId,
+                        isRevived: true
+                    });
+                    break;
+                case 'leaveShop':
+                    await ortegaApi.dungeonBattle.leaveShop({
+                        dungeonGridGuid: currentGridGuid,
+                        currentTermId
+                    });
+                    break;
+            }
+
+            // 刷新数据
+            await loadData();
+            setCurrentGridAction(null);
+        } catch (err) {
+            console.error('Action failed:', err);
+        } finally {
+            setIsActionSubmitting(false);
+        }
+    };
+
+    // 处理选择加护奖励
+    const handleSelectRelicReward = async (relicId: number) => {
+        if (!battleInfo) return;
+
+        setIsActionSubmitting(true);
+        try {
+            await ortegaApi.dungeonBattle.rewardBattleReceiveRelic({
+                dungeonGridGuid: battleInfo.userDungeonDtoInfo?.currentGridGuid,
+                currentTermId: battleInfo.currentTermId,
+                selectedRelicId: relicId
+            });
+
+            // 刷新数据
+            await loadData();
+            setCurrentGridAction(null);
+        } catch (err) {
+            console.error('Failed to select relic reward:', err);
+        } finally {
+            setIsActionSubmitting(false);
+        }
+    };
+
+    // 处理石台点击 - 根据状态决定打开哪个弹窗
+    const handlePlatformClick = async (platform: typeof platformChoices[0]) => {
+        const currentGridGuid = battleInfo?.userDungeonDtoInfo?.currentGridGuid;
+        const currentState = battleInfo?.userDungeonDtoInfo?.currentGridState;
+
+        // 如果点击的是当前石台
+        if (platform.guid === currentGridGuid) {
+            // 如果当前石台已完成（Done状态），则打开选择弹窗（虽然通常不应该点击已完成石台）
+            if (currentState === DungeonBattleGridState.Done) {
+                setSelectedPlatform(platform);
+                setPlatformDetails(null);
+                return;
+            }
+            // 否则打开当前石台操作弹窗
+            setCurrentGridAction(platform);
+            return;
+        }
+
+        // 如果当前状态不是 Done，点击其他石台无效（需要先处理当前石台）
+        if (currentState !== DungeonBattleGridState.Done) {
+            // 提示用户先处理当前石台
+            return;
+        }
+
+        // Done 状态下，点击可选择石台打开选择弹窗
+        setSelectedPlatform(platform);
+        setPlatformDetails(null);
+
+        // 如果是战斗石台，获取详细数据
+        if (isBattleGrid(platform.type) && battleInfo) {
+            setLoadingDetails(true);
+            try {
+                const data = await ortegaApi.dungeonBattle.getBattleGridData({
+                    dungeonGridGuid: platform.guid,
+                    currentTermId: battleInfo.currentTermId
+                });
+                setPlatformDetails(data);
+            } catch (err) {
+                console.error('Failed to load platform details:', err);
+            } finally {
+                setLoadingDetails(false);
+            }
+        }
     };
 
     // 获取石台类型颜色
@@ -226,39 +365,64 @@ export function TimeSpaceCavePage() {
         ].includes(type);
     };
 
-    // 处理石台点击
-    const handlePlatformClick = async (platform: typeof platformChoices[0]) => {
-        setSelectedPlatform(platform);
-        setPlatformDetails(null);
 
-        // 如果是战斗石台，获取详细数据
-        if (isBattleGrid(platform.type) && battleInfo) {
-            setLoadingDetails(true);
-            try {
-                const data = await ortegaApi.dungeonBattle.getBattleGridData({
-                    dungeonGridGuid: platform.guid,
-                    currentTermId: battleInfo.currentTermId
-                });
-                setPlatformDetails(data);
-            } catch (err) {
-                console.error('Failed to load platform details:', err);
-            } finally {
-                setLoadingDetails(false);
-            }
+
+    // 判断石台是否可选择
+    const isSelectable = (platform: typeof platformChoices[0]) => {
+        if (!battleInfo) return false;
+        const currentGridGuid = battleInfo.userDungeonDtoInfo?.currentGridGuid;
+        const doneGridGuids = battleInfo.userDungeonDtoInfo?.doneGridGuids || [];
+        const currentPlatform = platformChoices.find(p => p.guid === currentGridGuid);
+        const currentY = currentPlatform?.y ?? -1;
+
+        // 按Y坐标分组
+        const groupedByY = platformChoices.reduce((acc, p) => {
+            if (!acc[p.y]) acc[p.y] = [];
+            acc[p.y].push(p);
+            return acc;
+        }, {} as Record<number, typeof platformChoices>);
+
+        if (doneGridGuids.includes(platform.guid)) return false;
+        if (platform.guid === currentGridGuid) return false;
+        if (!currentGridGuid) return platform.y === 0;
+        if (platform.y !== currentY + 1) return false;
+
+        const currentRow = groupedByY[currentY];
+        const nextRow = groupedByY[platform.y];
+        const currentX = currentPlatform?.x ?? 0;
+
+        if (nextRow.length > currentRow.length) {
+            return platform.x === currentX || platform.x === currentX + 1;
         }
+        return platform.x === currentX || platform.x === currentX - 1;
     };
 
-    // 处理确认选择增援角色
-    const handleConfirmGuestSelection = async () => {
-        if (!selectedGuestCharacterId || !selectedPlatform || !battleInfo) return;
+    // 处理确认选择石台
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-        setIsSubmittingGuest(true);
+    const handleConfirmSelection = async () => {
+        if (!selectedPlatform || !battleInfo) return;
+
+        // 检查是否是可选择石台
+        if (!isSelectable(selectedPlatform)) return;
+
+        setIsSubmitting(true);
         try {
-            await ortegaApi.dungeonBattle.execGuest({
-                dungeonGridGuid: selectedPlatform.guid,
-                guestMBId: selectedGuestCharacterId,
-                currentTermId: battleInfo.currentTermId
-            });
+            if (selectedPlatform.type === DungeonBattleGridType.JoinCharacter) {
+                // JoinCharacter 类型需要选择增援角色
+                if (!selectedGuestCharacterId) return;
+                await ortegaApi.dungeonBattle.execGuest({
+                    dungeonGridGuid: selectedPlatform.guid,
+                    guestMBId: selectedGuestCharacterId,
+                    currentTermId: battleInfo.currentTermId
+                });
+            } else {
+                // 其他类型直接选择石台
+                await ortegaApi.dungeonBattle.selectGrid({
+                    dungeonGridGuid: selectedPlatform.guid,
+                    currentTermId: battleInfo.currentTermId
+                });
+            }
 
             // 刷新数据
             await loadData();
@@ -267,9 +431,9 @@ export function TimeSpaceCavePage() {
             setSelectedPlatform(null);
             setSelectedGuestCharacterId(null);
         } catch (err) {
-            console.error('Failed to select guest character:', err);
+            console.error('Failed to select grid:', err);
         } finally {
-            setIsSubmittingGuest(false);
+            setIsSubmitting(false);
         }
     };
 
@@ -481,8 +645,6 @@ export function TimeSpaceCavePage() {
                         {platformChoices.length > 0 ? (
                             <div className="bg-gradient-to-b from-secondary/10 to-secondary/5 p-8 rounded-lg relative">
                                 {(() => {
-                                    const currentGridGuid = battleInfo.userDungeonDtoInfo?.currentGridGuid;
-                                    const doneGridGuids = battleInfo.userDungeonDtoInfo?.doneGridGuids || [];
 
                                     // 按Y坐标分组
                                     const groupedByY = platformChoices.reduce((acc, platform) => {
@@ -495,30 +657,6 @@ export function TimeSpaceCavePage() {
 
                                     // 获取所有Y坐标并排序（从小到大）
                                     const yLevels = Object.keys(groupedByY).map(Number).sort((a, b) => a - b);
-
-                                    // 找到当前石台的Y坐标
-                                    const currentPlatform = platformChoices.find(p => p.guid === currentGridGuid);
-                                    const currentY = currentPlatform?.y ?? -1;
-
-                                    // 判断石台是否可选择（当前石台的相邻下一层，且未完成）
-                                    const isSelectable = (platform: typeof platformChoices[0]) => {
-                                        if (doneGridGuids.includes(platform.guid)) return false;
-                                        if (platform.guid === currentGridGuid) return false;
-                                        // 如果没有当前石台（开始状态），第0层可选
-                                        if (!currentGridGuid) return platform.y === 0;
-                                        // 必须是下一层
-                                        if (platform.y !== currentY + 1) return false;
-                                        // 必须相邻（根据C#逻辑）
-                                        const currentRow = groupedByY[currentY];
-                                        const nextRow = groupedByY[platform.y];
-                                        const currentX = currentPlatform?.x ?? 0;
-                                        // 如果下一层格子数 > 当前层格子数：nextX == currentX 或 nextX == currentX - 1
-                                        // 否则：nextX == currentX 或 nextX == currentX + 1
-                                        if (nextRow.length > currentRow.length) {
-                                            return platform.x === currentX || platform.x === currentX + 1;
-                                        }
-                                        return platform.x === currentX || platform.x === currentX - 1;
-                                    };
 
                                     return (
                                         <div className="relative">
@@ -565,6 +703,8 @@ export function TimeSpaceCavePage() {
                                                         <div key={y} className="flex justify-center items-center" style={{ minHeight: '160px' }}>
                                                             <div className="flex gap-12 justify-center items-center">
                                                                 {platforms.map((platform) => {
+                                                                    const currentGridGuid = battleInfo?.userDungeonDtoInfo?.currentGridGuid;
+                                                                    const doneGridGuids = battleInfo?.userDungeonDtoInfo?.doneGridGuids || [];
                                                                     const isCurrent = platform.guid === currentGridGuid;
                                                                     const isDone = doneGridGuids.includes(platform.guid);
                                                                     const canSelect = isSelectable(platform);
@@ -620,17 +760,6 @@ export function TimeSpaceCavePage() {
                                                                                     {platform.x},{platform.y}
                                                                                 </div>
                                                                             </div>
-
-                                                                            {/* 选择按钮 - 只在可选择的石台显示 */}
-                                                                            {canSelect && (
-                                                                                <Button
-                                                                                    size="sm"
-                                                                                    className="h-7 text-xs px-3"
-                                                                                    variant="default"
-                                                                                >
-                                                                                    选择
-                                                                                </Button>
-                                                                            )}
                                                                         </div>
                                                                     );
                                                                 })}
@@ -756,7 +885,192 @@ export function TimeSpaceCavePage() {
                 </CardContent>
             </Card>
 
-            {/* 石台详情弹窗 */}
+            {/* 当前石台操作弹窗 - 当 CurrentGridState 不是 Done 时显示 */}
+            <Dialog open={!!currentGridAction} onOpenChange={() => setCurrentGridAction(null)}>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                    {currentGridAction && battleInfo && (
+                        <>
+                            <DialogHeader>
+                                <DialogTitle className="flex items-center gap-2">
+                                    <Skull className={`w-5 h-5 ${getGridTypeColor(currentGridAction.type)}`} />
+                                    {currentGridAction.typeName}
+                                </DialogTitle>
+                                <DialogDescription>
+                                    当前石台状态: {getGridStateName(battleInfo.userDungeonDtoInfo?.currentGridState)} | 推荐战力: {currentGridAction.power.toLocaleString()}
+                                </DialogDescription>
+                            </DialogHeader>
+
+                            <div className="space-y-4">
+                                {/* 根据状态和类型显示不同内容 */}
+                                {(() => {
+                                    const state = battleInfo.userDungeonDtoInfo?.currentGridState;
+                                    const type = currentGridAction.type;
+
+                                    // Selected 状态下的不同操作
+                                    if (state === DungeonBattleGridState.Selected) {
+                                        // 战斗类型
+                                        if (isBattleGrid(type)) {
+                                            return (
+                                                <div className="space-y-3">
+                                                    <Alert>
+                                                        <AlertDescription>当前石台为战斗类型，点击开始战斗</AlertDescription>
+                                                    </Alert>
+                                                    <Button
+                                                        className="w-full"
+                                                        disabled={isActionSubmitting}
+                                                        onClick={() => handleCurrentGridAction('battle')}
+                                                    >
+                                                        {isActionSubmitting ? (
+                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />执行中...</>
+                                                        ) : (
+                                                            '开始战斗'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+
+                                        // 恢复类型
+                                        if (type === DungeonBattleGridType.Recovery) {
+                                            return (
+                                                <div className="space-y-3">
+                                                    <Alert>
+                                                        <AlertDescription>使用回复果实恢复角色HP</AlertDescription>
+                                                    </Alert>
+                                                    <Button
+                                                        className="w-full"
+                                                        disabled={isActionSubmitting}
+                                                        onClick={() => handleCurrentGridAction('recovery')}
+                                                    >
+                                                        {isActionSubmitting ? (
+                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />执行中...</>
+                                                        ) : (
+                                                            '使用回复果实'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+
+                                        // 强化圣遗物类型
+                                        if (type === DungeonBattleGridType.RelicReinforce) {
+                                            return (
+                                                <div className="space-y-3">
+                                                    <Alert>
+                                                        <AlertDescription>强化当前持有的加护圣遗物</AlertDescription>
+                                                    </Alert>
+                                                    <Button
+                                                        className="w-full"
+                                                        disabled={isActionSubmitting}
+                                                        onClick={() => handleCurrentGridAction('reinforce')}
+                                                    >
+                                                        {isActionSubmitting ? (
+                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />执行中...</>
+                                                        ) : (
+                                                            '强化加护'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+
+                                        // 复活类型
+                                        if (type === DungeonBattleGridType.Revival) {
+                                            return (
+                                                <div className="space-y-3">
+                                                    <Alert>
+                                                        <AlertDescription>复活已战败的角色</AlertDescription>
+                                                    </Alert>
+                                                    <Button
+                                                        className="w-full"
+                                                        disabled={isActionSubmitting}
+                                                        onClick={() => handleCurrentGridAction('revive')}
+                                                    >
+                                                        {isActionSubmitting ? (
+                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />执行中...</>
+                                                        ) : (
+                                                            '复活角色'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+
+                                        // 商店类型
+                                        if (type === DungeonBattleGridType.Shop) {
+                                            return (
+                                                <div className="space-y-3">
+                                                    <Alert>
+                                                        <AlertDescription>商店功能开发中，需要购买物品后离开</AlertDescription>
+                                                    </Alert>
+                                                    <Button
+                                                        className="w-full"
+                                                        disabled={isActionSubmitting}
+                                                        onClick={() => handleCurrentGridAction('leaveShop')}
+                                                    >
+                                                        {isActionSubmitting ? (
+                                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />执行中...</>
+                                                        ) : (
+                                                            '离开商店'
+                                                        )}
+                                                    </Button>
+                                                </div>
+                                            );
+                                        }
+
+                                        return (
+                                            <Alert>
+                                                <AlertDescription>此石台类型暂不支持手动操作</AlertDescription>
+                                            </Alert>
+                                        );
+                                    }
+
+                                    // Reward 状态 - 选择加护奖励
+                                    if (state === DungeonBattleGridState.Reward) {
+                                        return (
+                                            <div className="space-y-3">
+                                                <h4 className="text-sm font-semibold">选择加护奖励</h4>
+                                                <div className="grid gap-2">
+                                                    {battleInfo.rewardRelicIds?.map((relicId) => {
+                                                        const relic = relicTable.find(r => r.id === relicId);
+                                                        if (!relic) return null;
+                                                        return (
+                                                            <Card
+                                                                key={relicId}
+                                                                className="cursor-pointer hover:border-primary/50 transition-all"
+                                                                onClick={() => handleSelectRelicReward(relicId)}
+                                                            >
+                                                                <CardContent className="pt-4 pb-3">
+                                                                    <div className="flex items-center gap-3">
+                                                                        <Sparkles className={`w-5 h-5 ${getBlessingTierColor(relic.dungeonRelicRarityType).replace('bg-', 'text-')}`} />
+                                                                        <div>
+                                                                            <h5 className="font-semibold">{t(relic.nameKey)}</h5>
+                                                                            <p className="text-sm text-muted-foreground">{t(relic.descriptionKey)}</p>
+                                                                        </div>
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        );
+                                                    })}
+                                                </div>
+                                                {(!battleInfo.rewardRelicIds || battleInfo.rewardRelicIds.length === 0) && (
+                                                    <Alert>
+                                                        <AlertDescription>暂无可选择的加护奖励</AlertDescription>
+                                                    </Alert>
+                                                )}
+                                            </div>
+                                        );
+                                    }
+
+                                    return null;
+                                })()}
+                            </div>
+                        </>
+                    )}
+                </DialogContent>
+            </Dialog>
+
+            {/* 石台详情弹窗 - 用于选择下一个石台 */}
             <Dialog open={!!selectedPlatform} onOpenChange={() => {
                 setSelectedPlatform(null);
                 setSelectedGuestCharacterId(null);
@@ -900,8 +1214,8 @@ export function TimeSpaceCavePage() {
                                                                                     <h5 className="font-semibold">
                                                                                         {characterMB ? t(characterMB.nameKey) : '未知角色'}
                                                                                     </h5>
-                                                                                    <Badge 
-                                                                                        variant="outline" 
+                                                                                    <Badge
+                                                                                        variant="outline"
                                                                                         className={`text-xs ${rarityColor}`}
                                                                                     >
                                                                                         {rarityName}
@@ -937,20 +1251,6 @@ export function TimeSpaceCavePage() {
                                             })()}
                                         </div>
 
-                                        <Button
-                                            className="w-full"
-                                            disabled={!selectedGuestCharacterId || isSubmittingGuest}
-                                            onClick={handleConfirmGuestSelection}
-                                        >
-                                            {isSubmittingGuest ? (
-                                                <>
-                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                                    确认中...
-                                                </>
-                                            ) : (
-                                                '确认选择'
-                                            )}
-                                        </Button>
                                     </div>
                                 )}
 
@@ -959,6 +1259,27 @@ export function TimeSpaceCavePage() {
                                     <div className="text-sm text-muted-foreground py-4 text-center">
                                         此石台为非战斗类型，暂无详细信息
                                     </div>
+                                )}
+
+                                {/* 可选择石台显示确认按钮 - 仅在 Done 状态时显示 */}
+                                {selectedPlatform && isSelectable(selectedPlatform) && battleInfo?.userDungeonDtoInfo?.currentGridState === DungeonBattleGridState.Done && (
+                                    <Button
+                                        className="w-full"
+                                        disabled={
+                                            isSubmitting ||
+                                            (selectedPlatform.type === DungeonBattleGridType.JoinCharacter && !selectedGuestCharacterId)
+                                        }
+                                        onClick={handleConfirmSelection}
+                                    >
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                确认中...
+                                            </>
+                                        ) : (
+                                            '确认选择'
+                                        )}
+                                    </Button>
                                 )}
                             </div>
                         </>
