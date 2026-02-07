@@ -16,6 +16,7 @@ export interface MasterRecord {
 export interface TranslationRecord {
     lang: string;
     resources: Record<string, string>;
+    hash: string;
     lastUpdated: number;
 }
 
@@ -36,10 +37,11 @@ export class MementoMoriDB extends Dexie {
     /**
      * 保存翻译资源
      */
-    async saveTranslations(lang: string, resources: Record<string, string>) {
+    async saveTranslations(lang: string, resources: Record<string, string>, hash: string) {
         await this.translations.put({
             lang,
             resources,
+            hash,
             lastUpdated: Date.now()
         });
     }
@@ -50,6 +52,13 @@ export class MementoMoriDB extends Dexie {
     async getTranslations(lang: string): Promise<Record<string, string> | null> {
         const record = await this.translations.get(lang);
         return record ? record.resources : null;
+    }
+
+    /**
+     * 获取翻译资源记录（包含 hash 等元数据）
+     */
+    async getTranslationRecord(lang: string): Promise<TranslationRecord | null> {
+        return await this.translations.get(lang) || null;
     }
 
     /**

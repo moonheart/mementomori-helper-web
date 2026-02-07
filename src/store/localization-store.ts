@@ -6,10 +6,14 @@ interface LocalizationState {
     currentLanguage: string;
     resources: Record<string, string>;
     isLoading: boolean;
-    
+    isSyncing: boolean;
+    hash: string | null;
+    lastUpdated: number | null;
+
     // Actions
     setLanguage: (lang: string) => Promise<void>;
     fetchResources: (lang: string) => Promise<void>;
+    sync: (lang?: string) => Promise<void>;
     t: (key: string | undefined | null, params?: unknown[]) => string;
 }
 
@@ -17,11 +21,14 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
     currentLanguage: localStorage.getItem('app_lang') || 'zhCN',
     resources: {},
     isLoading: false,
+    isSyncing: false,
+    hash: null,
+    lastUpdated: null,
 
     setLanguage: async (lang: string) => {
         localStorage.setItem('app_lang', lang);
         set({ currentLanguage: lang });
-        await get().fetchResources(lang);
+        await get().sync(lang);
     },
 
     fetchResources: async (lang: string) => {
@@ -29,23 +36,22 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
         set({ isLoading: true });
         try {
             // 1. 尝试从 IndexedDB 获取
-            const cached = await db.getTranslations(lang);
-            if (cached && Object.keys(cached).length > 0) {
-                set({ resources: cached });
-                // 异步在后台更新一次，或者根据需要决定是否更新
-                // 这里为了简单，如果命中缓存就先用缓存
+            const cached = await db.getTranslationRecord(lang);
+            if (cached && Object.keys(cached.resources).length > 0) {
+                set({
+                    resources: cached.resources,
+                    hash: cached.hash,
+                    lastUpdated: cached.lastUpdated
+                });
                 set({ isLoading: false });
-                
-                // 可选：如果需要后台静默更新，可以在这里调用 API
+
+                // 后台静默检查更新
+                get().sync(lang);
                 return;
             }
 
             // 2. 如果没有缓存，从 API 获取
-            const data = await localizationApi.getResources(lang);
-            set({ resources: data });
-            
-            // 3. 保存到 IndexedDB
-            await db.saveTranslations(lang, data);
+            await get().sync(lang);
         } catch (error) {
             console.error('Failed to fetch localization resources:', error);
         } finally {
@@ -53,10 +59,43 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
         }
     },
 
+    sync: async (lang?: string) => {
+        const targetLang = lang || get().currentLanguage;
+        set({ isSyncing: true });
+
+        try {
+            // 1. 获取服务器 manifest
+            const manifest = await localizationApi.getManifest(targetLang);
+
+            // 2. 获取本地缓存
+            const localRecord = await db.translations.get(targetLang);
+
+            // 3. 如果 hash 不一致或本地无数据，则同步
+            if (!localRecord || localRecord.hash !== manifest.hash) {
+                console.log(`Syncing localization resources for: ${targetLang}...`);
+                const resources = await localizationApi.getResources(targetLang);
+
+                // 4. 保存到 IndexedDB
+                await db.saveTranslations(targetLang, resources, manifest.hash);
+
+                // 5. 更新状态
+                set({
+                    resources,
+                    hash: manifest.hash,
+                    lastUpdated: manifest.lastUpdated
+                });
+            }
+        } catch (error) {
+            console.error('Localization sync failed:', error);
+        } finally {
+            set({ isSyncing: false });
+        }
+    },
+
     t: (key: string | undefined | null, params?: unknown[]) => {
         if (!key) return '';
         const { resources } = get();
-        
+
         // 如果资源未加载或找不到 key，返回 key 本身
         if (!resources || !resources[key]) {
             return key;

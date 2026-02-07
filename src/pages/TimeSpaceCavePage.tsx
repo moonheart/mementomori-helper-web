@@ -15,7 +15,13 @@ import {
     Users,
     Skull,
     BookOpen,
-    Loader2
+    Loader2,
+    Zap,
+    Flame,
+    Droplets,
+    Wind,
+    Sun,
+    Moon
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
 import { useMasterStore } from '@/store/masterStore';
@@ -30,7 +36,10 @@ import {
     DungeonBattleGridType,
     CharacterMB,
     DungeonBattleRelicRarityType,
-    DungeonBattleGetBattleGridDataResponse
+    DungeonBattleGetBattleGridDataResponse,
+    DungeonBattleGuestMB,
+    ElementType,
+    CharacterRarityFlags
 } from '@/api/generated';
 
 export function TimeSpaceCavePage() {
@@ -40,6 +49,7 @@ export function TimeSpaceCavePage() {
     const [relicTable, setRelicTable] = useState<DungeonBattleRelicMB[]>([]);
     const [gridTable, setGridTable] = useState<DungeonBattleGridMB[]>([]);
     const [characterTable, setCharacterTable] = useState<CharacterMB[]>([]);
+    const [guestTable, setGuestTable] = useState<DungeonBattleGuestMB[]>([]);
     const [refreshTimeLeft, setRefreshTimeLeft] = useState<string>('');
 
     // 石台详情弹窗状态
@@ -71,15 +81,17 @@ export function TimeSpaceCavePage() {
             setBattleInfo(response);
 
             // 加载 Master 数据表
-            const [relics, grids, characters] = await Promise.all([
+            const [relics, grids, characters, guests] = await Promise.all([
                 getTable('DungeonBattleRelicTable'),
                 getTable('DungeonBattleGridTable'),
-                getTable('CharacterTable')
+                getTable('CharacterTable'),
+                getTable('DungeonBattleGuestTable')
             ]);
 
             setRelicTable((relics as any) || []);
             setGridTable((grids as any) || []);
             setCharacterTable((characters as any) || []);
+            setGuestTable((guests as any) || []);
         } catch (err) {
             console.error('Failed to load dungeon battle info:', err);
             setError('加载时空洞窟数据失败');
@@ -142,6 +154,63 @@ export function TimeSpaceCavePage() {
         return 'text-green-500';
     };
 
+
+    // 获取属性图标和颜色
+    const getElementInfo = (elementType: ElementType) => {
+        switch (elementType) {
+            case ElementType.Blue:
+                return { icon: Droplets, color: 'text-blue-500', bgColor: 'bg-blue-500/10', nameKey: '[ElementTypeBlue]' };
+            case ElementType.Red:
+                return { icon: Flame, color: 'text-red-500', bgColor: 'bg-red-500/10', nameKey: '[ElementTypeRed]' };
+            case ElementType.Green:
+                return { icon: Wind, color: 'text-green-500', bgColor: 'bg-green-500/10', nameKey: '[ElementTypeGreen]' };
+            case ElementType.Yellow:
+                return { icon: Zap, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', nameKey: '[ElementTypeYellow]' };
+            case ElementType.Light:
+                return { icon: Sun, color: 'text-amber-400', bgColor: 'bg-amber-400/10', nameKey: '[ElementTypeLight]' };
+            case ElementType.Dark:
+                return { icon: Moon, color: 'text-purple-500', bgColor: 'bg-purple-500/10', nameKey: '[ElementTypeDark]' };
+            default:
+                return { icon: Users, color: 'text-gray-500', bgColor: 'bg-gray-500/10', nameKey: '[ElementTypeNone]' };
+        }
+    };
+
+    // 获取稀有度名称
+    const getRarityName = (rarity: CharacterRarityFlags) => {
+        const rarityMap: Record<number, string> = {
+            [CharacterRarityFlags.N]: 'N',
+            [CharacterRarityFlags.R]: 'R',
+            [CharacterRarityFlags.RPlus]: 'R+',
+            [CharacterRarityFlags.SR]: 'SR',
+            [CharacterRarityFlags.SRPlus]: 'SR+',
+            [CharacterRarityFlags.SSR]: 'SSR',
+            [CharacterRarityFlags.SSRPlus]: 'SSR+',
+            [CharacterRarityFlags.UR]: 'UR',
+            [CharacterRarityFlags.URPlus]: 'UR+',
+            [CharacterRarityFlags.LR]: 'LR',
+            [CharacterRarityFlags.LRPlus]: 'LR+',
+            [CharacterRarityFlags.LRPlus2]: 'LR+2',
+            [CharacterRarityFlags.LRPlus3]: 'LR+3',
+            [CharacterRarityFlags.LRPlus4]: 'LR+4',
+            [CharacterRarityFlags.LRPlus5]: 'LR+5',
+            [CharacterRarityFlags.LRPlus6]: 'LR+6',
+            [CharacterRarityFlags.LRPlus7]: 'LR+7',
+            [CharacterRarityFlags.LRPlus8]: 'LR+8',
+            [CharacterRarityFlags.LRPlus9]: 'LR+9',
+            [CharacterRarityFlags.LRPlus10]: 'LR+10',
+        };
+        return rarityMap[rarity] || '?';
+    };
+
+    // 获取稀有度颜色
+    const getRarityColor = (rarity: CharacterRarityFlags) => {
+        if (rarity >= CharacterRarityFlags.LR) return 'text-pink-500 border-pink-500 bg-pink-500/10';
+        if (rarity >= CharacterRarityFlags.UR) return 'text-purple-500 border-purple-500 bg-purple-500/10';
+        if (rarity >= CharacterRarityFlags.SSR) return 'text-orange-500 border-orange-500 bg-orange-500/10';
+        if (rarity >= CharacterRarityFlags.SR) return 'text-yellow-500 border-yellow-500 bg-yellow-500/10';
+        if (rarity >= CharacterRarityFlags.R) return 'text-blue-500 border-blue-500 bg-blue-500/10';
+        return 'text-gray-500 border-gray-500 bg-gray-500/10';
+    };
 
     // 判断是否是战斗类型石台
     const isBattleGrid = (type: DungeonBattleGridType) => {
@@ -253,7 +322,8 @@ export function TimeSpaceCavePage() {
 
         return (battleInfo.userDungeonBattleGuestCharacterDtoInfos || []).map(char => {
             const characterMB = characterTable.find(c => c.id === char.characterId);
-            const isSelected = Object.values(battleInfo.userDungeonDtoInfo?.guestCharacterMap || {}).includes(char.guid);
+            const guestMap = battleInfo.userDungeonDtoInfo?.guestCharacterMap || {};
+            const isSelected = Object.values(guestMap).flat().includes(char.guid as unknown as number);
 
             return {
                 id: char.guid,
@@ -430,14 +500,24 @@ export function TimeSpaceCavePage() {
                                     const currentPlatform = platformChoices.find(p => p.guid === currentGridGuid);
                                     const currentY = currentPlatform?.y ?? -1;
 
-                                    // 判断石台是否可选择（当前石台的下一层，且未完成）
+                                    // 判断石台是否可选择（当前石台的相邻下一层，且未完成）
                                     const isSelectable = (platform: typeof platformChoices[0]) => {
                                         if (doneGridGuids.includes(platform.guid)) return false;
                                         if (platform.guid === currentGridGuid) return false;
                                         // 如果没有当前石台（开始状态），第0层可选
                                         if (!currentGridGuid) return platform.y === 0;
-                                        // 否则下一层可选
-                                        return platform.y === currentY + 1;
+                                        // 必须是下一层
+                                        if (platform.y !== currentY + 1) return false;
+                                        // 必须相邻（根据C#逻辑）
+                                        const currentRow = groupedByY[currentY];
+                                        const nextRow = groupedByY[platform.y];
+                                        const currentX = currentPlatform?.x ?? 0;
+                                        // 如果下一层格子数 > 当前层格子数：nextX == currentX 或 nextX == currentX - 1
+                                        // 否则：nextX == currentX 或 nextX == currentX + 1
+                                        if (nextRow.length > currentRow.length) {
+                                            return platform.x === currentX || platform.x === currentX + 1;
+                                        }
+                                        return platform.x === currentX || platform.x === currentX - 1;
                                     };
 
                                     return (
@@ -768,37 +848,81 @@ export function TimeSpaceCavePage() {
                                         <h4 className="text-sm font-semibold">选择增援角色</h4>
                                         <div className="grid gap-2">
                                             {(() => {
-                                                // 获取用户已有的角色 ID 集合
-                                                const existingCharacterIds = new Set(
-                                                    battleInfo.userDungeonBattleCharacterDtoInfos?.map(char => char.characterId) || []
-                                                );
+                                                // 从 guestCharacterMap 获取当前石台的 4 个增援角色 MB ID
+                                                const guestMbIds = battleInfo.userDungeonDtoInfo?.guestCharacterMap?.[selectedPlatform.guid] || [];
 
-                                                // 过滤并排序增援角色
-                                                return battleInfo.userDungeonBattleGuestCharacterDtoInfos
-                                                    .filter(guestChar => !existingCharacterIds.has(guestChar.characterId))
-                                                    .sort((a, b) => b.battlePower - a.battlePower)
-                                                    .map((guestChar) => {
-                                                        const characterMB = characterTable.find(c => c.id === guestChar.characterId);
-                                                        const isSelected = selectedGuestCharacterId === guestChar.characterId;
+                                                // 从 DungeonBattleGuestTable 查询角色信息
+                                                return guestMbIds
+                                                    .map(guestMbId => {
+                                                        const guestMB = guestTable.find(g => g.id === guestMbId);
+                                                        if (!guestMB) return null;
+                                                        return {
+                                                            guestMbId,
+                                                            characterId: guestMB.characterId,
+                                                        };
+                                                    })
+                                                    .filter((item): item is { guestMbId: number; characterId: number } => item !== null)
+                                                    .map(({ guestMbId, characterId }) => {
+                                                        const characterMB = characterTable.find(c => c.id === characterId);
+                                                        // 从 userDungeonBattleGuestCharacterDtoInfos 获取详细数据
+                                                        const guestCharInfo = battleInfo.userDungeonBattleGuestCharacterDtoInfos?.find(
+                                                            g => g.characterId === characterId
+                                                        );
+                                                        const isSelected = selectedGuestCharacterId === guestMbId;
+
+                                                        // 获取属性信息
+                                                        const elementType = characterMB?.elementType ?? ElementType.None;
+                                                        const elementInfo = getElementInfo(elementType);
+                                                        const ElementIcon = elementInfo.icon;
+
+                                                        // 获取稀有度信息
+                                                        const rarity = guestCharInfo?.rarityFlags ?? CharacterRarityFlags.N;
+                                                        const rarityName = getRarityName(rarity);
+                                                        const rarityColor = getRarityColor(rarity);
 
                                                         return (
                                                             <Card
-                                                                key={guestChar.guid}
+                                                                key={guestMbId}
                                                                 className={`cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
                                                                     }`}
-                                                                onClick={() => setSelectedGuestCharacterId(guestChar.characterId)}
+                                                                onClick={() => setSelectedGuestCharacterId(guestMbId)}
                                                             >
                                                                 <CardContent className="pt-4 pb-3">
                                                                     <div className="flex items-center justify-between">
                                                                         <div className="flex items-center gap-3">
-                                                                            <Users className="w-5 h-5 text-muted-foreground" />
-                                                                            <div>
-                                                                                <h5 className="font-semibold">
-                                                                                    {characterMB ? t(characterMB.nameKey) : '未知角色'}
-                                                                                </h5>
-                                                                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                                                                                    <span>Lv.{guestChar.level}</span>
-                                                                                    <span>战力: {guestChar.battlePower.toLocaleString()}</span>
+                                                                            {/* 属性图标 */}
+                                                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${elementInfo.bgColor}`}>
+                                                                                <ElementIcon className={`w-5 h-5 ${elementInfo.color}`} />
+                                                                            </div>
+                                                                            <div className="space-y-1">
+                                                                                {/* 角色名称和稀有度 */}
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <h5 className="font-semibold">
+                                                                                        {characterMB ? t(characterMB.nameKey) : '未知角色'}
+                                                                                    </h5>
+                                                                                    <Badge 
+                                                                                        variant="outline" 
+                                                                                        className={`text-xs ${rarityColor}`}
+                                                                                    >
+                                                                                        {rarityName}
+                                                                                    </Badge>
+                                                                                </div>
+                                                                                {/* 等级和战斗力 */}
+                                                                                <div className="flex items-center gap-3 text-sm">
+                                                                                    <span className="text-muted-foreground">
+                                                                                        Lv.{guestCharInfo?.level ?? '?'}
+                                                                                    </span>
+                                                                                    <span className="text-muted-foreground">|</span>
+                                                                                    <span className="flex items-center gap-1">
+                                                                                        <Zap className="w-3.5 h-3.5 text-yellow-500" />
+                                                                                        <span className="font-medium text-foreground">
+                                                                                            {(guestCharInfo?.battlePower ?? 0).toLocaleString()}
+                                                                                        </span>
+                                                                                    </span>
+                                                                                    <span className="text-muted-foreground">|</span>
+                                                                                    <span className={`text-xs ${elementInfo.color}`}>
+                                                                                        {t(elementInfo.nameKey)}
+                                                                                    </span>
                                                                                 </div>
                                                                             </div>
                                                                         </div>
