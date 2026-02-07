@@ -1,11 +1,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Grid, List, Swords, Zap, BookOpen, TrendingUp, Star, ArrowUp, Shield, Users, Loader2 } from 'lucide-react';
+import { Search, Swords, Zap, BookOpen, TrendingUp, Star, ArrowUp, Shield, Users, Loader2 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { ortegaApi } from '@/api/ortega-client';
 import { useMasterStore } from '@/store/masterStore';
@@ -13,6 +10,7 @@ import { useLocalizationStore } from '@/store/localization-store';
 import { UserCharacterDtoInfo, CharacterRarityFlags, ElementType, JobFlags, CharacterMB } from '@/api/generated';
 import { CharacterDetailDialog } from '@/components/characters/CharacterDetailDialog';
 import type { UICharacter } from '@/components/characters/types';
+import { AssetManager } from '@/lib/asset-manager';
 
 export function CharactersPage() {
     const { currentAccountId } = useAccountStore();
@@ -22,8 +20,7 @@ export function CharactersPage() {
     const [loading, setLoading] = useState(false);
     const [userCharacters, setUserCharacters] = useState<UserCharacterDtoInfo[]>([]);
     const [characterMasterMap, setCharacterMasterMap] = useState<Record<number, CharacterMB>>({});
-    
-    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
     const [search, setSearch] = useState('');
     const [selectedRarity, setSelectedRarity] = useState<string>('all');
     const [selectedElement, setSelectedElement] = useState<string>('all');
@@ -298,35 +295,16 @@ export function CharactersPage() {
                         </Select>
                     </div>
 
-                    <div className="flex items-center justify-between mt-4">
+                    <div className="mt-4">
                         <p className="text-sm text-muted-foreground">
                             找到 {filteredCharacters.length} 个角色
                         </p>
-                        <div className="flex gap-2">
-                            <Button
-                                variant={viewMode === 'grid' ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setViewMode('grid')}
-                            >
-                                <Grid className="h-4 w-4 mr-2" />
-                                网格
-                            </Button>
-                            <Button
-                                variant={viewMode === 'list' ? 'default' : 'outline'}
-                                size="sm"
-                                onClick={() => setViewMode('list')}
-                            >
-                                <List className="h-4 w-4 mr-2" />
-                                列表
-                            </Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>
 
-            {/* Characters Grid/List */}
-            {viewMode === 'grid' ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* Characters Grid */}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
                     {filteredCharacters.map((character) => {
                         const elementData = getElementData(character.element);
                         const jobData = getJobData(character.job);
@@ -339,92 +317,71 @@ export function CharactersPage() {
                         };
 
                         return (
-                            <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer" onClick={handleCardClick}>
-                                <div className={`h-40 ${rarityData.color} bg-gradient-to-br flex items-center justify-center relative`}>
-                                    <div className="absolute top-3 left-3">
-                                        <Badge className={rarityData.color}>{rarityData.name}</Badge>
+                            <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-sm" onClick={handleCardClick}>
+                                <div className="flex">
+                                    {/* 左侧方形头像区域 */}
+                                    <div className="relative w-24 h-24 shrink-0">
+                                        {/* 角色图片 */}
+                                        <img
+                                            src={AssetManager.character.getCardUrl(character.characterId)}
+                                            alt={character.name}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                            onError={(e) => {
+                                                (e.target as HTMLImageElement).style.display = 'none';
+                                            }}
+                                        />
+                                        {/* 稀有度色条 */}
+                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${rarityData.color}`} />
+                                        {/* 锁定图标 */}
+                                        {character.isLocked && (
+                                            <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
+                                                <Shield className="h-2.5 w-2.5 text-white" />
+                                            </div>
+                                        )}
                                     </div>
-                                    <div className="absolute top-3 right-3">
-                                        <Badge variant="outline" className="bg-white/90">Lv.{character.level}</Badge>
-                                    </div>
-                                    <div className="text-6xl opacity-80">👤</div>
-                                    <div className="absolute bottom-3 left-3 right-3 flex justify-between items-center">
-                                        <span className="text-2xl">{elementData.icon}</span>
-                                        <JobIcon className="h-5 w-5 text-white" />
+
+                                    {/* 右侧信息区域 */}
+                                    <div className="flex-1 p-2.5 min-w-0 flex flex-col justify-between">
+                                        {/* 顶部：名称和稀有度 */}
+                                        <div>
+                                            <div className="flex items-center gap-1.5 mb-1">
+                                                <h3 className="font-bold text-sm text-gray-900 truncate">{character.name}</h3>
+                                                <span className={`text-[10px] px-1 py-0 rounded ${rarityData.color} text-white`}>
+                                                    {rarityData.name}
+                                                </span>
+                                            </div>
+                                            {/* 职业和属性 */}
+                                            <div className="flex items-center gap-2 text-xs text-gray-500">
+                                                <span className="flex items-center gap-0.5">
+                                                    <JobIcon className={`h-3 w-3 ${jobData.color}`} />
+                                                    {jobData.name}
+                                                </span>
+                                                <span className="flex items-center gap-0.5">
+                                                    <span>{elementData.icon}</span>
+                                                    {elementData.name}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* 底部：等级和进度 */}
+                                        <div className="space-y-1">
+                                            <div className="flex items-center justify-between text-[10px]">
+                                                <span className="text-gray-400">等级</span>
+                                                <span className="font-medium text-gray-700">Lv.{character.level}/{rarityData.max}</span>
+                                            </div>
+                                            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full ${rarityData.color}`}
+                                                    style={{ width: `${Math.min((character.level / rarityData.max) * 100, 100)}%` }}
+                                                />
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <CardHeader className="pb-3">
-                                    <CardTitle className="text-lg truncate">{character.name}</CardTitle>
-                                    <CardDescription>
-                                        <span className={jobData.color}>{jobData.name}</span> • <span className={elementData.color}>{elementData.name}</span>
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="space-y-1">
-                                        <div className="flex items-center justify-between text-xs">
-                                            <span className="text-muted-foreground">等级进度</span>
-                                            <span className="font-medium">{character.level}/{rarityData.max}</span>
-                                        </div>
-                                        <Progress value={Math.min((character.level / rarityData.max) * 100, 100)} className="h-1.5" />
-                                    </div>
-                                    {character.isLocked && (
-                                        <div className="flex justify-end">
-                                            <Shield className="h-4 w-4 text-muted-foreground" />
-                                        </div>
-                                    )}
-                                </CardContent>
                             </Card>
                         );
                     })}
                 </div>
-            ) : (
-                <div className="space-y-4">
-                    {filteredCharacters.map((character) => {
-                        const elementData = getElementData(character.element);
-                        const jobData = getJobData(character.job);
-                        const rarityData = getRarityData(character.rarityFlags);
-                        const JobIcon = jobData.icon;
-
-                        const handleCardClick = () => {
-                            setSelectedCharacter(character);
-                            setDetailDialogOpen(true);
-                        };
-
-                        return (
-                            <Card key={character.guid} className="hover:shadow-md transition-shadow cursor-pointer" onClick={handleCardClick}>
-                                <CardContent className="flex items-center gap-6 p-6">
-                                    <div className={`h-20 w-20 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-3xl shrink-0 relative`}>
-                                        <div className="absolute top-1 right-1">
-                                            <span className="text-sm">{elementData.icon}</span>
-                                        </div>
-                                        👤
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <div className="flex items-center gap-3 mb-1 flex-wrap">
-                                            <h3 className="text-xl font-bold truncate">{character.name}</h3>
-                                            <Badge className={rarityData.color}>{rarityData.name}</Badge>
-                                            <Badge variant="outline">Lv.{character.level}/{rarityData.max}</Badge>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="flex items-center gap-1.5">
-                                                <JobIcon className={`h-4 w-4 ${jobData.color}`} />
-                                                <span className={`text-sm ${jobData.color}`}>{jobData.name}</span>
-                                            </div>
-                                            <span className={`text-sm ${elementData.color}`}>
-                                                {elementData.icon} {elementData.name}
-                                            </span>
-                                            <span className="text-xs text-muted-foreground truncate">ID: {character.characterId}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <Button size="sm" variant="outline">详情</Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
-                </div>
-            )}
 
             {filteredCharacters.length === 0 && !loading && (
                 <Card>

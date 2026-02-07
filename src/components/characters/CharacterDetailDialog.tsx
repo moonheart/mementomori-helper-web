@@ -22,6 +22,7 @@ import {
     PassiveSkillMB,
 } from '@/api/generated';
 import { getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
+import { AssetManager } from '@/lib/asset-manager';
 import { BookOpen, ChevronRight, Loader2, Shield, Sparkles, Swords, TrendingUp, Zap } from 'lucide-react';
 import type { UICharacter } from './types';
 
@@ -377,10 +378,17 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                     <>
                         <DialogHeader>
                             <div className="flex items-start gap-6">
-                                <div className={`h-24 w-24 rounded-lg ${rarityData.color} bg-gradient-to-br flex items-center justify-center text-5xl shrink-0 relative`}>
-                                    <div className="absolute top-1 left-1"><Badge className={rarityData.color}>{rarityData.name}</Badge></div>
-                                    <div className="absolute bottom-1 right-1"><span className="text-xl">{elementData.icon}</span></div>
-                                    👤
+                                <div className="h-24 w-24 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden">
+                                    <div className="absolute top-1 left-1 z-10"><Badge className={rarityData.color}>{rarityData.name}</Badge></div>
+                                    <div className="absolute bottom-1 right-1 z-10"><span className="text-xl">{elementData.icon}</span></div>
+                                    <img
+                                        src={AssetManager.character.getCardUrl(character.characterId)}
+                                        alt={character.name}
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                    />
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <DialogTitle className="text-2xl mb-1 truncate">{character.name}</DialogTitle>
