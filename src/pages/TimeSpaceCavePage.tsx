@@ -47,6 +47,10 @@ export function TimeSpaceCavePage() {
     const [platformDetails, setPlatformDetails] = useState<DungeonBattleGetBattleGridDataResponse | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
 
+    // 增援角色选择状态
+    const [selectedGuestCharacterId, setSelectedGuestCharacterId] = useState<number | null>(null);
+    const [isSubmittingGuest, setIsSubmittingGuest] = useState(false);
+
     const { currentAccountId } = useAccountStore();
     const sync = useMasterStore(state => state.sync);
     const getTable = useMasterStore(state => state.getTable);
@@ -172,6 +176,31 @@ export function TimeSpaceCavePage() {
             } finally {
                 setLoadingDetails(false);
             }
+        }
+    };
+
+    // 处理确认选择增援角色
+    const handleConfirmGuestSelection = async () => {
+        if (!selectedGuestCharacterId || !selectedPlatform || !battleInfo) return;
+
+        setIsSubmittingGuest(true);
+        try {
+            await ortegaApi.dungeonBattle.execGuest({
+                dungeonGridGuid: selectedPlatform.guid,
+                guestMBId: selectedGuestCharacterId,
+                currentTermId: battleInfo.currentTermId
+            });
+
+            // 刷新数据
+            await loadData();
+
+            // 关闭弹窗
+            setSelectedPlatform(null);
+            setSelectedGuestCharacterId(null);
+        } catch (err) {
+            console.error('Failed to select guest character:', err);
+        } finally {
+            setIsSubmittingGuest(false);
         }
     };
 
@@ -648,7 +677,10 @@ export function TimeSpaceCavePage() {
             </Card>
 
             {/* 石台详情弹窗 */}
-            <Dialog open={!!selectedPlatform} onOpenChange={() => setSelectedPlatform(null)}>
+            <Dialog open={!!selectedPlatform} onOpenChange={() => {
+                setSelectedPlatform(null);
+                setSelectedGuestCharacterId(null);
+            }}>
                 <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                     {selectedPlatform && (
                         <>
@@ -730,8 +762,76 @@ export function TimeSpaceCavePage() {
                                     </div>
                                 )}
 
-                                {/* 非战斗石台显示说明 */}
-                                {!isBattleGrid(selectedPlatform.type) && (
+                                {/* JoinCharacter 石台显示增援角色列表 */}
+                                {selectedPlatform.type === DungeonBattleGridType.JoinCharacter && battleInfo && (
+                                    <div className="space-y-3">
+                                        <h4 className="text-sm font-semibold">选择增援角色</h4>
+                                        <div className="grid gap-2">
+                                            {(() => {
+                                                // 获取用户已有的角色 ID 集合
+                                                const existingCharacterIds = new Set(
+                                                    battleInfo.userDungeonBattleCharacterDtoInfos?.map(char => char.characterId) || []
+                                                );
+
+                                                // 过滤并排序增援角色
+                                                return battleInfo.userDungeonBattleGuestCharacterDtoInfos
+                                                    .filter(guestChar => !existingCharacterIds.has(guestChar.characterId))
+                                                    .sort((a, b) => b.battlePower - a.battlePower)
+                                                    .map((guestChar) => {
+                                                        const characterMB = characterTable.find(c => c.id === guestChar.characterId);
+                                                        const isSelected = selectedGuestCharacterId === guestChar.characterId;
+
+                                                        return (
+                                                            <Card
+                                                                key={guestChar.guid}
+                                                                className={`cursor-pointer transition-all ${isSelected ? 'border-primary bg-primary/5' : 'hover:border-primary/50'
+                                                                    }`}
+                                                                onClick={() => setSelectedGuestCharacterId(guestChar.characterId)}
+                                                            >
+                                                                <CardContent className="pt-4 pb-3">
+                                                                    <div className="flex items-center justify-between">
+                                                                        <div className="flex items-center gap-3">
+                                                                            <Users className="w-5 h-5 text-muted-foreground" />
+                                                                            <div>
+                                                                                <h5 className="font-semibold">
+                                                                                    {characterMB ? t(characterMB.nameKey) : '未知角色'}
+                                                                                </h5>
+                                                                                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                                                                                    <span>Lv.{guestChar.level}</span>
+                                                                                    <span>战力: {guestChar.battlePower.toLocaleString()}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        {isSelected && (
+                                                                            <Badge variant="default">已选择</Badge>
+                                                                        )}
+                                                                    </div>
+                                                                </CardContent>
+                                                            </Card>
+                                                        );
+                                                    });
+                                            })()}
+                                        </div>
+
+                                        <Button
+                                            className="w-full"
+                                            disabled={!selectedGuestCharacterId || isSubmittingGuest}
+                                            onClick={handleConfirmGuestSelection}
+                                        >
+                                            {isSubmittingGuest ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    确认中...
+                                                </>
+                                            ) : (
+                                                '确认选择'
+                                            )}
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* 非战斗且非 JoinCharacter 石台显示说明 */}
+                                {!isBattleGrid(selectedPlatform.type) && selectedPlatform.type !== DungeonBattleGridType.JoinCharacter && (
                                     <div className="text-sm text-muted-foreground py-4 text-center">
                                         此石台为非战斗类型，暂无详细信息
                                     </div>
