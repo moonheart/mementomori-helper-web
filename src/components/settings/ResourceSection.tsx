@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ShoppingCart, Sparkles, Box, X, RotateCcw, Plus } from 'lucide-react';
+import { ShoppingCart, Sparkles, Box, X, RotateCcw, Plus, Store } from 'lucide-react';
 import { useItemName } from '@/hooks/useItemName';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useMasterStore } from '@/store/masterStore';
 import { ShopConfig } from '@/api/generated/shopConfig';
 import { GachaConfigModel } from '@/api/generated/gachaConfigModel';
 import { ItemsConfig } from '@/api/generated/itemsConfig';
 import { GachaRelicType } from '@/api/generated/gachaRelicType';
 import { AutoUseItemType } from '@/api/generated/autoUseItemType';
 import { ItemType } from '@/api/generated/itemType';
+import { TradeShopTabMB } from '@/api/generated/tradeShopTabMB';
 
 interface ResourceSectionProps {
     shop: ShopConfig;
@@ -32,6 +36,27 @@ export function ResourceSection({
     onUpdateItems,
 }: ResourceSectionProps) {
    const { getItemName } = useItemName();
+   const { t } = useTranslation();
+   const getTable = useMasterStore(state => state.getTable);
+   const [tradeShopTabMap, setTradeShopTabMap] = useState<Record<number, TradeShopTabMB>>({});
+
+   // 加载 TradeShopTabTable
+   useEffect(() => {
+       const loadMasterData = async () => {
+           const table = await getTable<TradeShopTabMB>('TradeShopTabTable');
+           const map: Record<number, TradeShopTabMB> = {};
+           table.forEach(item => {
+               map[item.id] = item;
+           });
+           setTradeShopTabMap(map);
+       };
+       loadMasterData();
+   }, [getTable]);
+
+   const getTabName = (tabId: number) => {
+       const tab = tradeShopTabMap[tabId];
+       return tab ? (t(tab.tabNameKey) || tab.memo || `商店 #${tabId}`) : `商店 #${tabId}`;
+   };
 
    const handleItemTypeToggle = (type: AutoUseItemType) => {
         const current = items.autoUseItemTypes;
@@ -75,52 +100,52 @@ export function ResourceSection({
                             <ShoppingCart className="h-5 w-5 text-primary" />
                             <CardTitle>商店自动购买 (Shop)</CardTitle>
                         </div>
-                        <Button variant="outline" size="sm" onClick={resetShopDefaults}>
-                            <RotateCcw className="mr-2 h-4 w-4" />
-                            重置默认
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Link to="/shop">
+                                <Button variant="outline" size="sm">
+                                    <Store className="mr-2 h-4 w-4" />
+                                    前往商店添加
+                                </Button>
+                            </Link>
+                            <Button variant="outline" size="sm" onClick={resetShopDefaults}>
+                                <RotateCcw className="mr-2 h-4 w-4" />
+                                重置默认
+                            </Button>
+                        </div>
                     </div>
                     <CardDescription>配置在商店自动购买的物品与折扣</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    <div className="flex justify-end">
-                         <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                                const next = [...(shop.autoBuyItems || []), {
-                                    buyItem: { itemType: ItemType.None, itemId: 0, itemCount: 0 },
-                                    shopTabId: 1,
-                                    minDiscountPercent: 0,
-                                    consumeItem: { itemType: ItemType.Gold, itemId: 1, itemCount: 0 }
-                                }];
-                                onUpdateShop({ ...shop, autoBuyItems: next });
-                            }}
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            添加购买项
-                        </Button>
-                    </div>
-                    <div className="grid gap-3">
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
                         {(shop.autoBuyItems || []).map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-medium">
-                                        购买: {item.buyItem?.itemId === 0 ? '任意物品' : getItemName(item.buyItem.itemType, item.buyItem.itemId)}
+                            <div key={idx} className="rounded-lg border bg-card p-4 space-y-3 hover:border-primary/50 transition-colors">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
+                                        <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium mb-2">
+                                            {getTabName(item.shopTabId)}
+                                        </div>
+                                        <div className="font-semibold text-sm truncate">
+                                            {!item.buyItem || item.buyItem.itemId === 0 ? '任意物品' : getItemName(item.buyItem.itemType, item.buyItem.itemId)}
+                                        </div>
+                                    </div>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 -mr-1 -mt-1 text-muted-foreground hover:text-destructive" onClick={() => removeShopItem(idx)}>
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
+                                    <span className="truncate">
+                                        消耗: {item.consumeItem ? getItemName(item.consumeItem.itemType, item.consumeItem.itemId) : '任意物品'}
                                     </span>
-                                    <span className="text-xs text-muted-foreground">
-                                        消耗: {getItemName(item.consumeItem.itemType, item.consumeItem.itemId)} | 折扣 {'>='} {item.minDiscountPercent}%
+                                    <span className={`shrink-0 ml-2 font-medium ${item.minDiscountPercent > 0 ? 'text-green-600' : ''}`}>
+                                        ≥{item.minDiscountPercent}% OFF
                                     </span>
                                 </div>
-                                <Button variant="ghost" size="icon" onClick={() => removeShopItem(idx)}>
-                                    <X className="h-4 w-4" />
-                                </Button>
                             </div>
                         ))}
-                        {(shop.autoBuyItems || []).length === 0 && (
-                            <p className="text-sm text-muted-foreground italic text-center py-4">未配置自动购买项</p>
-                        )}
                     </div>
+                    {(shop.autoBuyItems || []).length === 0 && (
+                        <p className="text-sm text-muted-foreground italic text-center py-4">未配置自动购买项，请在商店页面点击闹钟图标添加</p>
+                    )}
                 </CardContent>
             </Card>
 

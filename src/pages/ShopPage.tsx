@@ -7,6 +7,23 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+} from '@/components/ui/dialog';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
     Gem,
     Coins,
     Heart,
@@ -14,9 +31,11 @@ import {
     Clock,
     BookOpen,
     Tag,
-    Loader2
+    Loader2,
+    AlarmClock
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
+import { settingsApi } from '@/api/settings-service';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useToast } from '@/hooks/use-toast';
 import { useAccountStore } from '@/store/accountStore';
@@ -29,6 +48,9 @@ import { TradeShopType } from '@/api/generated/tradeShopType';
 import { SphereMB } from '@/api/generated/sphereMB';
 import { TradeShopSphereMB } from '@/api/generated/tradeShopSphereMB';
 import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
+import { ShopConfig } from '@/api/generated/shopConfig';
+import { ShopAutoBuyItem } from '@/api/generated/shopAutoBuyItem';
+import { UserItem } from '@/api/generated/userItem';
 import { useItemName } from '@/hooks/useItemName';
 import { getUserItemCount } from '@/lib/itemUtils';
 
@@ -50,35 +72,35 @@ export function ShopPage() {
     // 符石购买状态
     const [sphereBuyState, setSphereBuyState] = useState<Record<number, { lv: number; count: number }>>({});
 
-    // 获取 tab 中涉及的所有消耗道具类型
-    const getTabConsumeItems = useCallback((tab: TradeShopTabInfo) => {
-        const itemMap = new Map<string, { itemType: ItemType; itemId: number }>();
-        tab.tradeShopItems?.forEach(item => {
-            if (item.consumeItem1) {
-                const key = `${item.consumeItem1.itemType}-${item.consumeItem1.itemId}`;
-                if (!itemMap.has(key)) {
-                    itemMap.set(key, { itemType: item.consumeItem1.itemType, itemId: item.consumeItem1.itemId });
-                }
-            }
-            if (item.consumeItem2) {
-                const key = `${item.consumeItem2.itemType}-${item.consumeItem2.itemId}`;
-                if (!itemMap.has(key)) {
-                    itemMap.set(key, { itemType: item.consumeItem2.itemType, itemId: item.consumeItem2.itemId });
-                }
-            }
-        });
-        return Array.from(itemMap.values());
-    }, []);
+    // 自动购买配置
+    const [shopConfig, setShopConfig] = useState<ShopConfig>(() => ({ ...new ShopConfig() }));
+
+    // 自动购买对话框状态
+    const [autoBuyDialogOpen, setAutoBuyDialogOpen] = useState(false);
+    const [currentAutoBuyTabId, setCurrentAutoBuyTabId] = useState<number>(0);
+    const [currentAutoBuyTabItems, setCurrentAutoBuyTabItems] = useState<TradeShopItem[]>([]);
+    const [selectedAutoBuyItem, setSelectedAutoBuyItem] = useState<string>(''); // "itemType-itemId" 格式
+    const [selectedConsumeItem, setSelectedConsumeItem] = useState<string>(''); // "itemType-itemId" 格式
+    const [autoBuyDiscount, setAutoBuyDiscount] = useState<number>(0);
+    const [autoBuyConsumeCount, setAutoBuyConsumeCount] = useState<number>(0);
+
+
 
     const loadData = useCallback(async () => {
         if (!currentAccount) return;
         setLoading(true);
         try {
-            const [tradeShopRes, userRes, weeklyRes] = await Promise.all([
+            const [tradeShopRes, userRes, weeklyRes, shopData] = await Promise.all([
                 ortegaApi.tradeShop.getList({}),
                 ortegaApi.user.getUserData({}),
-                ortegaApi.weeklyTopics.getWeeklyTopicsInfo({})
+                ortegaApi.weeklyTopics.getWeeklyTopicsInfo({}),
+                settingsApi.getSetting<ShopConfig>(currentAccount.userId, 'shop')
             ]);
+
+            // 加载商店自动购买配置
+            if (shopData) {
+                setShopConfig(shopData);
+            }
 
             setTradeShopTabs(tradeShopRes.tradeShopTabInfoList || []);
 
@@ -145,6 +167,139 @@ export function ShopPage() {
             loadData();
         }
     }, [loadData, currentAccount]);
+
+    // 保存自动购买配置到服务器
+    const saveShopConfig = async (newConfig: ShopConfig) => {
+        if (!currentAccount) return;
+        try {
+            await settingsApi.saveSetting(currentAccount.userId, 'shop', newConfig);
+            setShopConfig(newConfig);
+        } catch (error) {
+            console.error('Failed to save shop config:', error);
+            toast({
+                title: '保存失败',
+                description: '无法保存自动购买配置',
+                variant: 'destructive',
+            });
+        }
+    };
+
+    // 打开自动购买对话框
+    const showAutoBuyDialog = (tabId: number, items: TradeShopItem[], defaultItem?: TradeShopItem) => {
+        setCurrentAutoBuyTabId(tabId);
+        // 去重：相同 giveItem (itemType + itemId + itemCount) 只保留一个
+        const uniqueItems = items.filter((item, index, arr) =>
+            index === arr.findIndex(i =>
+                i.giveItem.itemType === item.giveItem.itemType &&
+                i.giveItem.itemId === item.giveItem.itemId &&
+                i.giveItem.itemCount === item.giveItem.itemCount
+            )
+        );
+        setCurrentAutoBuyTabItems(uniqueItems);
+
+        if (defaultItem) {
+            setSelectedAutoBuyItem(`${defaultItem.giveItem.itemType}-${defaultItem.giveItem.itemId}-${defaultItem.giveItem.itemCount}`);
+            if (defaultItem.consumeItem1) {
+                setSelectedConsumeItem(`${defaultItem.consumeItem1.itemType}-${defaultItem.consumeItem1.itemId}`);
+                setAutoBuyConsumeCount(defaultItem.consumeItem1.itemCount);
+            }
+        } else {
+            setSelectedAutoBuyItem('');
+            setSelectedConsumeItem('');
+            setAutoBuyConsumeCount(0);
+        }
+        setAutoBuyDiscount(0);
+        setAutoBuyDialogOpen(true);
+    };
+
+    // 确认自动购买
+    const confirmAutoBuy = async () => {
+        if (!selectedAutoBuyItem && !selectedConsumeItem) {
+            toast({
+                title: '设置错误',
+                description: '请至少选择要购买的物品或消耗的物品',
+                variant: 'destructive',
+            });
+            return;
+        }
+
+        // 构建购买物品
+        let buyItem: UserItem | undefined;
+        if (selectedAutoBuyItem) {
+            const [type, id, count] = selectedAutoBuyItem.split('-');
+            buyItem = new UserItem();
+            buyItem.itemType = parseInt(type);
+            buyItem.itemId = parseInt(id);
+            buyItem.itemCount = parseInt(count);
+        }
+
+        // 构建消耗物品
+        let consumeItem: UserItem | undefined;
+        if (selectedConsumeItem) {
+            const [type, id] = selectedConsumeItem.split('-');
+            consumeItem = new UserItem();
+            consumeItem.itemType = parseInt(type);
+            consumeItem.itemId = parseInt(id);
+            consumeItem.itemCount = autoBuyConsumeCount;
+        }
+
+        const newAutoBuyItem = new ShopAutoBuyItem();
+        newAutoBuyItem.shopTabId = currentAutoBuyTabId;
+        newAutoBuyItem.buyItem = buyItem!;
+        newAutoBuyItem.consumeItem = consumeItem!;
+        newAutoBuyItem.minDiscountPercent = autoBuyDiscount;
+
+        // 检查是否已存在相同规则（同商店Tab + 同购买物品/同消耗物品）
+        const existingIndex = shopConfig.autoBuyItems.findIndex(item => {
+            const sameTab = item.shopTabId === currentAutoBuyTabId;
+            if (!sameTab) return false;
+
+            const existingBuyItemType = item.buyItem?.itemType;
+            const existingBuyItemId = item.buyItem?.itemId;
+            const existingBuyItemCount = item.buyItem?.itemCount;
+            const existingConsumeItemType = item.consumeItem?.itemType;
+            const existingConsumeItemId = item.consumeItem?.itemId;
+            const newBuyItemType = buyItem?.itemType;
+            const newBuyItemId = buyItem?.itemId;
+            const newBuyItemCount = buyItem?.itemCount;
+            const newConsumeItemType = consumeItem?.itemType;
+            const newConsumeItemId = consumeItem?.itemId;
+
+            // 如果都不选购买物品，则比较消耗物品
+            if (!newBuyItemType && !existingBuyItemType) {
+                return existingConsumeItemType === newConsumeItemType && existingConsumeItemId === newConsumeItemId;
+            }
+            // 如果都不选消耗物品，则比较购买物品
+            if (!newConsumeItemType && !existingConsumeItemType) {
+                return existingBuyItemType === newBuyItemType && existingBuyItemId === newBuyItemId;
+            }
+            // 否则比较两者
+            return existingBuyItemType === newBuyItemType && existingBuyItemId === newBuyItemId && existingBuyItemCount === newBuyItemCount &&
+                   existingConsumeItemType === newConsumeItemType && existingConsumeItemId === newConsumeItemId;
+        });
+
+        let newAutoBuyItems: ShopAutoBuyItem[];
+        if (existingIndex >= 0) {
+            // 更新现有规则
+            newAutoBuyItems = [...shopConfig.autoBuyItems];
+            newAutoBuyItems[existingIndex] = newAutoBuyItem;
+        } else {
+            // 添加新规则
+            newAutoBuyItems = [...shopConfig.autoBuyItems, newAutoBuyItem];
+        }
+
+        const newConfig = new ShopConfig();
+        newConfig.autoBuyItems = newAutoBuyItems;
+        await saveShopConfig(newConfig);
+
+        toast({
+            title: '设置成功',
+            description: '自动购买规则已保存',
+        });
+        setAutoBuyDialogOpen(false);
+    };
+
+
 
     const handleBuyTradeItem = async (tabId: number, item: TradeShopItem) => {
         try {
@@ -411,8 +566,8 @@ export function ShopPage() {
                 </div>
 
                 {([...tradeShopTabs, ...weeklyShopTabs]).map((tab) => {
-                    const consumeItems = getTabConsumeItems(tab);
                     const tabMaster = tradeShopTabMasterMap[tab.tradeShopTabId];
+                    const consumeItems = tabMaster?.consumeItemInfos || [];
                     const isSphereShop = tabMaster?.tradeShopType === TradeShopType.Sphere;
 
                     return (
@@ -429,7 +584,7 @@ export function ShopPage() {
                                         </CardTitle>
                                         <CardDescription>
                                             {tab.expirationTimeStamp > 0
-                                                ? `限时兑换，截止时间: ${new Date(tab.expirationTimeStamp * 1000).toLocaleString()}`
+                                                ? `限时兑换，截止时间: ${new Date(tab.expirationTimeStamp).toLocaleString()}`
                                                 : '常驻资源兑换'
                                             }
                                         </CardDescription>
@@ -571,7 +726,7 @@ export function ShopPage() {
                                     // 普通商店渲染
                                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                                         {tab.tradeShopItems?.map((item) => (
-                                            <Card key={item.tradeShopItemId}>
+                                            <Card key={`${item.tradeShopItemId}-${item.giveItem.itemType}-${item.giveItem.itemId}-${item.giveItem.itemCount}`}>
                                                 <CardContent className="p-4">
                                                     <div className="flex items-center justify-between mb-3">
                                                         <div>
@@ -611,19 +766,32 @@ export function ShopPage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                        {(() => {
-                                                            const canBuy = canBuyTradeItem(item);
-                                                            const isSoldOut = item.limitTradeCount > 0 && item.tradeCount >= item.limitTradeCount;
-                                                            return (
-                                                                <Button
-                                                                    size="sm"
-                                                                    disabled={!canBuy}
-                                                                    onClick={() => handleBuyTradeItem(tab.tradeShopTabId, item)}
-                                                                >
-                                                                    {isSoldOut ? '已售罄' : (canBuy ? '兑换' : '资源不足')}
-                                                                </Button>
-                                                            );
-                                                        })()}
+                                                        <div className="flex items-center gap-2">
+                                                            {(() => {
+                                                                const canBuy = canBuyTradeItem(item);
+                                                                const isSoldOut = item.limitTradeCount > 0 && item.tradeCount >= item.limitTradeCount;
+                                                                return (
+                                                                    <>
+                                                                        <Button
+                                                                            variant="outline"
+                                                                            size="icon"
+                                                                            className="h-8 w-8"
+                                                                            onClick={() => showAutoBuyDialog(tab.tradeShopTabId, tab.tradeShopItems || [], item)}
+                                                                            title="设置自动购买"
+                                                                        >
+                                                                            <AlarmClock className="h-4 w-4" />
+                                                                        </Button>
+                                                                        <Button
+                                                                            size="sm"
+                                                                            disabled={!canBuy}
+                                                                            onClick={() => handleBuyTradeItem(tab.tradeShopTabId, item)}
+                                                                        >
+                                                                            {isSoldOut ? '已售罄' : (canBuy ? '兑换' : '资源不足')}
+                                                                        </Button>
+                                                                    </>
+                                                                );
+                                                            })()}
+                                                        </div>
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -635,6 +803,116 @@ export function ShopPage() {
                     </TabsContent>
                 );})}
             </Tabs>
+
+            {/* 自动购买对话框 */}
+            <Dialog open={autoBuyDialogOpen} onOpenChange={setAutoBuyDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {(() => {
+                                const mb = tradeShopTabMasterMap[currentAutoBuyTabId];
+                                return mb ? `${t(mb.tabNameKey) || mb.memo} 自动购买` : '自动购买';
+                            })()}
+                        </DialogTitle>
+                        <DialogDescription>
+                            自动购买商城物品
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4 py-4">
+                        {/* 选择要购买的物品 */}
+                        <div className="space-y-2">
+                            <Label>购买物品</Label>
+                            <Select
+                                value={selectedAutoBuyItem || "any"}
+                                onValueChange={(value) => setSelectedAutoBuyItem(value === "any" ? "" : value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="不设置表示购买任意物品" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="any">— 不设置（购买任意物品）—</SelectItem>
+                                    {currentAutoBuyTabItems.map((item) => (
+                                        <SelectItem
+                                            key={`${item.giveItem.itemType}-${item.giveItem.itemId}-${item.giveItem.itemCount}`}
+                                            value={`${item.giveItem.itemType}-${item.giveItem.itemId}-${item.giveItem.itemCount}`}
+                                        >
+                                            {getItemName(item.giveItem.itemType, item.giveItem.itemId)} × {item.giveItem.itemCount}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">不设置表示购买任意物品</p>
+                        </div>
+
+                        {/* 折扣幅度 */}
+                        <div className="space-y-2">
+                            <div className="flex justify-between">
+                                <Label>商品打折幅度</Label>
+                                <span className="text-sm font-medium">{autoBuyDiscount}%OFF</span>
+                            </div>
+                            <Slider
+                                value={[autoBuyDiscount]}
+                                onValueChange={(values) => setAutoBuyDiscount(values[0] || 0)}
+                                min={0}
+                                max={100}
+                                step={10}
+                            />
+                        </div>
+
+                        {/* 选择消耗物品 */}
+                        <div className="space-y-2">
+                            <Label>消耗的物品</Label>
+                            <Select
+                                value={selectedConsumeItem || "any"}
+                                onValueChange={(value) => setSelectedConsumeItem(value === "any" ? "" : value)}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="不设置表示使用任意物品进行购买" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="any">— 不设置（使用任意物品）—</SelectItem>
+                                    {(() => {
+                                        const tabMaster = tradeShopTabMasterMap[currentAutoBuyTabId];
+                                        const consumeItems = tabMaster?.consumeItemInfos || [];
+                                        return consumeItems.map((item) => (
+                                            <SelectItem
+                                                key={`${item.itemType}-${item.itemId}`}
+                                                value={`${item.itemType}-${item.itemId}`}
+                                            >
+                                                {getItemName(item.itemType, item.itemId)}
+                                            </SelectItem>
+                                        ));
+                                    })()}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-muted-foreground">不设置表示使用任意物品进行购买</p>
+                        </div>
+
+                        {/* 消耗数量 */}
+                        <div className="space-y-2">
+                            <Label>消耗数量</Label>
+                            <Input
+                                type="number"
+                                min={0}
+                                value={autoBuyConsumeCount}
+                                onChange={(e) => setAutoBuyConsumeCount(parseInt(e.target.value) || 0)}
+                                placeholder="0"
+                            />
+                            <p className="text-xs text-muted-foreground">设置为 0 表示任意数量</p>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setAutoBuyDialogOpen(false)}>
+                            取消
+                        </Button>
+                        <Button onClick={confirmAutoBuy} variant="outline" className="text-pink-500 border-pink-500 hover:bg-pink-50">
+                            自动购买
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
