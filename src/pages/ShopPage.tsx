@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 import {
     Gem,
     Coins,
@@ -23,7 +24,9 @@ import { TradeShopTabInfo } from '@/api/generated/tradeShopTabInfo';
 import { ItemType } from '@/api/generated/itemType';
 import { TradeShopItem } from '@/api/generated/tradeShopItem';
 import { TradeShopTabMB } from '@/api/generated/tradeShopTabMB';
+import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
 import { useItemName } from '@/hooks/useItemName';
+import { getUserItemCount } from '@/lib/itemUtils';
 
 export function ShopPage() {
     const { t } = useTranslation();
@@ -36,6 +39,7 @@ export function ShopPage() {
     const [tradeShopTabMasterMap, setTradeShopTabMasterMap] = useState<Record<number, TradeShopTabMB>>({});
     const [weeklyShopTabs, setWeeklyShopTabs] = useState<TradeShopTabInfo[]>([]);
     const [tradeShopTabs, setTradeShopTabs] = useState<TradeShopTabInfo[]>([]);
+    const [userItems, setUserItems] = useState<UserItemDtoInfo[]>([]);
     const [userBalance, setUserBalance] = useState({
         diamond: 0,
         gold: 0,
@@ -43,6 +47,26 @@ export function ShopPage() {
         arenaPoints: 0,
         activityMedals: 0
     });
+
+    // 获取 tab 中涉及的所有消耗道具类型
+    const getTabConsumeItems = useCallback((tab: TradeShopTabInfo) => {
+        const itemMap = new Map<string, { itemType: ItemType; itemId: number }>();
+        tab.tradeShopItems?.forEach(item => {
+            if (item.consumeItem1) {
+                const key = `${item.consumeItem1.itemType}-${item.consumeItem1.itemId}`;
+                if (!itemMap.has(key)) {
+                    itemMap.set(key, { itemType: item.consumeItem1.itemType, itemId: item.consumeItem1.itemId });
+                }
+            }
+            if (item.consumeItem2) {
+                const key = `${item.consumeItem2.itemType}-${item.consumeItem2.itemId}`;
+                if (!itemMap.has(key)) {
+                    itemMap.set(key, { itemType: item.consumeItem2.itemType, itemId: item.consumeItem2.itemId });
+                }
+            }
+        });
+        return Array.from(itemMap.values());
+    }, []);
 
     const loadData = useCallback(async () => {
         if (!currentAccount) return;
@@ -86,6 +110,7 @@ export function ShopPage() {
             const syncData = userRes.userSyncData;
             if (syncData) {
                 const items = syncData.userItemDtoInfo || [];
+                setUserItems(items);
 
                 setUserBalance({
                     diamond: items.find(i => i.itemType === ItemType.CurrencyFree)?.itemCount || 0,
@@ -286,7 +311,9 @@ export function ShopPage() {
                     </TabsList>
                 </div>
 
-                {([...tradeShopTabs, ...weeklyShopTabs]).map((tab) => (
+                {([...tradeShopTabs, ...weeklyShopTabs]).map((tab) => {
+                    const consumeItems = getTabConsumeItems(tab);
+                    return (
                     <TabsContent key={tab.tradeShopTabId} value={tab.tradeShopTabId.toString()} className="space-y-4">
                         <Card>
                             <CardHeader>
@@ -305,9 +332,32 @@ export function ShopPage() {
                                             }
                                         </CardDescription>
                                     </div>
-                                    {tab.expirationTimeStamp > 0 && (
-                                        <Badge className="bg-orange-500">限时活动</Badge>
-                                    )}
+                                    <div className="flex items-center gap-3">
+                                        {/* 显示该 tab 涉及的消耗道具持有数量 */}
+                                        {consumeItems.length > 0 && (
+                                            <div className="flex items-center gap-2 bg-muted/50 rounded-lg px-3 py-1.5">
+                                                {consumeItems.map((consumeItem, idx) => {
+                                                    const count = getUserItemCount(userItems, consumeItem.itemType, consumeItem.itemId, 
+                                                        consumeItem.itemType === ItemType.CurrencyFree || consumeItem.itemType === ItemType.CurrencyPaid);
+                                                    return (
+                                                        <div key={`${consumeItem.itemType}-${consumeItem.itemId}`} className="flex items-center gap-1.5">
+                                                            {idx > 0 && <Separator orientation="vertical" className="h-4 mx-1" />}
+                                                            {getCurrencyIcon(consumeItem.itemType)}
+                                                            <span className="text-xs text-muted-foreground truncate max-w-[80px]">
+                                                                {getItemName(consumeItem.itemType, consumeItem.itemId)}
+                                                            </span>
+                                                            <span className="text-sm font-semibold">
+                                                                {count.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        )}
+                                        {tab.expirationTimeStamp > 0 && (
+                                            <Badge className="bg-orange-500">限时活动</Badge>
+                                        )}
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent>
@@ -326,28 +376,33 @@ export function ShopPage() {
                                                         {item.limitTradeCount > 0 ? `${item.tradeCount}/${item.limitTradeCount}` : '∞'}
                                                     </Badge>
                                                 </div>
-                                                <div className="flex items-center justify-between">
-                                                    <div className="flex items-center gap-2">
-                                                        {item.consumeItem1 ? (
-                                                            <>
-                                                                {getCurrencyIcon(item.consumeItem1.itemType)}
-                                                                <span className="font-bold">
-                                                                    {item.consumeItem1.itemCount.toLocaleString()}
-                                                                </span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="font-bold text-green-600">免费</span>
-                                                        )}
-                                                        {item.consumeItem2 && (
-                                                            <>
-                                                                <span className="text-muted-foreground">+</span>
-                                                                {getCurrencyIcon(item.consumeItem2.itemType)}
-                                                                <span className="font-bold">
-                                                                    {item.consumeItem2.itemCount.toLocaleString()}
-                                                                </span>
-                                                            </>
-                                                        )}
-                                                    </div>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex flex-col gap-1">
+                                                    {item.consumeItem1 ? (
+                                                        <div className="flex items-center gap-2">
+                                                            {getCurrencyIcon(item.consumeItem1.itemType)}
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {getItemName(item.consumeItem1.itemType, item.consumeItem1.itemId)}
+                                                            </span>
+                                                            <span className="font-bold">
+                                                                ×{item.consumeItem1.itemCount.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <span className="font-bold text-green-600">免费</span>
+                                                    )}
+                                                    {item.consumeItem2 && (
+                                                        <div className="flex items-center gap-2">
+                                                            {getCurrencyIcon(item.consumeItem2.itemType)}
+                                                            <span className="text-sm text-muted-foreground">
+                                                                {getItemName(item.consumeItem2.itemType, item.consumeItem2.itemId)}
+                                                            </span>
+                                                            <span className="font-bold">
+                                                                ×{item.consumeItem2.itemCount.toLocaleString()}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
                                                     <Button
                                                         size="sm"
                                                         disabled={item.tradeCount >= item.limitTradeCount && item.limitTradeCount > 0}
@@ -363,7 +418,7 @@ export function ShopPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
-                ))}
+                );})}
             </Tabs>
         </div>
     );
