@@ -714,7 +714,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                                                 <div key={`adv-l-${row.label}`} className="flex justify-between border-b py-1">
                                                                     <span>{row.label}</span>
                                                                     <span className="font-medium">
-                                                                        {'key' in row ? formatBattleStatValue(row.key, row.value) : row.value.toLocaleString()}
+                                                                        {'key' in row ? formatBattleStatValue(row.key!, row.value) : row.value.toLocaleString()}
                                                                     </span>
                                                                 </div>
                                                             ))}
@@ -728,7 +728,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                                                 <div key={`adv-r-${row.label}`} className="flex justify-between border-b py-1">
                                                                     <span>{row.label}</span>
                                                                     <span className="font-medium">
-                                                                        {'key' in row ? formatBattleStatValue(row.key, row.value) : row.value.toLocaleString()}
+                                                                        {'key' in row ? formatBattleStatValue(row.key!, row.value) : row.value.toLocaleString()}
                                                                     </span>
                                                                 </div>
                                                             ))}

@@ -11,4 +11,14 @@ export class SpecialLimitedLoginBonusItem implements IUserCharacterItem {
     date: number;
     specialRewardItem: UserItem;
     rarityFlags: CharacterRarityFlags;
+
+    //<custom-body>
+    get item(): UserItem {
+        return this.specialRewardItem;
+    }
+
+    set item(value: UserItem) {
+        this.specialRewardItem = value;
+    }
+    //</custom-body>
 }

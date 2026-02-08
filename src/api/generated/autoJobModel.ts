@@ -18,6 +18,11 @@ export class AutoJobModel {
     autoChangeGachaRelic: boolean;
     autoDrawGachaRelic: boolean;
     autoBuyShopItem: boolean;
+    autoReceiveAutoBattleReward: boolean;
+    autoBossQuickBattle: boolean;
+    autoBossHighSpeedBattle: boolean;
+    autoBountyQuestDispatch: boolean;
+    autoBountyQuestReward: boolean;
     dailyJobCron: string = "0 50 4 ? * *";
     hourlyJobCron: string = "0 30 0,4,8,12,16,20 ? * *";
     pvpJobCron: string = "0 0 20 ? * *";

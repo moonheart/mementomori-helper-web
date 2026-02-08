@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { ortegaApi } from '@/api/ortega-client';
-import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo, TotalActivityMedalRewardMB } from '@/api/generated';
+import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo, TotalActivityMedalRewardMB, MissionMB } from '@/api/generated';
 import { useMasterData, useMasterTable } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
 
@@ -38,7 +38,7 @@ function MissionRow({ mission, onClaim, isClaiming }: {
     onClaim: () => void,
     isClaiming: boolean
 }) {
-    const { data: mb } = useMasterData('MissionTable', mission.id);
+    const { data: mb } = useMasterData<MissionMB>('MissionTable', mission.id);
     const t = useLocalizationStore(state => state.t);
     
     const title = mb ? t(mb.nameKey) : `任务 ${mission.id}`;

@@ -74,7 +74,7 @@ export function TowerPage() {
     const { getItemName } = useItemName();
     const [userTowerProgress, setUserTowerProgress] = useState<UserTowerBattleDtoInfo[]>([]);
     const [loading, setLoading] = useState(true);
-    const { data: towerQuests, loading: masterLoading } = useMasterTable<TowerBattleQuestMB[]>('TowerBattleQuestTable');
+    const { data: towerQuests, loading: masterLoading } = useMasterTable<TowerBattleQuestMB>('TowerBattleQuestTable');
 
     // 获取各塔的所有楼层并按 Floor 升序排列
     const allTowerQuests = useMemo(() => {

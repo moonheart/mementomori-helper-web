@@ -10,4 +10,14 @@ import { CharacterRarityFlags } from "./characterRarityFlags";
 export class EveryDayLimitedLoginBonusItem implements IUserCharacterItem {
     everyDayRewardItem: UserItem;
     rarityFlags: CharacterRarityFlags;
+
+    //<custom-body>
+    get item(): UserItem {
+        return this.everyDayRewardItem;
+    }
+
+    set item(value: UserItem) {
+        this.everyDayRewardItem = value;
+    }
+    //</custom-body>
 }

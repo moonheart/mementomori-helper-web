@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useMasterStore } from '@/store/masterStore';
+import { MasterBookBase } from '@/api/generated/masterBookBase';
+
+interface MasterState {
+    getRecord: <T extends MasterBookBase>(tableName: string, id: number) => Promise<T | null>;
+    getTable: <T extends MasterBookBase>(tableName: string) => Promise<T[]>;
+}
 
 /**
  * 通用 Hook 用于获取 Master 数据
@@ -7,10 +13,10 @@ import { useMasterStore } from '@/store/masterStore';
  * @param id 记录 ID
  * @returns { data: T | null, loading: boolean }
  */
-export function useMasterData<T = any>(tableName: string, id: number | string | undefined) {
+export function useMasterData<T extends MasterBookBase>(tableName: string, id: number | string | undefined) {
     const [data, setData] = useState<T | null>(null);
     const [loading, setLoading] = useState(true);
-    const getRecord = useMasterStore(state => state.getRecord);
+    const getRecord = useMasterStore((state: MasterState) => state.getRecord);
 
     useEffect(() => {
         if (id === undefined || id === null) {
@@ -47,12 +53,12 @@ export function useMasterData<T = any>(tableName: string, id: number | string | 
 /**
  * Hook 用于获取 Master 全表数据
  * @param tableName 表名
- * @returns { data: T | null, loading: boolean }
+ * @returns { data: T[] | null, loading: boolean }
  */
-export function useMasterTable<T = any>(tableName: string) {
-    const [data, setData] = useState<T | null>(null);
+export function useMasterTable<T extends MasterBookBase>(tableName: string) {
+    const [data, setData] = useState<T[] | null>(null);
     const [loading, setLoading] = useState(true);
-    const getTable = useMasterStore(state => state.getTable);
+    const getTable = useMasterStore((state: MasterState) => state.getTable);
 
     useEffect(() => {
         let isMounted = true;
@@ -60,7 +66,7 @@ export function useMasterTable<T = any>(tableName: string) {
 
         getTable<T>(tableName).then(res => {
             if (isMounted) {
-                setData(res as any);
+                setData(res);
                 setLoading(false);
             }
         }).catch(() => {

@@ -12,4 +12,14 @@ export class GachaItemRate implements IUserCharacterItem {
     addItem: UserItem;
     lotteryRate: number;
     item: UserItem;
+
+    //<custom-body>
+    get rarityFlags(): CharacterRarityFlags {
+        return this.characterRarityFlags;
+    }
+
+    set rarityFlags(value: CharacterRarityFlags) {
+        this.characterRarityFlags = value;
+    }
+    //</custom-body>
 }

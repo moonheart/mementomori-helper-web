@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AccountDto } from '../api/generated';
+import type { AccountDto } from '../api/generated/accountDto';
 
 interface AccountState {
     accounts: AccountDto[];

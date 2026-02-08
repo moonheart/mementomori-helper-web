@@ -1,4 +1,5 @@
 import Dexie, { Table } from 'dexie';
+import { MasterBookBase } from '@/api/generated/masterBookBase';
 
 export interface MasterMeta {
     tableName: string;
@@ -10,7 +11,7 @@ export interface MasterRecord {
     table_id: string; // 复合主键: tableName + ":" + id
     tableName: string;
     id: number;
-    data: any;
+    data: unknown;
 }
 
 export interface TranslationRecord {
@@ -71,7 +72,7 @@ export class MementoMoriDB extends Dexie {
     /**
      * 批量保存记录
      */
-    async saveRecords(tableName: string, records: any[]) {
+    async saveRecords<T extends MasterBookBase>(tableName: string, records: T[]) {
         const masterRecords: MasterRecord[] = records.map(r => ({
             table_id: `${tableName}:${r.id}`,
             tableName,
@@ -84,7 +85,7 @@ export class MementoMoriDB extends Dexie {
     /**
      * 获取单条记录
      */
-    async getRecord<T>(tableName: string, id: number): Promise<T | null> {
+    async getRecord<T extends MasterBookBase>(tableName: string, id: number): Promise<T | null> {
         const record = await this.masterData.get(`${tableName}:${id}`);
         return record ? record.data as T : null;
     }
@@ -92,7 +93,7 @@ export class MementoMoriDB extends Dexie {
     /**
      * 获取全表数据
      */
-    async getFullTable<T>(tableName: string): Promise<T[]> {
+    async getFullTable<T extends MasterBookBase>(tableName: string): Promise<T[]> {
         const records = await this.masterData.where('tableName').equals(tableName).toArray();
         return records.map(r => r.data as T);
     }

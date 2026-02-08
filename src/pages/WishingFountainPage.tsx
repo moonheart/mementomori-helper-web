@@ -70,7 +70,7 @@ export function WishingFountainPage() {
     const [quests, setQuests] = useState<ProcessedQuest[]>([]);
     const [serverTime, setServerTime] = useState(timeManager.getServerNowMs());
     
-    const { data: timeServers } = useMasterTable<TimeServerMB[]>('TimeServerTable');
+    const { data: timeServers } = useMasterTable<TimeServerMB>('TimeServerTable');
     const { getItemName } = useItemName();
 
     // 初始化服务器时间偏移

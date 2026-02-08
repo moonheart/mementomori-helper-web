@@ -10,4 +10,14 @@ import { CharacterRarityFlags } from "./characterRarityFlags";
 export class EventMissionReward implements IUserCharacterItem {
     eventItem: UserItem;
     rarityFlags: CharacterRarityFlags;
+
+    //<custom-body>
+    get item(): UserItem {
+        return this.eventItem;
+    }
+
+    set item(value: UserItem) {
+        this.eventItem = value;
+    }
+    //</custom-body>
 }

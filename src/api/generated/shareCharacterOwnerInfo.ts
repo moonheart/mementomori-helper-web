@@ -14,4 +14,10 @@ export class ShareCharacterOwnerInfo implements IPlayerIconInfo, IShareCharacter
     mainCharacterIconId: number;
     mainCharacterIconEffectId: number;
     prevLegendLeagueClass: LegendLeagueClassType;
+
+    //<custom-body>
+    get playerIconInfo(): IPlayerIconInfo {
+        return this;
+    }
+    //</custom-body>
 }

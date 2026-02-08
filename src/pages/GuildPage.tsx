@@ -14,6 +14,7 @@ import {
     Gift,
     Award
 } from 'lucide-react';
+import { JSX } from 'react';
 
 // Mock数据 - 公会信息
 const guildInfo = {

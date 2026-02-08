@@ -6,7 +6,6 @@
 import { IPlayerIconInfo } from "./iPlayerIconInfo";
 import { UserCharacterInfo } from "./userCharacterInfo";
 import { FriendStatusType } from "./friendStatusType";
-import { TimeSpan } from "./timeSpan";
 import { PlayerGuildPositionType } from "./playerGuildPositionType";
 import { LegendLeagueClassType } from "./legendLeagueClassType";
 import { PlayerRecruitType } from "./playerRecruitType";
@@ -28,7 +27,7 @@ export class PlayerInfo implements IPlayerIconInfo {
     guildPeriodTotalFame: number;
     isBlock: boolean;
     isRecruit: boolean;
-    lastLoginTime: TimeSpan;
+    lastLoginTime: number;
     latestQuestId: number;
     latestTowerBattleQuestId: number;
     localRaidBattlePower: number;

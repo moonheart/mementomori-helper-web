@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { AccountManagement } from '@/components/account/AccountManagement';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserStatusDtoInfo } from '@/api/generated/userStatusDtoInfo';
-import { GetUserDataResponse } from '@/api/generated/getUserDataResponse';
+import { UserGetUserDataResponse } from '@/api/generated/';
 
 export function AccountsPage() {
     const [loading, setLoading] = useState(true);
@@ -13,7 +13,7 @@ export function AccountsPage() {
         const fetchUserData = async () => {
             try {
                 setLoading(true);
-                const response = await ortegaApi.user.getUserData({}) as GetUserDataResponse;
+                const response = await ortegaApi.user.getUserData({}) as UserGetUserDataResponse;
                 if (response.userSyncData?.userStatusDtoInfo) {
                     setUserInfo(response.userSyncData.userStatusDtoInfo);
                     setIsLoggedIn(true);

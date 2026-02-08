@@ -4,9 +4,19 @@ import type {
     AddAccountWithClientKeyRequest,
     AddAccountWithPasswordRequest,
     GetClientKeyResponse,
-    LoginRequest,
-    LoginResponse,
 } from './generated';
+
+/** 登录请求参数 */
+export interface LoginRequest {
+    userId: number;
+    clientKey: string;
+}
+
+/** 登录响应 */
+export interface LoginResult {
+    success: boolean;
+    message: string;
+}
 
 export const accountApi = {
     /**
@@ -53,8 +63,8 @@ export const accountApi = {
     /**
      * 登录到游戏
      */
-    login: async (request: LoginRequest): Promise<LoginResponse> => {
-        const response = await apiClient.post<LoginResponse>(
+    login: async (request: LoginRequest): Promise<LoginResult> => {
+        const response = await apiClient.post<LoginResult>(
             '/api/auth/login',
             request
         );

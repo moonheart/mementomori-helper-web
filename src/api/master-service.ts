@@ -1,4 +1,5 @@
 import axiosClient from './axios-client';
+import { MasterBookBase } from './generated/masterBookBase';
 
 export interface MasterTableManifest {
     name: string;
@@ -23,7 +24,7 @@ export const masterService = {
     /**
      * 获取单表全量数据
      */
-    getTableData: async <T = unknown>(tableName: string): Promise<T[]> => {
+    getTableData: async <T extends MasterBookBase>(tableName: string): Promise<T[]> => {
         const response = await axiosClient.get<T[]>(`/api/master/table/${tableName}`);
         return response.data;
     }

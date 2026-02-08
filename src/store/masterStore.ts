@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { db } from '@/lib/db';
 import { masterService } from '@/api/master-service';
+import { MasterBookBase } from '@/api/generated/masterBookBase';
 
 interface MasterState {
     isInitializing: boolean;
@@ -12,14 +13,14 @@ interface MasterState {
     sync: () => Promise<void>;
     
     // 获取单条数据 (带内存缓存)
-    getRecord: <T>(tableName: string, id: number) => Promise<T | null>;
+    getRecord: <T extends MasterBookBase>(tableName: string, id: number) => Promise<T | null>;
 
     // 获取全表数据
-    getTable: <T>(tableName: string) => Promise<T[]>;
+    getTable: <T extends MasterBookBase>(tableName: string) => Promise<T[]>;
 }
 
 // 内存缓存以提高高频访问性能
-const memoryCache: Record<string, any> = {};
+const memoryCache: Record<string, MasterBookBase> = {};
 
 export const useMasterStore = create<MasterState>((set, get) => ({
     isInitializing: true,
@@ -42,8 +43,8 @@ export const useMasterStore = create<MasterState>((set, get) => ({
                 // 如果 Hash 不一致或本地无数据，则同步
                 if (!localMeta || localMeta.hash !== table.hash) {
                     console.log(`Syncing table: ${table.name}...`);
-                    const data = await masterService.getTableData(table.name);
-                    
+                    const data = await masterService.getTableData<MasterBookBase>(table.name);
+
                     await db.transaction('rw', db.masterData, db.meta, async () => {
                         await db.clearTable(table.name);
                         await db.saveRecords(table.name, data);
@@ -64,9 +65,9 @@ export const useMasterStore = create<MasterState>((set, get) => ({
         }
     },
 
-    getRecord: async <T>(tableName: string, id: number): Promise<T | null> => {
+    getRecord: async <T extends MasterBookBase>(tableName: string, id: number): Promise<T | null> => {
         const cacheKey = `${tableName}:${id}`;
-        if (memoryCache[cacheKey]) return memoryCache[cacheKey];
+        if (memoryCache[cacheKey]) return memoryCache[cacheKey] as T;
 
         const data = await db.getRecord<T>(tableName, id);
         if (data) {
@@ -75,7 +76,7 @@ export const useMasterStore = create<MasterState>((set, get) => ({
         return data;
     },
 
-    getTable: async <T>(tableName: string): Promise<T[]> => {
+    getTable: async <T extends MasterBookBase>(tableName: string): Promise<T[]> => {
         // 先同步一次元数据（如果需要，这里简单起见假设已经同步或从 DB 取）
         return await db.getFullTable<T>(tableName);
     }
