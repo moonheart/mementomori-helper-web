@@ -85,7 +85,7 @@ export function ItemsPage() {
     }
 
     return (
-        <div className="container mx-auto p-6 space-y-6">
+        <div className="w-full p-6 space-y-6">
             {/* 页面标题 */}
             <div className="space-y-2">
                 <div className="flex items-center gap-3">

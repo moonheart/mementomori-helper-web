@@ -111,20 +111,34 @@ import type {
     EquipmentRemoveEquipmentResponse,
     EquipmentTrainingRequest,
     EquipmentTrainingResponse,
+    FriendApplyFriendRequest,
+    FriendApplyFriendResponse,
     FriendBulkApplyFriendsRequest,
     FriendBulkApplyFriendsResponse,
     FriendBulkTransferFriendPointRequest,
     FriendBulkTransferFriendPointResponse,
+    FriendCancelAllApplyFriendRequest,
+    FriendCancelAllApplyFriendResponse,
     FriendGetFriendCampaignInfoRequest,
     FriendGetFriendCampaignInfoResponse,
     FriendGetPlayerInfoListRequest,
     FriendGetPlayerInfoListResponse,
+    FriendReceiveFriendPointRequest,
+    FriendReceiveFriendPointResponse,
     FriendRemoveFriendRequest,
     FriendRemoveFriendResponse,
     FriendReplyAllFriendRequest,
     FriendReplyAllFriendResponse,
+    FriendReplyFriendRequest,
+    FriendReplyFriendResponse,
     FriendRewardFriendMissionRequest,
     FriendRewardFriendMissionResponse,
+    FriendSearchFriendRequest,
+    FriendSearchFriendResponse,
+    FriendSendFriendPointRequest,
+    FriendSendFriendPointResponse,
+    FriendUpdateBlockListRequest,
+    FriendUpdateBlockListResponse,
     FriendUseFriendCodeRequest,
     FriendUseFriendCodeResponse,
     GachaChangeGachaRelicRequest,
@@ -466,6 +480,10 @@ export interface OrtegaRpcMap {
         request: EquipmentTrainingRequest;
         response: EquipmentTrainingResponse;
     };
+    "friend/applyFriend": {
+        request: FriendApplyFriendRequest;
+        response: FriendApplyFriendResponse;
+    };
     "friend/bulkApplyFriends": {
         request: FriendBulkApplyFriendsRequest;
         response: FriendBulkApplyFriendsResponse;
@@ -473,6 +491,10 @@ export interface OrtegaRpcMap {
     "friend/bulkTransferFriendPoint": {
         request: FriendBulkTransferFriendPointRequest;
         response: FriendBulkTransferFriendPointResponse;
+    };
+    "friend/cancelAllApplyFriend": {
+        request: FriendCancelAllApplyFriendRequest;
+        response: FriendCancelAllApplyFriendResponse;
     };
     "friend/getFriendCampaignInfo": {
         request: FriendGetFriendCampaignInfoRequest;
@@ -482,6 +504,10 @@ export interface OrtegaRpcMap {
         request: FriendGetPlayerInfoListRequest;
         response: FriendGetPlayerInfoListResponse;
     };
+    "friend/receiveFriendPoint": {
+        request: FriendReceiveFriendPointRequest;
+        response: FriendReceiveFriendPointResponse;
+    };
     "friend/removeFriend": {
         request: FriendRemoveFriendRequest;
         response: FriendRemoveFriendResponse;
@@ -490,9 +516,25 @@ export interface OrtegaRpcMap {
         request: FriendReplyAllFriendRequest;
         response: FriendReplyAllFriendResponse;
     };
+    "friend/replyFriend": {
+        request: FriendReplyFriendRequest;
+        response: FriendReplyFriendResponse;
+    };
     "friend/rewardFriendMission": {
         request: FriendRewardFriendMissionRequest;
         response: FriendRewardFriendMissionResponse;
+    };
+    "friend/searchFriend": {
+        request: FriendSearchFriendRequest;
+        response: FriendSearchFriendResponse;
+    };
+    "friend/sendFriendPoint": {
+        request: FriendSendFriendPointRequest;
+        response: FriendSendFriendPointResponse;
+    };
+    "friend/updateBlockList": {
+        request: FriendUpdateBlockListRequest;
+        response: FriendUpdateBlockListResponse;
     };
     "friend/useFriendCode": {
         request: FriendUseFriendCodeRequest;

@@ -185,27 +185,48 @@ export const ortegaApi = {
             rpcClient.call<OrtegaRpcMap["equipment/training"]["response"]>("equipment/training", request),
     },
     friend: {
+        /** friend/applyFriend */
+        applyFriend: (request: OrtegaRpcMap["friend/applyFriend"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/applyFriend"]["response"]>("friend/applyFriend", request),
         /** friend/bulkApplyFriends */
         bulkApplyFriends: (request: OrtegaRpcMap["friend/bulkApplyFriends"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/bulkApplyFriends"]["response"]>("friend/bulkApplyFriends", request),
         /** friend/bulkTransferFriendPoint */
         bulkTransferFriendPoint: (request: OrtegaRpcMap["friend/bulkTransferFriendPoint"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/bulkTransferFriendPoint"]["response"]>("friend/bulkTransferFriendPoint", request),
+        /** friend/cancelAllApplyFriend */
+        cancelAllApplyFriend: (request: OrtegaRpcMap["friend/cancelAllApplyFriend"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/cancelAllApplyFriend"]["response"]>("friend/cancelAllApplyFriend", request),
         /** friend/getFriendCampaignInfo */
         getFriendCampaignInfo: (request: OrtegaRpcMap["friend/getFriendCampaignInfo"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/getFriendCampaignInfo"]["response"]>("friend/getFriendCampaignInfo", request),
         /** friend/getPlayerInfoList */
         getPlayerInfoList: (request: OrtegaRpcMap["friend/getPlayerInfoList"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/getPlayerInfoList"]["response"]>("friend/getPlayerInfoList", request),
+        /** friend/receiveFriendPoint */
+        receiveFriendPoint: (request: OrtegaRpcMap["friend/receiveFriendPoint"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/receiveFriendPoint"]["response"]>("friend/receiveFriendPoint", request),
         /** friend/removeFriend */
         removeFriend: (request: OrtegaRpcMap["friend/removeFriend"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/removeFriend"]["response"]>("friend/removeFriend", request),
         /** friend/replyAllFriend */
         replyAllFriend: (request: OrtegaRpcMap["friend/replyAllFriend"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/replyAllFriend"]["response"]>("friend/replyAllFriend", request),
+        /** friend/replyFriend */
+        replyFriend: (request: OrtegaRpcMap["friend/replyFriend"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/replyFriend"]["response"]>("friend/replyFriend", request),
         /** friend/rewardFriendMission */
         rewardFriendMission: (request: OrtegaRpcMap["friend/rewardFriendMission"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/rewardFriendMission"]["response"]>("friend/rewardFriendMission", request),
+        /** friend/searchFriend */
+        searchFriend: (request: OrtegaRpcMap["friend/searchFriend"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/searchFriend"]["response"]>("friend/searchFriend", request),
+        /** friend/sendFriendPoint */
+        sendFriendPoint: (request: OrtegaRpcMap["friend/sendFriendPoint"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/sendFriendPoint"]["response"]>("friend/sendFriendPoint", request),
+        /** friend/updateBlockList */
+        updateBlockList: (request: OrtegaRpcMap["friend/updateBlockList"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["friend/updateBlockList"]["response"]>("friend/updateBlockList", request),
         /** friend/useFriendCode */
         useFriendCode: (request: OrtegaRpcMap["friend/useFriendCode"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["friend/useFriendCode"]["response"]>("friend/useFriendCode", request),
