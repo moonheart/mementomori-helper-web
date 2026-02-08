@@ -3,30 +3,43 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2 } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2, ScrollText, Target, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserSyncData } from '@/api/generated/userSyncData';
 import { UserGetUserDataResponse } from '@/api/generated/UsergetUserDataResponse';
+import { UserGetMypageResponse } from '@/api/generated/UsergetMypageResponse';
 import { useLocalizationStore } from '@/store/localization-store';
 import { MissionGroupType } from '@/api/generated/missionGroupType';
 import { ItemType } from '@/api/generated/itemType';
 import { TowerType } from '@/api/generated/towerType';
+import { LanguageType } from '@/api/generated/languageType';
+import { TransferSpotType } from '@/api/generated/transferSpotType';
+import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
+import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
 
 export function DashboardPage() {
     const navigate = useNavigate();
     const { t } = useLocalizationStore();
     const [userData, setUserData] = useState<UserSyncData | null>(null);
+    const [mypageData, setMypageData] = useState<UserGetMypageResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [monthlyLoginBonusOpen, setMonthlyLoginBonusOpen] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
             try {
                 setIsLoading(true);
-                const response = await ortegaApi.user.getUserData({}) as UserGetUserDataResponse;
-                if (response && response.userSyncData) {
-                    setUserData(response.userSyncData);
+                const [userResponse, mypageResponse] = await Promise.all([
+                    ortegaApi.user.getUserData({}) as Promise<UserGetUserDataResponse>,
+                    ortegaApi.user.getMypage({ languageType: LanguageType.zhCN }) as Promise<UserGetMypageResponse>
+                ]);
+                if (userResponse && userResponse.userSyncData) {
+                    setUserData(userResponse.userSyncData);
+                }
+                if (mypageResponse) {
+                    setMypageData(mypageResponse);
                 }
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
@@ -183,6 +196,70 @@ export function DashboardPage() {
         },
     ];
 
+    // 徽章通知区域数据
+    const notificationBadges = [
+        {
+            id: 'friend-point',
+            label: t('[ItemName9]'), // 友谊点
+            visible: mypageData?.existNewFriendPointTransfer ?? false,
+            icon: Heart,
+            color: 'bg-pink-500'
+        },
+        {
+            id: 'private-chat',
+            label: t('[CommonHeaderChatLabel]'), // 私聊
+            visible: mypageData?.existNewPrivateChat ?? false,
+            icon: MessageCircle,
+            color: 'bg-blue-500'
+        },
+        {
+            id: 'bounty-quest',
+            label: t('[CommonHeaderBountyQuestLabel]'), // 悬赏任务
+            visible: mypageData?.existNotReceivedBountyQuestReward ?? false,
+            icon: ScrollText,
+            color: 'bg-amber-500'
+        },
+        {
+            id: 'mission-reward',
+            label: t('[MyPageMenuButtonMissionLabel]'), // 任务奖励
+            visible: mypageData?.existNotReceivedMissionReward ?? false,
+            icon: Target,
+            color: 'bg-green-500'
+        },
+        {
+            id: 'dungeon-battle',
+            label: t('[CommonHeaderDungeonBattleLabel]'), // 地牢战斗
+            visible: (userData as unknown as UserGetUserDataResponse)?.isNotClearDungeonBattleMap ?? false,
+            icon: MapPin,
+            color: 'bg-purple-500'
+        },
+        {
+            id: 'present-box',
+            label: t('[MyPageMenuButtonPresentBoxLabel]'), // 礼物盒
+            visible: (userData?.presentCount ?? 0) > 0,
+            icon: Gift,
+            color: 'bg-red-500'
+        }
+    ];
+
+    const visibleBadges = notificationBadges.filter(b => b.visible);
+    const mypageIconInfos = mypageData?.mypageInfo?.mypageIconInfos ?? [];
+
+    // 处理 MypageIconInfo 点击
+    const handleMypageIconClick = (info: MypageIconInfo) => {
+        const transferSpotType = info.transferDetailInfo?.transferSpotType;
+        if (transferSpotType === TransferSpotType.MonthlyLoginBonus) {
+            setMonthlyLoginBonusOpen(true);
+        }
+        // 可以在这里添加其他 TransferSpotType 的处理
+    };
+
+    // 判断是否可点击
+    const isClickableIcon = (info: MypageIconInfo): boolean => {
+        const transferSpotType = info.transferDetailInfo?.transferSpotType;
+        return transferSpotType === TransferSpotType.MonthlyLoginBonus;
+    };
+
     return (
         <div className="space-y-6">
             {/* Resources Grid */}
@@ -207,6 +284,44 @@ export function DashboardPage() {
                     </Card>
                 ))}
             </div>
+
+            {/* Notification Badges */}
+            {(visibleBadges.length > 0 || mypageIconInfos.length > 0) && (
+                <div className="flex flex-wrap gap-2">
+                    {visibleBadges.map((badge) => {
+                        const Icon = badge.icon;
+                        return (
+                            <Badge key={badge.id} variant="secondary" className="px-3 py-1.5 text-sm flex items-center gap-1.5">
+                                <span className={`relative flex h-2 w-2`}>
+                                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${badge.color}`}></span>
+                                    <span className={`relative inline-flex rounded-full h-2 w-2 ${badge.color}`}></span>
+                                </span>
+                                <Icon className="h-3.5 w-3.5" />
+                                {badge.label}
+                            </Badge>
+                        );
+                    })}
+                    {mypageIconInfos.map((info) => {
+                        const clickable = isClickableIcon(info);
+                        return (
+                            <Badge
+                                key={info.id}
+                                variant="secondary"
+                                className={`px-3 py-1.5 text-sm flex items-center gap-1.5 ${clickable ? 'cursor-pointer hover:bg-primary/20 transition-colors' : ''}`}
+                                onClick={() => clickable && handleMypageIconClick(info)}
+                            >
+                                {info.isDisplayBadge && (
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                    </span>
+                                )}
+                                {t(info.iconNameKey)}
+                            </Badge>
+                        );
+                    })}
+                </div>
+            )}
 
             {/* Page Header */}
             <div>
@@ -339,6 +454,12 @@ export function DashboardPage() {
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Monthly Login Bonus Dialog */}
+            <MonthlyLoginBonusDialog
+                open={monthlyLoginBonusOpen}
+                onOpenChange={setMonthlyLoginBonusOpen}
+            />
         </div>
     );
 }
