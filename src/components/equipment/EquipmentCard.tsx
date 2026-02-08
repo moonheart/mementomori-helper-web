@@ -1,4 +1,4 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,7 +12,8 @@ import {
     getRuneSlotUsage,
     canEnhance
 } from '@/lib/equipmentUtils';
-import { Swords, TrendingUp, Sparkles, XCircle } from 'lucide-react';
+import { EquipmentIconManager, SphereIconManager } from '@/lib/asset-manager';
+import { Swords, TrendingUp, XCircle } from 'lucide-react';
 
 interface EquipmentCardProps {
     equipment: UIEquipment;
@@ -47,32 +48,34 @@ export function EquipmentCard({
             )}
 
             <CardHeader className="pb-3">
-                <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3 flex-1">
-                        <div className="text-4xl">{getSlotIcon(equipment.slotType)}</div>
-                        <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg truncate">
-                                {equipment.name}
-                            </CardTitle>
-                            <CardDescription className="flex items-center gap-2 mt-1">
-                                <span>{getSlotName(equipment.slotType)}</span>
-                                {equipment.equippedByName && (
-                                    <>
-                                        <span>•</span>
-                                        <span className="text-green-600">由 {equipment.equippedByName} 装备</span>
-                                    </>
-                                )}
-                            </CardDescription>
-                        </div>
+                <div className="flex items-start gap-3">
+                    <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center overflow-hidden border-2 border-border/50 shrink-0">
+                        <img
+                            src={EquipmentIconManager.getUrl(equipment.equipmentId)}
+                            alt={equipment.name}
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                                (e.target as HTMLImageElement).style.display = 'none';
+                                (e.target as HTMLImageElement).parentElement!.innerHTML = getSlotIcon(equipment.slotType);
+                            }}
+                        />
                     </div>
-
-                    <div className="flex flex-col items-end gap-1.5">
-                        <Badge className={`${getRarityColor(equipment.rarity)} text-white font-bold`}>
-                            {rarityName}
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                            Lv.{equipment.level}
-                        </Badge>
+                    <div className="flex-1 min-w-0">
+                        <CardTitle className="text-lg truncate">
+                            {equipment.name}
+                        </CardTitle>
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                            <span className="text-sm text-muted-foreground">{getSlotName(equipment.slotType)}</span>
+                            <Badge className={`${getRarityColor(equipment.rarity)} text-white text-xs px-1.5 py-0`}>
+                                {rarityName}
+                            </Badge>
+                            <Badge variant="outline" className="text-xs px-1.5 py-0">
+                                Lv.{equipment.level}
+                            </Badge>
+                        </div>
+                        {equipment.equippedByName && (
+                            <div className="text-sm text-green-600 mt-0.5">由 {equipment.equippedByName} 装备</div>
+                        )}
                     </div>
                 </div>
             </CardHeader>
@@ -105,41 +108,61 @@ export function EquipmentCard({
                     </div>
                 </div>
 
-                {/* 基础属性 */}
-                {equipment.master?.battleParameterChangeInfo && (
-                    <div className="space-y-1">
-                        <div className="text-xs text-muted-foreground font-medium">基础属性</div>
-                        <div className="flex justify-between text-xs bg-muted/50 px-2 py-1 rounded">
-                            <span className="text-muted-foreground">
-                                {formatStatName(equipment.master.battleParameterChangeInfo.battleParameterType)}
-                            </span>
-                            <span className="font-semibold">
-                                {formatStatValue(
-                                    equipment.master.battleParameterChangeInfo.battleParameterType,
-                                    equipment.master.battleParameterChangeInfo.value
-                                )}
-                            </span>
-                        </div>
-                    </div>
-                )}
-
-                {/* 符石插槽 */}
-                {runeUsage.total > 0 && (
-                    <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
-                        <span className="text-xs text-muted-foreground">符石插槽</span>
-                        <div className="flex items-center gap-1.5">
-                            {[...Array(runeUsage.total)].map((_, index) => (
-                                <div
-                                    key={index}
-                                    className={`w-6 h-6 rounded border-2 flex items-center justify-center text-xs ${index < runeUsage.used
-                                        ? 'border-purple-500 bg-purple-100 dark:bg-purple-900 text-purple-600'
-                                        : 'border-gray-300 bg-gray-100 dark:bg-gray-800'
-                                        }`}
-                                >
-                                    {index < runeUsage.used ? '◆' : '◇'}
+                {/* 基础属性和符石插槽 - 左右布局 */}
+                {(equipment.master?.battleParameterChangeInfo || runeUsage.total > 0) && (
+                    <div className="flex gap-2">
+                        {/* 基础属性 */}
+                        {equipment.master?.battleParameterChangeInfo && (
+                            <div className="flex-1 space-y-1">
+                                <div className="text-xs text-muted-foreground font-medium">基础属性</div>
+                                <div className="flex justify-between text-xs bg-muted/50 px-2 py-1 rounded">
+                                    <span className="text-muted-foreground truncate">
+                                        {formatStatName(equipment.master.battleParameterChangeInfo.battleParameterType)}
+                                    </span>
+                                    <span className="font-semibold ml-1">
+                                        {formatStatValue(
+                                            equipment.master.battleParameterChangeInfo.battleParameterType,
+                                            equipment.master.battleParameterChangeInfo.value
+                                        )}
+                                    </span>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        )}
+
+                        {/* 符石插槽 */}
+                        {runeUsage.total > 0 && (
+                            <div className={`space-y-1 ${equipment.master?.battleParameterChangeInfo ? 'w-auto' : 'flex-1'}`}>
+                                <div className="text-xs text-muted-foreground font-medium">符石</div>
+                                <div className="flex items-center gap-1">
+                                    {[...Array(runeUsage.total)].map((_, index) => {
+                                        const categoryId = equipment.sphereCategoryIds?.[index];
+                                        const hasSphere = index < runeUsage.used && categoryId !== undefined;
+                                        return (
+                                            <div
+                                                key={index}
+                                                className={`w-5 h-5 rounded border-2 flex items-center justify-center overflow-hidden ${hasSphere
+                                                    ? 'border-purple-500 bg-purple-100 dark:bg-purple-900'
+                                                    : 'border-gray-300 bg-gray-100 dark:bg-gray-800'
+                                                    }`}
+                                            >
+                                                {hasSphere ? (
+                                                    <img
+                                                        src={SphereIconManager.getTinyUrl(categoryId)}
+                                                        alt="符石"
+                                                        className="w-4 h-4 object-contain"
+                                                        onError={(e) => {
+                                                            (e.target as HTMLImageElement).style.display = 'none';
+                                                        }}
+                                                    />
+                                                ) : (
+                                                    <span className="text-[10px] text-gray-400">◇</span>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </div>
                 )}
 

@@ -15,6 +15,7 @@ export interface UIEquipment extends UserEquipmentDtoInfo {
     setName?: string;
     equippedByName?: string;
     power: number;
+    sphereCategoryIds?: (number | undefined)[]; // 每个插槽的符石 categoryId
 }
 
 /**

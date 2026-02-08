@@ -18,7 +18,8 @@ import {
     UserEquipmentDtoInfo,
     EquipmentSlotType,
     EquipmentRarityFlags,
-    CharacterMB
+    CharacterMB,
+    SphereMB
 } from '@/api/generated';
 
 export function EquipmentPage() {
@@ -32,6 +33,7 @@ export function EquipmentPage() {
     const [equipmentMasterMap, setEquipmentMasterMap] = useState<Record<number, EquipmentMB>>({});
     const [setMasterMap, setSetMasterMap] = useState<Record<number, EquipmentSetMB>>({});
     const [characterNameMap, setCharacterNameMap] = useState<Record<string, string>>({});
+    const [sphereMasterMap, setSphereMasterMap] = useState<Record<number, SphereMB>>({});
 
     // 筛选状态
     const [searchQuery, setSearchQuery] = useState('');
@@ -85,6 +87,14 @@ export function EquipmentPage() {
                 });
                 setSetMasterMap(setMap);
 
+                // 3. 获取符石 Master 数据
+                const sphereTable = await getTable<SphereMB>('SphereTable');
+                const sphereMap: Record<number, SphereMB> = {};
+                sphereTable.forEach((m) => {
+                    sphereMap[m.id] = m;
+                });
+                setSphereMasterMap(sphereMap);
+
             } catch (error) {
                 console.error('Failed to fetch equipment data:', error);
             } finally {
@@ -100,7 +110,15 @@ export function EquipmentPage() {
         return userEquipments.map(eq => {
             const master = equipmentMasterMap[eq.equipmentId];
             const setMaster = master?.equipmentSetId ? setMasterMap[master.equipmentSetId] : undefined;
-            
+
+            // 获取每个插槽的符石 categoryId
+            const sphereCategoryIds = [
+                eq.sphereId1 ? sphereMasterMap[eq.sphereId1]?.categoryId : undefined,
+                eq.sphereId2 ? sphereMasterMap[eq.sphereId2]?.categoryId : undefined,
+                eq.sphereId3 ? sphereMasterMap[eq.sphereId3]?.categoryId : undefined,
+                eq.sphereId4 ? sphereMasterMap[eq.sphereId4]?.categoryId : undefined,
+            ];
+
             return {
                 ...eq,
                 master,
@@ -110,10 +128,11 @@ export function EquipmentPage() {
                 level: master?.equipmentLv || 0,
                 setName: setMaster ? t(setMaster.nameKey) : undefined,
                 equippedByName: eq.characterGuid ? characterNameMap[eq.characterGuid] : undefined,
-                power: calculateEquipmentPower(eq, master)
+                power: calculateEquipmentPower(eq, master),
+                sphereCategoryIds
             };
         });
-    }, [userEquipments, equipmentMasterMap, setMasterMap, characterNameMap, t]);
+    }, [userEquipments, equipmentMasterMap, setMasterMap, sphereMasterMap, characterNameMap, t]);
 
     // 筛选和排序装备
     const filteredAndSortedEquipment = useMemo(() => {
@@ -242,7 +261,7 @@ export function EquipmentPage() {
 
             {/* 装备网格 */}
             {filteredAndSortedEquipment.length > 0 ? (
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 3xl:grid-cols-6">
                     {filteredAndSortedEquipment.map((equipment) => (
                         <EquipmentCard
                             key={equipment.guid}
