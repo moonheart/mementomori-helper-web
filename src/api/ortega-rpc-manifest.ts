@@ -229,8 +229,18 @@ import type {
     QuestGetQuestInfoResponse,
     QuestMapInfoRequest,
     QuestMapInfoResponse,
+    RankingGetAchieveRankingPlayerInfoRequest,
+    RankingGetAchieveRankingPlayerInfoResponse,
+    RankingGetBulkAchieveRankingPlayerInfoRequest,
+    RankingGetBulkAchieveRankingPlayerInfoResponse,
+    RankingGetGuildRankingRequest,
+    RankingGetGuildRankingResponse,
     RankingGetPlayerRankingRequest,
     RankingGetPlayerRankingResponse,
+    RankingGetRankingBattleLogRequest,
+    RankingGetRankingBattleLogResponse,
+    RankingGetTowerRankingRequest,
+    RankingGetTowerRankingResponse,
     RankingReceiveAchieveRankingRewardRequest,
     RankingReceiveAchieveRankingRewardResponse,
     ShopBuyProductRequest,
@@ -716,9 +726,29 @@ export interface OrtegaRpcMap {
         request: QuestMapInfoRequest;
         response: QuestMapInfoResponse;
     };
+    "ranking/getAchieveRankingPlayerInfo": {
+        request: RankingGetAchieveRankingPlayerInfoRequest;
+        response: RankingGetAchieveRankingPlayerInfoResponse;
+    };
+    "ranking/getBulkAchieveRankingPlayerInfo": {
+        request: RankingGetBulkAchieveRankingPlayerInfoRequest;
+        response: RankingGetBulkAchieveRankingPlayerInfoResponse;
+    };
+    "ranking/getGuildRanking": {
+        request: RankingGetGuildRankingRequest;
+        response: RankingGetGuildRankingResponse;
+    };
     "ranking/getPlayerRanking": {
         request: RankingGetPlayerRankingRequest;
         response: RankingGetPlayerRankingResponse;
+    };
+    "ranking/getRankingBattleLog": {
+        request: RankingGetRankingBattleLogRequest;
+        response: RankingGetRankingBattleLogResponse;
+    };
+    "ranking/getTowerRanking": {
+        request: RankingGetTowerRankingRequest;
+        response: RankingGetTowerRankingResponse;
     };
     "ranking/receiveAchieveRankingReward": {
         request: RankingReceiveAchieveRankingRewardRequest;

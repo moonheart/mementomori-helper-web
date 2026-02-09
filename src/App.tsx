@@ -16,7 +16,6 @@ import { ShopPage } from './pages/ShopPage';
 import { GachaPage } from './pages/GachaPage';
 import { PVPPage } from './pages/PVPPage';
 import { GuildPage } from './pages/GuildPage';
-import { DungeonPage } from './pages/DungeonPage';
 import { TimeSpaceCavePage } from './pages/TimeSpaceCavePage';
 import { PhantomTemplePage } from './pages/PhantomTemplePage';
 import { LeaderboardPage } from './pages/LeaderboardPage';
@@ -62,7 +61,6 @@ function App() {
           <Route path="/gacha" element={<GachaPage />} />
           <Route path="/pvp" element={<PVPPage />} />
           <Route path="/guild" element={<GuildPage />} />
-          <Route path="/dungeon" element={<DungeonPage />} />
           <Route path="/cave" element={<TimeSpaceCavePage />} />
           <Route path="/temple" element={<PhantomTemplePage />} />
           <Route path="/leaderboard" element={<LeaderboardPage />} />

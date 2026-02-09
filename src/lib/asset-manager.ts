@@ -1,6 +1,6 @@
 /**
  * 游戏资源管理器 - 统一管理图标、图片等资源的URL生成
- * 
+ *
  * 图标格式说明:
  * - _l: 1024*1024 (大图标)
  * - _m: 256*256 (中等图标)
@@ -9,6 +9,9 @@
  */
 
 const BASE_URL = 'https://list.moonheart.dev/d/public/mmtm/AddressableConvertAssets';
+
+/** 特殊头像解码掩码 (63个1，去掉最高位符号位) */
+const SPECIAL_ICON_MASK = 0x7FFFFFFFFFFFFFFFn;
 
 export type IconSize = 'l' | 'm' | 's' | 'w';
 
@@ -22,6 +25,39 @@ export interface IconOptions {
  */
 export class CharacterIconManager {
     /**
+     * 解码特殊头像ID
+     * 大负数格式: 使用掩码 0x7FFFFFFFFFFFFFFF 解码出特殊头像ID
+     * @param mainCharacterIconId MainCharacterIconId (可能是普通角色ID或特殊头像编码，字符串类型保留完整精度)
+     * @returns 解码后的图标信息
+     */
+    static decodeIconId(mainCharacterIconId: string | number): {
+        isSpecialIcon: boolean;
+        characterId: number;
+        specialIconId?: number;
+    } {
+        // 转换为 BigInt 处理
+        const iconIdBigInt = BigInt(mainCharacterIconId);
+
+        // 正数直接作为角色ID使用
+        if (iconIdBigInt > 0) {
+            return {
+                isSpecialIcon: false,
+                characterId: Number(iconIdBigInt)
+            };
+        }
+
+        // 处理大负数 (特殊头像编码)
+        // 使用掩码 0x7FFFFFFFFFFFFFFF 解码出特殊头像ID
+        const specialId = Number(iconIdBigInt & SPECIAL_ICON_MASK);
+
+        return {
+            isSpecialIcon: true,
+            characterId: specialId, // 临时使用，需要查询 SpecialIconItemMB 获取实际角色ID
+            specialIconId: specialId
+        };
+    }
+
+    /**
      * 获取角色图标URL
      * @param characterId 角色ID (数字)
      * @param options 图标选项
@@ -31,6 +67,17 @@ export class CharacterIconManager {
         const { size = 'm' } = options;
         const paddedId = characterId.toString().padStart(6, '0');
         return `${BASE_URL}/CharacterIcon/CHR_${paddedId}/CHR_${paddedId}_00_${size}.png`;
+    }
+
+    /**
+     * 获取特殊头像图标URL
+     * 格式: CHR_{characterId}_00_em_001.png (后缀固定为001)
+     * @param characterId 基础角色ID (来自 SpecialIconItemMB.characterId)
+     * @returns 完整的图标URL
+     */
+    static getSpecialIconUrl(characterId: number): string {
+        const paddedCharId = characterId.toString().padStart(6, '0');
+        return `${BASE_URL}/CharacterIcon/CHR_${paddedCharId}/CHR_${paddedCharId}_00_em_001.png`;
     }
 
     /**

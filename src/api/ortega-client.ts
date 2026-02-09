@@ -390,9 +390,24 @@ export const ortegaApi = {
             rpcClient.call<OrtegaRpcMap["quest/mapInfo"]["response"]>("quest/mapInfo", request),
     },
     ranking: {
+        /** ranking/getAchieveRankingPlayerInfo */
+        getAchieveRankingPlayerInfo: (request: OrtegaRpcMap["ranking/getAchieveRankingPlayerInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["ranking/getAchieveRankingPlayerInfo"]["response"]>("ranking/getAchieveRankingPlayerInfo", request),
+        /** ranking/getBulkAchieveRankingPlayerInfo */
+        getBulkAchieveRankingPlayerInfo: (request: OrtegaRpcMap["ranking/getBulkAchieveRankingPlayerInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["ranking/getBulkAchieveRankingPlayerInfo"]["response"]>("ranking/getBulkAchieveRankingPlayerInfo", request),
+        /** ranking/getGuildRanking */
+        getGuildRanking: (request: OrtegaRpcMap["ranking/getGuildRanking"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["ranking/getGuildRanking"]["response"]>("ranking/getGuildRanking", request),
         /** ranking/getPlayerRanking */
         getPlayerRanking: (request: OrtegaRpcMap["ranking/getPlayerRanking"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["ranking/getPlayerRanking"]["response"]>("ranking/getPlayerRanking", request),
+        /** ranking/getRankingBattleLog */
+        getRankingBattleLog: (request: OrtegaRpcMap["ranking/getRankingBattleLog"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["ranking/getRankingBattleLog"]["response"]>("ranking/getRankingBattleLog", request),
+        /** ranking/getTowerRanking */
+        getTowerRanking: (request: OrtegaRpcMap["ranking/getTowerRanking"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["ranking/getTowerRanking"]["response"]>("ranking/getTowerRanking", request),
         /** ranking/receiveAchieveRankingReward */
         receiveAchieveRankingReward: (request: OrtegaRpcMap["ranking/receiveAchieveRankingReward"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["ranking/receiveAchieveRankingReward"]["response"]>("ranking/receiveAchieveRankingReward", request),
