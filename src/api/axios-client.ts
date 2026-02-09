@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { useAccountStore } from '@/store/accountStore';
+import { parseOrtegaError } from '@/lib/errorHandler';
 
 const apiClient = axios.create({
     baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
@@ -64,6 +65,14 @@ apiClient.interceptors.response.use(
                 window.location.href = '/accounts';
             }
         }
+
+        // 解析 Ortega API 错误
+        if (error.response?.data?.errorCode !== undefined) {
+            const parsedError = parseOrtegaError(error);
+            // 将解析后的错误信息附加到 error 对象上
+            error.ortegaError = parsedError;
+        }
+
         return Promise.reject(error);
     }
 );

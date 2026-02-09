@@ -27,6 +27,7 @@ import { LanguageType } from '@/api/generated/languageType';
 import { PlayerInfo } from '@/api/generated/playerInfo';
 import { timeManager } from '@/lib/time-manager';
 import { AssetManager } from '@/lib/asset-manager';
+import { parseOrtegaError } from '@/lib/errorHandler';
 
 // 玩家信息扩展类型
 interface FriendPlayerInfo extends PlayerInfo {
@@ -295,7 +296,8 @@ export function FriendsPage() {
             loadPendingRequests();
         } catch (error) {
             console.error('Reply friend failed:', error);
-            toast({ title: '操作失败', description: '请稍后重试', variant: 'destructive' });
+            const { message } = parseOrtegaError(error);
+            toast({ title: '操作失败', description: message, variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
