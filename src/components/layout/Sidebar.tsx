@@ -1,4 +1,4 @@
-import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot } from 'lucide-react';
+import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -88,6 +88,11 @@ const navItems: NavItem[] = [
         title: '好友',
         href: '/friends',
         icon: Users
+    },
+    {
+        title: '战斗记录',
+        href: '/battle-logs',
+        icon: ScrollText
     },
     {
         title: '排行榜',

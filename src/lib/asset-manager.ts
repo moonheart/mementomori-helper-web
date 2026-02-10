@@ -8,7 +8,11 @@
  * - _w: 256*152 (宽屏图标)
  */
 
+/** 资源服务器基础URL (AddressableConvertAssets) */
 const BASE_URL = 'https://list.moonheart.dev/d/public/mmtm/AddressableConvertAssets';
+
+/** 本地资源服务器基础URL (AddressableLocalAssets) */
+const BASE_URL_LOCAL = 'https://list.moonheart.dev/d/public/mmtm/AddressableLocalAssets';
 
 /** 特殊头像解码掩码 (63个1，去掉最高位符号位) */
 const SPECIAL_ICON_MASK = 0x7FFFFFFFFFFFFFFFn;
@@ -157,8 +161,6 @@ export class RelicIconManager {
  * 宝石图标管理
  */
 export class SphereIconManager {
-    private static readonly BASE_URL_LOCAL = 'https://list.moonheart.dev/d/public/mmtm/AddressableLocalAssets';
-
     /**
      * 获取宝石图标URL
      * @param categoryId 符石分类ID (2位)
@@ -188,7 +190,7 @@ export class SphereIconManager {
         }
 
         const paddedCategoryId = categoryId.toString().padStart(2, '0');
-        return `${this.BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}${suffix}.png`;
+        return `${BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}${suffix}.png`;
     }
 
     /**
@@ -196,7 +198,7 @@ export class SphereIconManager {
      */
     static getTinyUrl(categoryId: number): string {
         const paddedCategoryId = categoryId.toString().padStart(2, '0');
-        return `${this.BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}00.png`;
+        return `${BASE_URL_LOCAL}/Icon/Sphere/SPH_${paddedCategoryId}00.png`;
     }
 }
 
@@ -217,10 +219,25 @@ export class SkillIconManager {
 }
 
 /**
+ * 敌人图标管理
+ */
+export class EnemyIconManager {
+    /**
+     * 获取敌人图标URL
+     * @param enemyId 敌人ID
+     */
+    static getUrl(enemyId: number): string {
+        const paddedId = enemyId.toString().padStart(6, '0');
+        return `${BASE_URL_LOCAL}/Icon/Enemy/ENE_${paddedId}.png`;
+    }
+}
+
+/**
  * 统一的资源管理器入口
  */
 export const AssetManager = {
     character: CharacterIconManager,
+    enemy: EnemyIconManager,
     equipment: EquipmentIconManager,
     item: ItemIconManager,
     relic: RelicIconManager,
