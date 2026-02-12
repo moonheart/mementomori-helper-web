@@ -207,7 +207,7 @@ export class SphereIconManager {
  */
 export class SkillIconManager {
     /**
-     * 获取技能图标URL
+     * 获取技能图标URL (SKL格式)
      * @param skillId 技能ID
      * @param options 图标选项
      */
@@ -215,6 +215,16 @@ export class SkillIconManager {
         const { size = 'm' } = options;
         const paddedId = skillId.toString().padStart(6, '0');
         return `${BASE_URL}/SkillIcon/SKL_${paddedId}/SKL_${paddedId}_${size}.png`;
+    }
+
+    /**
+     * 获取技能图标URL (CSK格式，用于效果组图标)
+     * @param skillId 技能ID (如 39003)
+     * @returns CSK格式的图标URL (如 CSK_000039003.png)
+     */
+    static getCskUrl(skillId: number): string {
+        const paddedId = skillId.toString().padStart(9, '0');
+        return `${BASE_URL}/Icon/Skill/CSK_${paddedId}.png`;
     }
 }
 
