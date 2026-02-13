@@ -45,7 +45,7 @@ export function BattleLogModal({
     return (
         <>
             <Dialog open={isOpen} onOpenChange={onClose}>
-                <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                <DialogContent className="max-w-5xl max-h-[90vh] p-0">
                     <DialogHeader className="px-6 pt-6 pb-2">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -56,7 +56,7 @@ export function BattleLogModal({
                                 <div>
                                     <DialogTitle className="text-lg">战斗记录</DialogTitle>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                        <span>获胜回合数: {battleEndInfo.endTurn}</span>
+                                        <span>回合数: {battleEndInfo.endTurn}</span>
                                     </div>
                                 </div>
                             </div>

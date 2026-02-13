@@ -123,7 +123,7 @@ export function Sidebar() {
                 {navItems.map((item) => {
                     const Icon = item.icon;
                     const isActive = location.pathname === item.href ||
-                        (item.href !== '/dashboard' && location.pathname.startsWith(item.href));
+                        (item.href !== '/dashboard' && location.pathname.startsWith(item.href + '/'));
 
                     return (
                         <Link
