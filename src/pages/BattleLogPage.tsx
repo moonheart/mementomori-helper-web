@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,6 +6,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useBattleLog } from '@/hooks/useBattleLog';
 import { BattleLogModal } from '@/components/battle-log';
 import { BattleType } from '@/api/generated/battleType';
+import { BattleSimulationResult } from '@/api/generated/battleSimulationResult';
+import { toast } from '@/hooks/use-toast';
+import { convertKeysToCamelCase } from '@/lib/keyConverter';
 import {
     Trophy,
     Sword,
@@ -15,7 +18,8 @@ import {
     ChevronRight,
     Trash2,
     Loader2,
-    Filter
+    Filter,
+    Upload
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -48,9 +52,64 @@ export function BattleLogPage() {
 
     const [selectedType, setSelectedType] = useState<number | null>(null);
 
+    // 手动导入 JSON 文件相关状态
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [manualBattleData, setManualBattleData] = useState<BattleSimulationResult | null>(null);
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+
     useEffect(() => {
         loadLogs({ battleType: selectedType ?? undefined });
     }, [selectedType]);
+
+    // 处理文件上传
+    const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const parsed = JSON.parse(content);
+                // 兼容 PascalCase 和 camelCase 两种格式的 JSON
+                const battleData = convertKeysToCamelCase<BattleSimulationResult>(parsed);
+
+                // 验证基本结构
+                if (!battleData.battleEndInfo || !battleData.battleCharacterReports) {
+                    throw new Error('无效的战斗日志格式');
+                }
+
+                setManualBattleData(battleData);
+                setIsManualModalOpen(true);
+                toast({
+                    title: '导入成功',
+                    description: '战斗日志已加载'
+                });
+            } catch (error) {
+                console.error('Failed to parse battle log:', error);
+                toast({
+                    title: '导入失败',
+                    description: '无法解析战斗日志文件，请检查文件格式',
+                    variant: 'destructive'
+                });
+            }
+        };
+        reader.readAsText(file);
+
+        // 重置 input 以便重复选择同一文件
+        if (event.target) {
+            event.target.value = '';
+        }
+    };
+
+    const handleUploadClick = () => {
+        fileInputRef.current?.click();
+    };
+
+    const closeManualModal = () => {
+        setIsManualModalOpen(false);
+        setManualBattleData(null);
+    };
 
     const handlePageChange = (newPage: number) => {
         if (newPage < 1 || newPage > pagination.totalPages) return;
@@ -85,26 +144,46 @@ export function BattleLogPage() {
             {/* 筛选栏 */}
             <Card>
                 <CardContent className="p-4">
-                    <div className="flex items-center gap-2 flex-wrap">
-                        <Filter className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">筛选:</span>
-                        <Button
-                            variant={selectedType === null ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedType(null)}
-                        >
-                            全部
-                        </Button>
-                        {[BattleType.Boss, BattleType.BattleLeague, BattleType.LegendLeague, BattleType.TowerBattle].map(type => (
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <Filter className="w-4 h-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">筛选:</span>
                             <Button
-                                key={type}
-                                variant={selectedType === type ? 'default' : 'outline'}
+                                variant={selectedType === null ? 'default' : 'outline'}
                                 size="sm"
-                                onClick={() => setSelectedType(type)}
+                                onClick={() => setSelectedType(null)}
                             >
-                                {battleTypeNames[type] || `类型${type}`}
+                                全部
                             </Button>
-                        ))}
+                            {[BattleType.Boss, BattleType.BattleLeague, BattleType.LegendLeague, BattleType.TowerBattle].map(type => (
+                                <Button
+                                    key={type}
+                                    variant={selectedType === type ? 'default' : 'outline'}
+                                    size="sm"
+                                    onClick={() => setSelectedType(type)}
+                                >
+                                    {battleTypeNames[type] || `类型${type}`}
+                                </Button>
+                            ))}
+                        </div>
+                        {/* 手动导入按钮 */}
+                        <div className="flex items-center gap-2">
+                            <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept=".json"
+                                onChange={handleFileUpload}
+                                className="hidden"
+                            />
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleUploadClick}
+                            >
+                                <Upload className="w-4 h-4 mr-1" />
+                                导入日志
+                            </Button>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -237,11 +316,18 @@ export function BattleLogPage() {
                 </CardContent>
             </Card>
 
-            {/* 战斗详情弹窗 */}
+            {/* 战斗详情弹窗 - 数据库记录 */}
             <BattleLogModal
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 battleData={selectedLog}
+            />
+
+            {/* 战斗详情弹窗 - 手动导入 */}
+            <BattleLogModal
+                isOpen={isManualModalOpen}
+                onClose={closeManualModal}
+                battleData={manualBattleData}
             />
         </div>
     );
