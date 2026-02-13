@@ -143,11 +143,12 @@ export function useBattleReplay(battleData: BattleSimulationResult | null): UseB
         ) => {
             const isPassive = result.subSkillResultType === SubSkillResultType.Passive;
             const hasHpChange = result.changeHp !== 0;
-            const hasEffects = (result.addEffectGroups?.length ?? 0) > 0 || (result.removeEffectGroups?.length ?? 0) > 0;
+            const hasAddEffects = (result.addEffectGroups?.length ?? 0) > 0;
             const isMiss = result.hitType === HitType.Miss;
+            const isShieldBreak = result.hitType === HitType.ShieldBreak || result.hitType === HitType.ShieldBreakCritical;
             
-            // 伤害/治疗/Miss 事件
-            if (hasHpChange || isMiss) {
+            // 伤害/治疗/Miss/破盾 事件
+            if (hasHpChange || isMiss || isShieldBreak) {
                 const isHeal = result.skillDisplayType === SkillDisplayType.Heal || 
                                result.skillDisplayType === SkillDisplayType.SilenceHeal;
                 const eventType = isHeal ? 'heal' : 'damage';
@@ -173,9 +174,12 @@ export function useBattleReplay(battleData: BattleSimulationResult | null): UseB
                     eventIndex: allEvents.length,
                     timestamp: timestamp++
                 });
+                // 破盾时不再单独生成 effect 事件（已包含在 damage 事件中）
+                return;
             }
             
-            if (hasEffects) {
+            // 添加效果事件
+            if (hasAddEffects) {
                 allEvents.push({
                     id: `effect_${turn}_${globalEventIndex++}`,
                     turn,

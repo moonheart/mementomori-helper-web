@@ -8,8 +8,6 @@ import { BattleCharacterAvatar } from './BattleCharacterAvatar';
 import { BattleLogPanel } from './BattleLogPanel';
 import { cn } from '@/lib/utils';
 import { 
-    Play, 
-    Pause, 
     RotateCcw, 
     ChevronLeft, 
     ChevronRight,
@@ -17,7 +15,7 @@ import {
     SkipForward,
     Swords
 } from 'lucide-react';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 interface BattleReplayModalProps {
     isOpen: boolean;
@@ -54,7 +52,6 @@ export function BattleReplayModal({
     battleData
 }: BattleReplayModalProps) {
     const {
-        replayState,
         currentIndex,
         totalEvents,
         currentTurn,
@@ -62,8 +59,6 @@ export function BattleReplayModal({
         currentEvent,
         activeDamageEvents,
         snapshots,
-        play,
-        pause,
         reset,
         goTo,
         next,
@@ -74,10 +69,27 @@ export function BattleReplayModal({
 
     // 关闭时重置
     const handleClose = useCallback(() => {
-        pause();
         reset();
         onClose();
-    }, [pause, reset, onClose]);
+    }, [reset, onClose]);
+
+    // 键盘快捷键支持
+    useEffect(() => {
+        if (!isOpen) return;
+
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                prev();
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                next();
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, prev, next]);
 
     // 点击日志事件跳转
     const handleEventClick = useCallback((index: number) => {
@@ -101,47 +113,88 @@ export function BattleReplayModal({
         <Dialog open={isOpen} onOpenChange={handleClose}>
             <DialogContent className="max-w-7xl max-h-[95vh] p-0 overflow-hidden">
                 <TooltipProvider>
-                <DialogHeader className="px-6 pt-4 pb-2">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Swords className="w-6 h-6 text-primary" />
-                            <div>
-                                <DialogTitle className="text-lg">战斗重播</DialogTitle>
-                                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-0.5">
-                                    <span>回合 {currentTurn}</span>
-                                    {currentEvent && (
-                                        <span className="text-xs px-2 py-0.5 bg-muted rounded">
-                                            {getEventLabel(currentEvent)}
-                                        </span>
-                                    )}
-                                </div>
-                            </div>
+                <DialogHeader className="px-6 pr-14 pt-3 pb-3 border-b bg-muted/30">
+                    <div className="flex items-center gap-6">
+                        {/* 标题 */}
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <Swords className="w-5 h-5 text-primary" />
+                            <DialogTitle className="text-base">战斗重播</DialogTitle>
                         </div>
-                        
-                        {/* 回合导航 */}
-                        <div className="flex items-center gap-1">
+
+                        {/* 回合信息 */}
+                        <div className="flex items-center gap-1 px-3 py-1 bg-background rounded-md border">
                             <Button 
-                                variant="outline" 
+                                variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8"
+                                className="h-6 w-6"
                                 onClick={prevTurn}
                                 disabled={currentIndex <= 0}
+                                title="上一回合"
                             >
-                                <SkipBack className="w-4 h-4" />
+                                <SkipBack className="w-3.5 h-3.5" />
                             </Button>
-                            <span className="text-sm font-medium px-2 min-w-[80px] text-center">
+                            <span className="text-sm font-medium px-2">
                                 回合 {currentTurn}
                             </span>
                             <Button 
-                                variant="outline" 
+                                variant="ghost" 
                                 size="icon" 
-                                className="h-8 w-8"
+                                className="h-6 w-6"
                                 onClick={nextTurn}
                                 disabled={currentIndex >= totalEvents - 1}
+                                title="下一回合"
                             >
-                                <SkipForward className="w-4 h-4" />
+                                <SkipForward className="w-3.5 h-3.5" />
                             </Button>
                         </div>
+
+                        {/* 当前事件 */}
+                        {currentEvent && (
+                            <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
+                                {getEventLabel(currentEvent)}
+                            </span>
+                        )}
+
+                        {/* 弹性间隔 */}
+                        <div className="flex-1" />
+
+                        {/* 步进控制 */}
+                        <div className="flex items-center gap-1 px-3 py-1 bg-background rounded-md border">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={prev}
+                                disabled={currentIndex <= 0}
+                                title="上一步 (←)"
+                                className="h-6 w-6"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                            </Button>
+                            <span className="text-sm font-medium px-2 tabular-nums">
+                                {currentIndex + 1} / {totalEvents}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={next}
+                                disabled={currentIndex >= totalEvents - 1}
+                                title="下一步 (→)"
+                                className="h-6 w-6"
+                            >
+                                <ChevronRight className="w-4 h-4" />
+                            </Button>
+                        </div>
+
+                        {/* 重置按钮 */}
+                        <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={reset}
+                            title="重置到开始"
+                            className="h-8 w-8"
+                        >
+                            <RotateCcw className="w-4 h-4" />
+                        </Button>
                     </div>
                 </DialogHeader>
 
@@ -162,7 +215,7 @@ export function BattleReplayModal({
                     </div>
 
                     {/* 中央战斗日志区域 */}
-                    <div className="flex-1 relative bg-gradient-to-b from-muted/30 to-muted/50 rounded-lg h-[400px] flex flex-col overflow-hidden">
+                    <div className="flex-1 relative bg-gradient-to-b from-muted/30 to-muted/50 rounded-lg h-150 flex flex-col overflow-hidden">
                         {/* 标题栏 */}
                         <div className="px-3 py-2 border-b border-border/50 bg-muted/30 flex items-center justify-between">
                             <span className="text-xs font-medium text-muted-foreground">战斗日志</span>
@@ -223,74 +276,6 @@ export function BattleReplayModal({
                                 isActing={actingCharacter?.guid === char.guid}
                             />
                         ))}
-                    </div>
-                </div>
-
-                {/* 控制栏 */}
-                <div className="px-6 pb-6">
-                    <div className="flex items-center justify-center gap-4 p-4 bg-muted/50 rounded-lg">
-                        {/* 播放控制 */}
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={reset}
-                                title="重置"
-                            >
-                                <RotateCcw className="w-4 h-4" />
-                            </Button>
-                            
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={prev}
-                                disabled={currentIndex <= 0}
-                                title="上一步"
-                            >
-                                <ChevronLeft className="w-4 h-4" />
-                            </Button>
-                            
-                            {replayState === 'playing' ? (
-                                <Button
-                                    variant="default"
-                                    size="icon"
-                                    onClick={pause}
-                                    className="h-12 w-12"
-                                    title="暂停"
-                                >
-                                    <Pause className="w-5 h-5" />
-                                </Button>
-                            ) : (
-                                <Button
-                                    variant="default"
-                                    size="icon"
-                                    onClick={play}
-                                    className="h-12 w-12"
-                                    title="播放"
-                                    disabled={currentIndex >= totalEvents - 1}
-                                >
-                                    <Play className="w-5 h-5 ml-0.5" />
-                                </Button>
-                            )}
-                            
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={next}
-                                disabled={currentIndex >= totalEvents - 1}
-                                title="下一步"
-                            >
-                                <ChevronRight className="w-4 h-4" />
-                            </Button>
-                        </div>
-
-                        {/* 状态显示 */}
-                        <div className="ml-4 text-sm text-muted-foreground">
-                            {replayState === 'idle' && '准备就绪'}
-                            {replayState === 'playing' && '播放中...'}
-                            {replayState === 'paused' && '已暂停'}
-                            {replayState === 'ended' && '播放完毕'}
-                        </div>
                     </div>
                 </div>
 

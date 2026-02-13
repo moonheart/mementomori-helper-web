@@ -3,6 +3,7 @@ import { ReplayEvent, CharacterState } from '@/hooks/useBattleReplay';
 import { SkillDisplayType } from '@/api/generated/skillDisplayType';
 import { EffectType } from '@/api/generated/effectType';
 import { HitType } from '@/api/generated/hitType';
+import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 import { forwardRef } from 'react';
 import { useBattleUnitInfo } from '@/hooks/useBattleUnitInfo';
 import { useLocalizationStore } from '@/store/localization-store';
@@ -127,7 +128,7 @@ interface BattleLogEntryProps {
 }
 
 /**
- * 角色名字组件 - 从 Master 数据获取真实角色名
+ * 角色名字组件 - 从 Master 数据获取真实角色名，区分敌我颜色
  */
 function CharacterName({ character }: { character: CharacterState | null }) {
     const t = useLocalizationStore(state => state.t);
@@ -137,11 +138,23 @@ function CharacterName({ character }: { character: CharacterState | null }) {
     );
     
     if (!character) {
-        console.log(character)
-        return <span>未知</span>
-    };
+        return <span>未知</span>;
+    }
+    
+    const isAttacker = character.groupType === BattleFieldCharacterGroupType.Attacker;
+    
     if (isLoading) return <span>...</span>;
-    return <span>{t(nameKey)}</span>;
+    
+    return (
+        <span className={cn(
+            "font-medium",
+            isAttacker 
+                ? "text-blue-600 dark:text-blue-400" 
+                : "text-red-600 dark:text-red-400"
+        )}>
+            {t(nameKey)}
+        </span>
+    );
 }
 
 /**
@@ -181,6 +194,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
         // 获取命中类型文本
         const getHitTypeText = (hitType?: HitType) => {
             if (hitType === undefined || hitType === HitType.Hit) return null;
+            console.log('HitType:', hitType);
             switch (hitType) {
                 case HitType.Ignore: return '无视防御';
                 case HitType.Miss: return '闪避';
@@ -215,7 +229,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                 case 'action':
                     return (
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-medium"><CharacterName character={sourceChar} /></span>
+                            <CharacterName character={sourceChar} />
                             <span className="text-muted-foreground">使用</span>
                             <span className="text-primary font-medium">{activeSkillName}</span>
                         </div>
@@ -231,7 +245,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                         : (isHeal 
                             ? `+${value.toLocaleString()}` 
                             : `-${Math.abs(value).toLocaleString()}`);
-                    const hitText = !isMiss && getHitTypeText(event.hitType);
+                    const hitText = getHitTypeText(event.hitType);
                     const effectText = getEffectText();
                     const attackTypeText = event.skillDisplayType 
                         ? skillDisplayTypeLabels[event.skillDisplayType] 
@@ -242,12 +256,12 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                             {/* 来源 */}
                             {sourceChar && (
                                 <>
-                                    <span className="font-medium"><CharacterName character={sourceChar} /></span>
+                                    <CharacterName character={sourceChar} />
                                     <span className="text-muted-foreground">→</span>
                                 </>
                             )}
                             {/* 目标 */}
-                            <span className="font-medium"><CharacterName character={targetChar} /></span>
+                            <CharacterName character={targetChar} />
                             {/* 攻击类型 */}
                             {attackTypeText && (
                                 <span className="text-xs text-muted-foreground">[{attackTypeText}]</span>
@@ -290,7 +304,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                             {/* 来源 */}
                             {sourceChar && (
                                 <>
-                                    <span className="font-medium"><CharacterName character={sourceChar} /></span>
+                                    <CharacterName character={sourceChar} />
                                     {targetChar && targetChar.guid !== sourceChar.guid && (
                                         <span className="text-muted-foreground">→</span>
                                     )}
@@ -298,7 +312,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                             )}
                             {/* 目标 */}
                             {targetChar && (!sourceChar || targetChar.guid !== sourceChar.guid) && (
-                                <span className="font-medium"><CharacterName character={targetChar} /></span>
+                                <CharacterName character={targetChar} />
                             )}
                             {/* 技能名称 */}
                             {event.skillId && (
