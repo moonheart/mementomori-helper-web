@@ -324,9 +324,15 @@ export const ortegaApi = {
             rpcClient.call<OrtegaRpcMap["localGvg/receiveLocalGvgReward"]["response"]>("localGvg/receiveLocalGvgReward", request),
     },
     localRaid: {
+        /** localRaid/getLocalRaidBattleLogs */
+        getLocalRaidBattleLogs: (request: OrtegaRpcMap["localRaid/getLocalRaidBattleLogs"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["localRaid/getLocalRaidBattleLogs"]["response"]>("localRaid/getLocalRaidBattleLogs", request),
         /** localRaid/getLocalRaidBattleResult */
         getLocalRaidBattleResult: (request: OrtegaRpcMap["localRaid/getLocalRaidBattleResult"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["localRaid/getLocalRaidBattleResult"]["response"]>("localRaid/getLocalRaidBattleResult", request),
+        /** localRaid/getLocalRaidFriendInfo */
+        getLocalRaidFriendInfo: (request: OrtegaRpcMap["localRaid/getLocalRaidFriendInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["localRaid/getLocalRaidFriendInfo"]["response"]>("localRaid/getLocalRaidFriendInfo", request),
         /** localRaid/getLocalRaidInfo */
         getLocalRaidInfo: (request: OrtegaRpcMap["localRaid/getLocalRaidInfo"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["localRaid/getLocalRaidInfo"]["response"]>("localRaid/getLocalRaidInfo", request),

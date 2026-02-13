@@ -16,4 +16,5 @@ export class UserBookSortAssistanceQuest {
     dispatchEndLocalTimeStamp: number;
     characterId: number;
     characterRarityFlags: CharacterRarityFlags;
+    isUnlockEffect: boolean;
 }

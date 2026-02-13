@@ -49,6 +49,7 @@ export enum PassiveTrigger {
     NextCheckReceiveDamageSelf = 43,
     NextCheckReceiveDamage = 44,
     AlwaysEnemyDead = 45,
+    EnemyRemoveBuff = 46,
     EnemyAttack = 50,
     RecoveryFromInstantDeathDamage = 52,
     InstantDeathDamageIgnoreFixDamage = 53,

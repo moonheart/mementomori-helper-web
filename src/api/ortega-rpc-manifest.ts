@@ -193,8 +193,12 @@ import type {
     ItemUseAutoBattleRewardItemResponse,
     LocalGvgReceiveLocalGvgRewardRequest,
     LocalGvgReceiveLocalGvgRewardResponse,
+    LocalRaidGetLocalRaidBattleLogsRequest,
+    LocalRaidGetLocalRaidBattleLogsResponse,
     LocalRaidGetLocalRaidBattleResultRequest,
     LocalRaidGetLocalRaidBattleResultResponse,
+    LocalRaidGetLocalRaidFriendInfoRequest,
+    LocalRaidGetLocalRaidFriendInfoResponse,
     LocalRaidGetLocalRaidInfoRequest,
     LocalRaidGetLocalRaidInfoResponse,
     LoginBonusGetLimitedLoginBonusInfoRequest,
@@ -654,9 +658,17 @@ export interface OrtegaRpcMap {
         request: LocalGvgReceiveLocalGvgRewardRequest;
         response: LocalGvgReceiveLocalGvgRewardResponse;
     };
+    "localRaid/getLocalRaidBattleLogs": {
+        request: LocalRaidGetLocalRaidBattleLogsRequest;
+        response: LocalRaidGetLocalRaidBattleLogsResponse;
+    };
     "localRaid/getLocalRaidBattleResult": {
         request: LocalRaidGetLocalRaidBattleResultRequest;
         response: LocalRaidGetLocalRaidBattleResultResponse;
+    };
+    "localRaid/getLocalRaidFriendInfo": {
+        request: LocalRaidGetLocalRaidFriendInfoRequest;
+        response: LocalRaidGetLocalRaidFriendInfoResponse;
     };
     "localRaid/getLocalRaidInfo": {
         request: LocalRaidGetLocalRaidInfoRequest;

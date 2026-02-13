@@ -194,7 +194,6 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
         // 获取命中类型文本
         const getHitTypeText = (hitType?: HitType) => {
             if (hitType === undefined || hitType === HitType.Hit) return null;
-            console.log('HitType:', hitType);
             switch (hitType) {
                 case HitType.Ignore: return '无视防御';
                 case HitType.Miss: return '闪避';

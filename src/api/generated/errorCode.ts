@@ -1015,6 +1015,7 @@ export enum ErrorCode {
     MagicOnionHasNoPermissionSetCastleMemo = 1002019,
     MagicOnionOverCastleMemoMessageMaxLength = 1002020,
     MagicOnionAlreadyResetCastleMemo = 1002021,
+    MagicOnionEndDeclarationTime = 1002022,
     PushNotificationNotSupportedDeviceType = 4000000,
     InvalidDeviceToken = 4000001,
     InvalidRemoteNotificationIgnoreTypes = 4000002,
