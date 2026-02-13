@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useMemo } from 'react';
 import { useSkillInfosFromEffectGroups, SkillInfo } from '@/hooks/useSkillInfoFromEffectGroup';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BattleCharacterAvatarProps {
     character: CharacterState;
@@ -33,36 +34,40 @@ function getUnitIconUrl(unitIconType: UnitIconType, unitIconId: number): string 
  * 效果图标组件
  */
 function EffectTag({ effectGroup, skillInfo }: { effectGroup: ActiveEffectGroup; skillInfo: SkillInfo }) {
+    const t = useLocalizationStore(state => state.t);
     const isPermanent = effectGroup.effectTurn >= 9999;
     
-    // 获取主要效果值显示
-    const mainEffect = effectGroup.effects[0];
-    const valueDisplay = mainEffect 
-        ? (mainEffect.effectValue > 0 ? `+${mainEffect.effectValue.toLocaleString()}` : mainEffect.effectValue.toLocaleString())
-        : '';
+    const turnText = !isPermanent ? ` (${effectGroup.effectTurn}回合)` : '';
     
-    const title = `${skillInfo.name}${valueDisplay ? ` ${valueDisplay}` : ''}${!isPermanent ? ` (${effectGroup.effectTurn}回合)` : ''}`;
+    // 使用 t 函数格式化描述，传入 effectValues 替换占位符
+    const effectValues = effectGroup.effects.map(e => e.effectValue.toLocaleString());
+    const description = skillInfo.descriptionKey ? t(skillInfo.descriptionKey, effectValues) : '';
     
     return (
-        <div 
-            className="relative w-8 h-8 rounded overflow-hidden border border-border/50"
-            title={title}
-        >
-            <img
-                src={skillInfo.iconUrl}
-                alt={skillInfo.name}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                }}
-            />
-            {/* 回合数标记 */}
-            {!isPermanent && effectGroup.effectTurn > 0 && (
-                <div className="absolute bottom-0 right-0 bg-black/60 text-white text-[8px] px-0.5 rounded-tl">
-                    {effectGroup.effectTurn}
+        <Tooltip>
+            <TooltipTrigger asChild>
+                <div className="relative w-8 h-8 rounded overflow-hidden border border-border/50 cursor-pointer">
+                    <img
+                        src={skillInfo.iconUrl}
+                        alt={skillInfo.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                        }}
+                    />
+                    {/* 回合数标记 */}
+                    {!isPermanent && effectGroup.effectTurn > 0 && (
+                        <div className="absolute bottom-0 right-0 bg-black/60 text-white text-[8px] px-0.5 rounded-tl">
+                            {effectGroup.effectTurn}
+                        </div>
+                    )}
                 </div>
-            )}
-        </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-50">
+                <div className="font-medium">{skillInfo.name}{turnText}</div>
+                {description && <div className="text-xs mt-1">{description}</div>}
+            </TooltipContent>
+        </Tooltip>
     );
 }
 
@@ -167,12 +172,12 @@ export function BattleCharacterAvatar({
 
             {/* 效果显示区域 */}
             {character.effectGroups.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-border/30 flex flex-wrap gap-1 max-h-[80px] overflow-y-auto">
+                <div className="mt-2 pt-2 border-t border-border/30 flex flex-wrap gap-1">
                     {character.effectGroups.map(eg => (
                         <EffectTag
                             key={eg.effectGroupId}
                             effectGroup={eg}
-                            skillInfo={skillInfos.get(eg.effectGroupId) || { name: `技能 #${eg.effectGroupId}`, iconUrl: '', isActiveSkill: false, isLoading: true }}
+                            skillInfo={skillInfos.get(eg.effectGroupId) || { name: `技能 #${eg.effectGroupId}`, descriptionKey: '', iconUrl: '', isActiveSkill: false, isLoading: true }}
                         />
                     ))}
                 </div>

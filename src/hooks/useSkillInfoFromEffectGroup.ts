@@ -1,12 +1,14 @@
 import { useMasterStore } from '@/store/masterStore';
 import { ActiveSkillMB } from '@/api/generated/activeSkillMB';
 import { PassiveSkillMB } from '@/api/generated/passiveSkillMB';
+import { EffectGroupMB } from '@/api/generated/effectGroupMB';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useEffect, useState, useMemo } from 'react';
 import { AssetManager } from '@/lib/asset-manager';
 
 export interface SkillInfo {
     name: string;
+    descriptionKey: string;
     iconUrl: string;
     isActiveSkill: boolean;
     isLoading: boolean;
@@ -38,6 +40,7 @@ export function useSkillInfoFromEffectGroup(effectGroupId: number): SkillInfo {
     
     const [info, setInfo] = useState<SkillInfo>({
         name: `技能 #${effectGroupId}`,
+        descriptionKey: '',
         iconUrl: '',
         isActiveSkill: false,
         isLoading: true
@@ -51,11 +54,16 @@ export function useSkillInfoFromEffectGroup(effectGroupId: number): SkillInfo {
         
         async function loadSkillInfo() {
             try {
+                // 获取 EffectGroupMB 以获取描述 key
+                const effectGroupMB = await getRecord<EffectGroupMB>('EffectGroupTable', effectGroupId);
+                const descriptionKey = effectGroupMB?.descriptionKey || '';
+                
                 if (isActive) {
                     const activeSkillMB = await getRecord<ActiveSkillMB>('ActiveSkillTable', skillId);
                     if (activeSkillMB && mounted) {
                         setInfo({
                             name: t(activeSkillMB.nameKey) || `技能 #${skillId}`,
+                            descriptionKey,
                             iconUrl: AssetManager.skill.getCskUrl(skillId),
                             isActiveSkill: true,
                             isLoading: false
@@ -67,6 +75,7 @@ export function useSkillInfoFromEffectGroup(effectGroupId: number): SkillInfo {
                     if (passiveSkillMB && mounted) {
                         setInfo({
                             name: t(passiveSkillMB.nameKey) || `技能 #${skillId}`,
+                            descriptionKey,
                             iconUrl: AssetManager.skill.getCskUrl(skillId),
                             isActiveSkill: false,
                             isLoading: false
@@ -82,6 +91,7 @@ export function useSkillInfoFromEffectGroup(effectGroupId: number): SkillInfo {
             if (mounted) {
                 setInfo({
                     name: `技能 #${skillId}`,
+                    descriptionKey: '',
                     iconUrl: AssetManager.skill.getCskUrl(skillId),
                     isActiveSkill: isActive,
                     isLoading: false
@@ -121,8 +131,15 @@ export function useSkillInfosFromEffectGroups(effectGroupIds: number[]): Map<num
             for (const data of skillData) {
                 const { effectGroupId, skillId, isActive } = data;
                 let skillName = `技能 #${skillId}`;
+                let descriptionKey = '';
                 
                 try {
+                    // 获取 EffectGroupMB 以获取描述 key
+                    const effectGroupMB = await getRecord<EffectGroupMB>('EffectGroupTable', effectGroupId);
+                    if (effectGroupMB) {
+                        descriptionKey = effectGroupMB.descriptionKey;
+                    }
+                    
                     if (isActive) {
                         const activeSkillMB = await getRecord<ActiveSkillMB>('ActiveSkillTable', skillId);
                         if (activeSkillMB) {
@@ -140,6 +157,7 @@ export function useSkillInfosFromEffectGroups(effectGroupIds: number[]): Map<num
                 
                 result.set(effectGroupId, {
                     name: skillName,
+                    descriptionKey,
                     iconUrl: AssetManager.skill.getCskUrl(skillId),
                     isActiveSkill: isActive,
                     isLoading: false

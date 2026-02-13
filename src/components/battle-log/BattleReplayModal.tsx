@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import { BattleSimulationResult } from '@/api/generated/battleSimulationResult';
 import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 import { useBattleReplay } from '@/hooks/useBattleReplay';
@@ -99,6 +100,7 @@ export function BattleReplayModal({
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
             <DialogContent className="max-w-7xl max-h-[95vh] p-0 overflow-hidden">
+                <TooltipProvider>
                 <DialogHeader className="px-6 pt-4 pb-2">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -308,6 +310,7 @@ export function BattleReplayModal({
                         animation: floatUp 1s ease-out forwards;
                     }
                 `}</style>
+                </TooltipProvider>
             </DialogContent>
         </Dialog>
     );
