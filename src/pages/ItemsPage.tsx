@@ -16,7 +16,9 @@ import { ortegaApi } from '@/api/ortega-client';
 import { getItemName } from '@/lib/itemUtils';
 
 export function ItemsPage() {
-    const [loading, setLoading] = useState(true);
+    const [initialLoading, setInitialLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
+    const [activeTab, setActiveTab] = useState('equipment');
     const [items, setItems] = useState<UserItemDtoInfo[]>([]);
     const [userEquipments, setUserEquipments] = useState<UserEquipmentDtoInfo[]>([]);
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -27,9 +29,13 @@ export function ItemsPage() {
     const getTable = useMasterStore(state => state.getTable);
     const t = useLocalizationStore((state) => state.t);
 
-    const loadData = async () => {
+    const loadData = async (isRefresh = false) => {
         try {
-            setLoading(true);
+            if (isRefresh) {
+                setRefreshing(true);
+            } else {
+                setInitialLoading(true);
+            }
 
             // 确保Master数据已加载
             await sync();
@@ -45,13 +51,17 @@ export function ItemsPage() {
         } catch (error) {
             console.error('Failed to load items data:', error);
         } finally {
-            setLoading(false);
+            if (isRefresh) {
+                setRefreshing(false);
+            } else {
+                setInitialLoading(false);
+            }
         }
     };
 
     useEffect(() => {
         if (!currentAccountId) {
-            setLoading(false);
+            setInitialLoading(false);
             return;
         }
 
@@ -70,13 +80,13 @@ export function ItemsPage() {
     };
 
     const handleUseSuccess = () => {
-        // 刷新数据
-        loadData();
+        // 刷新数据（保持当前 Tab 选中状态）
+        loadData(true);
     };
 
     const totalUniqueItems = items.filter((item) => item.itemCount > 0).length;
 
-    if (loading) {
+    if (initialLoading) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -99,7 +109,13 @@ export function ItemsPage() {
 
             {/* Tab导航和内容 */}
             <Card className="p-6">
-                <Tabs defaultValue="equipment" className="space-y-6">
+                {refreshing && (
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>正在刷新...</span>
+                    </div>
+                )}
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                     <TabsList className="grid w-full grid-cols-5">
                         <TabsTrigger value="equipment">
                             {t('[ItemBoxTabEquipment]') || '装备'}
