@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, ChevronDown, Users, User, Star, Calendar, MessageSquare, Clock } from 'lucide-react';
+import { Bell, ChevronDown, Users, User, Star, Calendar, MessageSquare, Clock, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -23,13 +23,21 @@ import { TimeServerMB } from '@/api/generated/timeServerMB';
 
 export function Header() {
     const navigate = useNavigate();
-    const { t } = useLocalizationStore();
+    const { t, currentLanguage, setLanguage } = useLocalizationStore();
     const currentAccountId = useAccountStore((state) => state.currentAccountId);
     const setUserInfo = useUserStore((state) => state.setUserInfo);
     const timeManager = useTimeManager();
     const getTable = useMasterStore((state) => state.getTable);
     const [status, setStatus] = useState<UserStatusDtoInfo | null>(null);
     const [serverTimeStr, setServerTimeStr] = useState('--:--:--');
+
+    const languages = [
+        { code: 'zhCN', label: '简体中文' },
+        { code: 'zhTW', label: '繁體中文' },
+        { code: 'enUS', label: 'English' },
+        { code: 'jaJP', label: '日本語' },
+        { code: 'koKR', label: '한국어' }
+    ];
 
     // 获取用户数据，并初始化时间偏移
     useEffect(() => {
@@ -132,6 +140,26 @@ export function Header() {
                         <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="tabular-nums">{serverTimeStr}</span>
                     </div>
+
+                    {/* Language Switcher */}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" title="切换语言">
+                                <Globe className="h-5 w-5 text-muted-foreground" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            {languages.map(lang => (
+                                <DropdownMenuItem
+                                    key={lang.code}
+                                    onClick={() => setLanguage(lang.code)}
+                                    className={currentLanguage === lang.code ? 'bg-accent' : ''}
+                                >
+                                    {lang.label}
+                                </DropdownMenuItem>
+                            ))}
+                        </DropdownMenuContent>
+                    </DropdownMenu>
 
                     {/* Account Menu */}
                     <DropdownMenu>

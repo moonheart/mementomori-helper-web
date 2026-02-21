@@ -39,7 +39,7 @@ import { TimeServerMB } from '@/api/generated/timeServerMB';
 
 interface ProcessedQuest {
     id: number;
-    name: string;
+    nameKey: string;
     type: BountyQuestType;
     rarity: BountyQuestRarityFlags;
     startTime: number;
@@ -139,7 +139,7 @@ export function WishingFountainPage() {
 
                 return {
                     id: tpl.bountyQuestId,
-                    name: t(tpl.bountyQuestNameKey),
+                    nameKey: tpl.bountyQuestNameKey,
                     type: tpl.bountyQuestType,
                     rarity: tpl.bountyQuestRarity,
                     startTime,
@@ -167,7 +167,7 @@ export function WishingFountainPage() {
             setQuests(processed);
         } catch (error) {
             console.error('Failed to fetch bounty quests:', error);
-            toast({ title: '获取任务失败', description: '请检查网络连接或重试', variant: 'destructive' });
+            toast({ title: t('WF_FETCH_FAILED_TITLE'), description: t('WF_FETCH_FAILED_DESC'), variant: 'destructive' });
         } finally {
             if (!silent) setLoading(false);
         }
@@ -213,11 +213,11 @@ export function WishingFountainPage() {
                 consumeCurrency: 0
             });
 
-            toast({ title: '奖励领取成功', description: `已领取 ${ids.length} 个任务的奖励` });
+            toast({ title: t('WF_REWARD_SUCCESS_TITLE'), description: t('WF_REWARD_SUCCESS_DESC', [ids.length]) });
             fetchQuests(true);
         } catch (error) {
             console.error('Failed to claim rewards:', error);
-            toast({ title: '领取失败', description: '请稍后再试', variant: 'destructive' });
+            toast({ title: t('WF_REWARD_FAILED_TITLE'), description: t('WF_REWARD_FAILED_DESC'), variant: 'destructive' });
         }
     };
 
@@ -233,23 +233,23 @@ export function WishingFountainPage() {
 
             if (res.successCount > 0) {
                 toast({
-                    title: '派遣成功',
-                    description: `成功派遣 ${res.successCount} 个任务`
+                    title: t('WF_DISPATCH_SUCCESS_TITLE'),
+                    description: t('WF_DISPATCH_SUCCESS_DESC', [res.successCount])
                 });
                 fetchQuests(true);
             } else {
                 toast({
-                    title: '未派遣任何任务',
-                    description: '请检查角色是否充足或任务状态',
+                    title: t('WF_DISPATCH_EMPTY_TITLE'),
+                    description: t('WF_DISPATCH_EMPTY_DESC'),
                     variant: 'destructive'
                 });
             }
         } catch (error: unknown) {
             console.error('Failed to dispatch quests:', error);
             const axiosError = error as { response?: { data?: { message?: string } } };
-            const errorMessage = axiosError.response?.data?.message || (error instanceof Error ? error.message : '请重试');
+            const errorMessage = axiosError.response?.data?.message || (error instanceof Error ? error.message : t('WF_DISPATCH_FAILED_DESC'));
             toast({
-                title: '派遣失败',
+                title: t('WF_DISPATCH_FAILED_TITLE'),
                 description: errorMessage,
                 variant: 'destructive'
             });
@@ -261,11 +261,11 @@ export function WishingFountainPage() {
     const handleRemake = async () => {
         try {
             await ortegaApi.bountyQuest.remake({});
-            toast({ title: '任务已刷新', description: '常规任务列表已更新' });
+            toast({ title: t('WF_REMAKE_SUCCESS_TITLE'), description: t('WF_REMAKE_SUCCESS_DESC') });
             fetchQuests(true);
         } catch (error) {
             console.error('Failed to remake quests:', error);
-            toast({ title: '刷新失败', description: '钻石不足或请求异常', variant: 'destructive' });
+            toast({ title: t('WF_REMAKE_FAILED_TITLE'), description: t('WF_REMAKE_FAILED_DESC'), variant: 'destructive' });
         }
     };
 
@@ -277,12 +277,12 @@ export function WishingFountainPage() {
         return 'bg-gray-500';
     };
 
+    const getRarityText = (rarity: CharacterRarityFlags, t: any) => {
+        return t(`[CharacterRarityFlags${CharacterRarityFlags[rarity]}]`)
+    };
+
     const getRarityName = (rarity: BountyQuestRarityFlags) => {
-        if (rarity & BountyQuestRarityFlags.LR) return 'LR';
-        if (rarity & BountyQuestRarityFlags.UR) return 'UR';
-        if (rarity & BountyQuestRarityFlags.SSR) return 'SSR';
-        if (rarity & BountyQuestRarityFlags.SR) return 'SR';
-        return 'R';
+        return t(`[BountyQuestRarityFlags${BountyQuestRarityFlags[rarity]}]`)
     };
 
     const formatDuration = (ms: number) => {
@@ -290,37 +290,31 @@ export function WishingFountainPage() {
         const h = Math.floor(seconds / 3600);
         const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
-        if (h > 0) return `${h}小时${m}分`;
-        if (m > 0) return `${m}分${s}秒`;
-        return `${s}秒`;
+        return t('[CommonTimeFormatOnlyTime]', [h, m, s]);
     };
 
     const getStatusInfo = (quest: ProcessedQuest) => {
         switch (quest.status) {
             case 'OnGoing':
                 return {
-                    label: t('进行中'),
                     color: 'text-blue-500',
                     badge: 'bg-blue-500/10 text-blue-500 hover:bg-blue-500/20',
-                    timeLabel: timeManager.formatTimeSpan(quest.remainingMs)
+                    timeLabel: formatDuration(quest.remainingMs)
                 };
             case 'NotReceived':
                 return {
-                    label: t('待领取'),
                     color: 'text-orange-500',
                     badge: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
-                    timeLabel: timeManager.formatTimeSpan(quest.remainingMs)
+                    timeLabel: formatDuration(quest.remainingMs)
                 };
             case 'Received':
                 return {
-                    label: t('已领取'),
                     color: 'text-green-500',
                     badge: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
                     timeLabel: ''
                 };
             default:
                 return {
-                    label: t('未开始'),
                     color: 'text-muted-foreground',
                     badge: 'bg-muted text-muted-foreground',
                     timeLabel: ''
@@ -344,11 +338,11 @@ export function WishingFountainPage() {
                             )}
                             <div>
                                 <CardTitle className="text-lg flex items-center gap-2">
-                                    {quest.name}
+                                    {t(quest.nameKey) || quest.nameKey}
                                     {quest.status === 'Received' && <CheckCircle2 className="h-4 w-4 text-green-500" />}
                                 </CardTitle>
                                 <CardDescription>
-                                    持续时间: {formatDuration(quest.durationMs)}
+                                    {t('[BountyQuestFormationTimeLabel]')} {formatDuration(quest.durationMs)}
                                 </CardDescription>
                             </div>
                         </div>
@@ -357,33 +351,19 @@ export function WishingFountainPage() {
                                 {getRarityName(quest.rarity)}
                             </Badge>
                             <Badge variant="outline" className={statusInfo.badge}>
-                                {statusInfo.label} {statusInfo.timeLabel}
+                                {statusInfo.timeLabel}
                             </Badge>
                         </div>
                     </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                    {/* 进度 */}
-                    {quest.status === 'OnGoing' && (
-                        <div className="space-y-2">
-                            <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">执行进度</span>
-                                <div className="flex items-center gap-2">
-                                    <Clock className="h-4 w-4" />
-                                    <span className="font-semibold">{statusInfo.timeLabel} 剩余</span>
-                                </div>
-                            </div>
-                            <Progress value={quest.progress} className="h-2" />
-                        </div>
-                    )}
-
                     {/* 要求 */}
                     <div>
-                        <div className="text-sm font-medium mb-2">执行条件</div>
+                        <div className="text-sm font-medium mb-2">{t('[BountyQuestCondition]')}</div>
                         <div className="flex flex-wrap gap-2">
                             {quest.requirements.map((req, index) => (
                                 <Badge key={index} variant="outline" className="text-xs">
-                                    {req.type === BountyQuestConditionType.Rarity && req.rarity && getRarityName(req.rarity as unknown as BountyQuestRarityFlags) + '角色'}
+                                    {req.type === BountyQuestConditionType.Rarity && req.rarity && t('WF_REQ_CHAR', [getRarityText(req.rarity, t)])}
                                     {req.type === BountyQuestConditionType.Element && req.element && (
                                         t(`[ElementType${ElementType[req.element]}]`)
                                     )}
@@ -395,7 +375,7 @@ export function WishingFountainPage() {
 
                     {/* 奖励 */}
                     <div>
-                        <div className="text-sm font-medium mb-2">任务奖励</div>
+                        <div className="text-sm font-medium mb-2">{t('[BountyQuestRewardTitle]')}</div>
                         <div className="flex flex-wrap gap-2">
                             {quest.type === BountyQuestType.Guerrilla ? (
                                 <Badge variant="secondary" className="text-xs">
@@ -418,17 +398,17 @@ export function WishingFountainPage() {
                         {quest.status === 'NotReceived' ? (
                             <Button className="w-full" onClick={() => handleReward(quest.id)}>
                                 <Trophy className="mr-2 h-4 w-4" />
-                                领取奖励
+                                {t('[BountyQuestAcceptance]')}
                             </Button>
                         ) : quest.status === 'OnGoing' ? (
                             <Button variant="outline" className="w-full">
                                 <span className="mr-1">💎</span>
-                                高速完成
+                                {t('[BountyQuestFastCompletion]')}
                             </Button>
                         ) : quest.status === 'Received' ? (
                             <Button className="w-full" disabled variant="ghost">
                                 <CheckCircle2 className="mr-2 h-4 w-4" />
-                                已领取
+                                {t('WF_BTN_RECEIVED')}
                             </Button>
                         ) : (
                             <Button
@@ -441,7 +421,7 @@ export function WishingFountainPage() {
                                 ) : (
                                     <Send className="mr-2 h-4 w-4" />
                                 )}
-                                自动派遣
+                                {t('[BountyQuestAutoPlacement]')}
                             </Button>
                         )}
                     </div>
@@ -454,7 +434,7 @@ export function WishingFountainPage() {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">同步任务数据中...</span>
+                <span className="ml-2">{t('WF_LOADING_SYNC')}</span>
             </div>
         );
     }
@@ -472,10 +452,7 @@ export function WishingFountainPage() {
             {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">祈愿之泉</h1>
-                    <p className="text-muted-foreground mt-1">
-                        当前服务器时间: {new Date(serverTime).toLocaleTimeString()}
-                    </p>
+                    <h1 className="text-3xl font-bold">{t('[CommonHeaderBountyQuestLabel]')}</h1>
                 </div>
                 <Button
                     variant="outline"
@@ -483,7 +460,7 @@ export function WishingFountainPage() {
                     disabled={quests.every(q => q.status !== 'NotReceived')}
                 >
                     <Trophy className="mr-2 h-4 w-4" />
-                    一键领取
+                    {t('[BountyQuestAllReceive]')}
                 </Button>
             </div>
 
@@ -491,24 +468,24 @@ export function WishingFountainPage() {
             <Alert>
                 <BookOpen className="h-4 w-4" />
                 <AlertDescription>
-                    <strong>祈愿之泉说明：</strong>
-                    常规任务每天凌晨4:00更新，联合任务需要好友/公会支援，游击任务随机出现。
-                    完成远征可获得金币、经验、强化石等奖励。
+                    <strong>{t('WF_HELP_TITLE')}</strong><br />
+                    {t('WF_HELP_DESC1')}<br />
+                    {t('WF_HELP_DESC2')}
                 </AlertDescription>
             </Alert>
 
             <Tabs defaultValue="regular" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="regular">常规任务 ({soloQuests.length})</TabsTrigger>
-                    <TabsTrigger value="joint">联合任务 ({teamQuests.length})</TabsTrigger>
-                    <TabsTrigger value="guerrilla">游击任务 ({guerrillaQuests.length})</TabsTrigger>
+                    <TabsTrigger value="regular">{t('[BountyQuestTypeSolo]')} ({soloQuests.length})</TabsTrigger>
+                    <TabsTrigger value="joint">{t('[BountyQuestTypeTeam]')} ({teamQuests.length})</TabsTrigger>
+                    <TabsTrigger value="guerrilla">{t('[BountyQuestTypeGuerrilla]')} ({guerrillaQuests.length})</TabsTrigger>
                 </TabsList>
 
                 {/* 常规任务 */}
                 <TabsContent value="regular" className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-muted-foreground">
-                            每天凌晨4:00更新 • 未执行任务将刷新
+                            {t('WF_REGULAR_DESC')}
                         </div>
                         <div className="flex gap-2">
                             <Button
@@ -518,11 +495,11 @@ export function WishingFountainPage() {
                                 disabled={!hasAvailableSolo || dispatching !== null}
                             >
                                 {dispatching === 'solo' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
-                                一键派遣
+                                {t('[BountyQuestAutoPlacement]')}
                             </Button>
                             <Button variant="outline" size="sm" onClick={handleRemake}>
                                 <span className="mr-1">💎</span>
-                                刷新列表
+                                {t('[BountyQuestUpdate]')}
                             </Button>
                         </div>
                     </div>
@@ -532,7 +509,7 @@ export function WishingFountainPage() {
                             soloQuests.map(renderQuestCard)
                         ) : (
                             <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                                暂无常规任务
+                                {t('[BountyQuestQuestEmpty]')}
                             </div>
                         )}
                     </div>
@@ -542,7 +519,7 @@ export function WishingFountainPage() {
                 <TabsContent value="joint" className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-muted-foreground">
-                            联合任务需要支援角色参与 • 奖励更加丰厚
+                            {t('WF_JOINT_DESC')}
                         </div>
                         <Button
                             variant="secondary"
@@ -551,7 +528,7 @@ export function WishingFountainPage() {
                             disabled={!hasAvailableTeam || dispatching !== null}
                         >
                             {dispatching === 'team' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
-                            一键派遣
+                            {t('[BountyQuestAutoPlacement]')}
                         </Button>
                     </div>
 
@@ -560,7 +537,7 @@ export function WishingFountainPage() {
                             teamQuests.map(renderQuestCard)
                         ) : (
                             <div className="col-span-full py-12 text-center text-muted-foreground border-2 border-dashed rounded-lg">
-                                暂无联合任务
+                                {t('[BountyQuestQuestEmpty]')}
                             </div>
                         )}
                     </div>
@@ -570,7 +547,7 @@ export function WishingFountainPage() {
                 <TabsContent value="guerrilla" className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-muted-foreground">
-                            游击任务随机出现，奖励丰厚
+                            {t('WF_GUERRILLA_DESC')}
                         </div>
                         <Button
                             variant="secondary"
@@ -579,7 +556,7 @@ export function WishingFountainPage() {
                             disabled={!hasAvailableGuerrilla || dispatching !== null}
                         >
                             {dispatching === 'guerrilla' ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Flashlight className="mr-2 h-3 w-3" />}
-                            一键派遣
+                            {t('[BountyQuestAutoPlacement]')}
                         </Button>
                     </div>
                     {guerrillaQuests.length > 0 ? (
@@ -592,9 +569,9 @@ export function WishingFountainPage() {
                                 <div className="text-6xl mb-4 opacity-20">
                                     <Timer className="h-24 w-24 mx-auto" />
                                 </div>
-                                <h3 className="text-lg font-semibold mb-2">目前没有游击任务</h3>
+                                <h3 className="text-lg font-semibold mb-2">{t('WF_GUERRILLA_EMPTY_TITLE')}</h3>
                                 <p className="text-muted-foreground mb-4">
-                                    游击任务随机出现，请稍后再来查看
+                                    {t('WF_GUERRILLA_EMPTY_DESC')}
                                 </p>
                             </CardContent>
                         </Card>

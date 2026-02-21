@@ -1,0 +1,34 @@
+export default {
+    // Wishing Fountain
+    'WF_FETCH_FAILED_TITLE': 'Failed to Load Quests',
+    'WF_FETCH_FAILED_DESC': 'Please check your connection or try again',
+    'WF_REWARD_SUCCESS_TITLE': 'Rewards Claimed',
+    'WF_REWARD_SUCCESS_DESC': 'Successfully claimed rewards for {0} quests',
+    'WF_REWARD_FAILED_TITLE': 'Claim Failed',
+    'WF_REWARD_FAILED_DESC': 'Please try again later',
+    'WF_DISPATCH_SUCCESS_TITLE': 'Dispatch Successful',
+    'WF_DISPATCH_SUCCESS_DESC': 'Successfully dispatched {0} quests',
+    'WF_DISPATCH_EMPTY_TITLE': 'No Quests Dispatched',
+    'WF_DISPATCH_EMPTY_DESC': 'Please check your characters or quest status',
+    'WF_DISPATCH_FAILED_TITLE': 'Dispatch Failed',
+    'WF_DISPATCH_FAILED_DESC': 'Please try again',
+    'WF_REMAKE_SUCCESS_TITLE': 'Quests Refreshed',
+    'WF_REMAKE_SUCCESS_DESC': 'Regular quest list has been updated',
+    'WF_REMAKE_FAILED_TITLE': 'Refresh Failed',
+    'WF_REMAKE_FAILED_DESC': 'Insufficient Diamonds or request error',
+
+
+    'WF_LOADING_SYNC': 'Syncing quest data...',
+    'WF_SERVER_TIME': 'Server Time: {0}',
+
+    'WF_HELP_TITLE': 'Wishing Fountain Info:',
+    'WF_HELP_DESC1': 'Regular quests update at 4:00 AM. Team quests require Guild/Friend support. Guerrilla quests appear randomly.',
+    'WF_HELP_DESC2': 'Complete expeditions to earn Gold, EXP, Upgrade Stones, and more.',
+
+    'WF_REGULAR_DESC': 'Updates daily at 4:00 AM • Unstarted quests will be refreshed',
+    'WF_JOINT_DESC': 'Team quests require support characters • Better rewards',
+    'WF_GUERRILLA_DESC': 'Guerrilla quests appear randomly with great rewards',
+    'WF_GUERRILLA_EMPTY_TITLE': 'No Guerrilla Quests',
+    'WF_GUERRILLA_EMPTY_DESC': 'Guerrilla quests appear randomly, please check back later',
+    'WF_REQ_CHAR': '{0} Character',
+};

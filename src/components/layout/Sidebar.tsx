@@ -1,112 +1,108 @@
 import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocalizationStore } from '@/store/localization-store';
 
-interface NavItem {
-    title: string;
-    href: string;
-    icon: React.ElementType;
-}
-
-const navItems: NavItem[] = [
+const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = [
     {
-        title: '每日清单',
+        titleKey: '每日清单',
         href: '/dashboard',
         icon: Home
     },
     {
-        title: '托管管理',
+        titleKey: '托管管理',
         href: '/automation',
         icon: Bot
     },
     {
-        title: '角色',
+        titleKey: '角色',
         href: '/characters',
         icon: Users
     },
     {
-        title: '装备',
+        titleKey: '装备',
         href: '/equipment',
         icon: Package
     },
     {
-        title: '道具',
+        titleKey: '道具',
         href: '/items',
         icon: Boxes
     },
     {
-        title: '战斗',
+        titleKey: '战斗',
         href: '/battle',
         icon: Swords
     },
     {
-        title: '塔攻略',
+        titleKey: '塔攻略',
         href: '/tower',
         icon: MapPin
     },
     {
-        title: '祈愿之泉',
+        titleKey: '[CommonHeaderBountyQuestLabel]',
         href: '/fountain',
         icon: Sparkles
     },
     {
-        title: '时空洞窟',
+        titleKey: '时空洞窟',
         href: '/cave',
         icon: Mountain
     },
     {
-        title: '幻影神殿',
+        titleKey: '幻影神殿',
         href: '/temple',
         icon: Ghost
     },
     {
-        title: '竞技场',
+        titleKey: '竞技场',
         href: '/pvp',
         icon: Shield
     },
     {
-        title: '公会',
+        titleKey: '公会',
         href: '/guild',
         icon: Users
     },
     {
-        title: '任务',
+        titleKey: '任务',
         href: '/missions',
         icon: ListTodo
     },
     {
-        title: '抽卡',
+        titleKey: '抽卡',
         href: '/gacha',
         icon: Sparkles
     },
     {
-        title: '商店',
+        titleKey: '商店',
         href: '/shop',
         icon: ShoppingCart
     },
     {
-        title: '好友',
+        titleKey: '好友',
         href: '/friends',
         icon: Users
     },
     {
-        title: '战斗记录',
+        titleKey: '战斗记录',
         href: '/battle-logs',
         icon: ScrollText
     },
     {
-        title: '排行榜',
+        titleKey: '排行榜',
         href: '/leaderboard',
         icon: TrendingUp
     },
     {
-        title: '设置',
+        titleKey: '设置',
         href: '/settings',
         icon: Settings
     }
 ];
 
 export function Sidebar() {
+    const { t } = useLocalizationStore();
     const location = useLocation();
 
     return (
@@ -137,7 +133,7 @@ export function Sidebar() {
                             )}
                         >
                             <Icon className="h-5 w-5" />
-                            {item.title}
+                            {t(item.titleKey)}
                         </Link>
                     );
                 })}

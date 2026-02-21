@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { localizationApi } from '@/api/localization-service';
 import { db } from '@/lib/db';
+import { localTranslations } from '@/locales';
 
 interface LocalizationState {
     currentLanguage: string;
@@ -94,20 +95,30 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
 
     t: (key: string | undefined | null, params?: unknown[]) => {
         if (!key) return '';
-        const { resources } = get();
+        const { resources, currentLanguage } = get();
 
-        // 如果资源未加载或找不到 key，返回 key 本身
-        if (!resources || !resources[key]) {
-            return key;
-        }
+        // 如果资源未加载或找不到 key，尝试本地翻译，如果还找不到返回 key
+        let text = resources?.[key] ?? localTranslations[currentLanguage]?.[key] ?? key;
 
-        let text = resources[key];
-
-        // 处理 C# 风格的占位符 {0}, {1}, etc.
+        // 处理 C# 风格的占位符 {0}, {0:D2}, etc.
         if (params && params.length > 0) {
             params.forEach((param, index) => {
-                const placeholder = `{${index}}`;
-                text = text.replaceAll(placeholder, String(param));
+                // 1. 处理带格式的占位符，如 {0:D2}
+                const formattedRegex = new RegExp(`\\{${index}:([^}]+)\\}`, 'g');
+                text = text.replace(formattedRegex, (_, format) => {
+                    const value = String(param);
+                    if (format.startsWith('D')) {
+                        const digits = parseInt(format.substring(1));
+                        if (!isNaN(digits)) {
+                            return value.padStart(digits, '0');
+                        }
+                    }
+                    return value;
+                });
+
+                // 2. 处理基本占位符 {0}
+                const basicPlaceholder = `{${index}}`;
+                text = text.replaceAll(basicPlaceholder, String(param));
             });
         }
 

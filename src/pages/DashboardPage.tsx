@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2, ScrollText, Target, MessageCircle, Bell } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2, ScrollText, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserSyncData } from '@/api/generated/userSyncData';
@@ -118,7 +118,7 @@ export function DashboardPage() {
             icon: Gift,
             items: [
                 { name: '补签次数', current: 0, max: statusInfo?.vip || 0, completed: false, link: '/missions' },
-                { name: '祈愿之泉', current: 0, max: 5, completed: false, link: '/missions' },
+                { name: t('[CommonHeaderBountyQuestLabel]'), current: 0, max: 5, completed: false, link: '/missions' },
                 { name: '好友对战', current: userData?.todayChallengeFriendBattleCount || 0, max: statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50, completed: (userData?.todayChallengeFriendBattleCount || 0) >= (statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50), link: '/missions' },
             ]
         }
