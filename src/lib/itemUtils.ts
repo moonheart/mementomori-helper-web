@@ -73,34 +73,6 @@ function formatItemName(
     t: (key: string | undefined | null, params?: unknown[]) => string
 ): string {
     switch (itemType) {
-        case ItemType.CurrencyFree:
-        case ItemType.CurrencyPaid:
-        case ItemType.Gold:
-        case ItemType.QuestQuickTicket:
-        case ItemType.CharacterTrainingMaterial:
-        case ItemType.EquipmentReinforcementItem:
-        case ItemType.ExchangePlaceItem:
-        case ItemType.MatchlessSacredTreasureExpItem:
-        case ItemType.GachaTicket:
-        case ItemType.TreasureChestKey:
-        case ItemType.BossChallengeTicket:
-        case ItemType.TowerBattleTicket:
-        case ItemType.DungeonRecoveryItem:
-        case ItemType.PlayerExp:
-        case ItemType.FriendPoint:
-        case ItemType.EquipmentRarityCrystal:
-        case ItemType.GuildFame:
-        case ItemType.GuildExp:
-        case ItemType.ActivityMedal:
-        case ItemType.EventExchangePlaceItem:
-        case ItemType.PanelGetJudgmentItem:
-        case ItemType.UnlockPanelGridItem:
-        case ItemType.PanelUnlockItem:
-        case ItemType.BookSortGridCellUnlockItem:
-        case ItemType.MusicTicket: {
-            const itemMb = masterTables.ItemTable?.find(m => m.itemType === itemType && m.itemId === itemId);
-            return t(itemMb?.nameKey) || itemMb?.memo || `道具 ${itemId}`;
-        }
         case ItemType.Equipment: {
             const equipmentMb = masterTables.EquipmentTable?.find(m => m.id === itemId);
             return t(equipmentMb?.nameKey) || equipmentMb?.memo || `装备 ${itemId}`;
@@ -150,8 +122,10 @@ function formatItemName(
             const mb = masterTables.EquipmentSetMaterialBoxTable?.find(m => m.id === itemId);
             return t(mb?.nameKey) || mb?.memo || `套装材料箱 ${itemId}`;
         }
-        default:
-            return `道具 ${itemId}`;
+        default: {
+            const itemMb = masterTables.ItemTable?.find(m => m.itemType === itemType && m.itemId === itemId);
+            return t(itemMb?.nameKey) || itemMb?.memo || `道具 ${itemId}`;
+        }
     }
 }
 
