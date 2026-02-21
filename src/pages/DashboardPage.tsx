@@ -208,13 +208,6 @@ export function DashboardPage() {
     // 徽章通知区域数据
     const notificationBadges = [
         {
-            id: 'friend-point',
-            label: t('[ItemName9]'), // 友谊点
-            visible: mypageData?.existNewFriendPointTransfer ?? false,
-            icon: Heart,
-            color: 'bg-pink-500'
-        },
-        {
             id: 'private-chat',
             label: t('[CommonHeaderChatLabel]'), // 私聊
             visible: mypageData?.existNewPrivateChat ?? false,
@@ -229,25 +222,11 @@ export function DashboardPage() {
             color: 'bg-amber-500'
         },
         {
-            id: 'mission-reward',
-            label: t('[MyPageMenuButtonMissionLabel]'), // 任务奖励
-            visible: mypageData?.existNotReceivedMissionReward ?? false,
-            icon: Target,
-            color: 'bg-green-500'
-        },
-        {
             id: 'dungeon-battle',
             label: t('[CommonHeaderDungeonBattleLabel]'), // 地牢战斗
             visible: (userData as unknown as UserGetUserDataResponse)?.isNotClearDungeonBattleMap ?? false,
             icon: MapPin,
             color: 'bg-purple-500'
-        },
-        {
-            id: 'present-box',
-            label: t('[MyPageMenuButtonPresentBoxLabel]'), // 礼物盒
-            visible: (userData?.presentCount ?? 0) > 0,
-            icon: Gift,
-            color: 'bg-red-500'
         }
     ];
 
@@ -354,12 +333,12 @@ export function DashboardPage() {
             {/* Quick Menu Icons */}
             {(() => {
                 const quickMenuItems = [
-                    { key: 'ranking', label: '排行榜', icon: 'icon_menu_ranking', action: () => setLeaderboardOpen(true) },
-                    { key: 'shop', label: '商城', icon: 'icon_menu_shop', action: () => navigate('/shop') },
-                    { key: 'present', label: '礼物', icon: 'icon_menu_present', action: () => setPresentBoxOpen(true) },
-                    { key: 'news', label: '公告', icon: 'icon_menu_news', action: () => setNoticeOpen(true) },
-                    { key: 'friend', label: '好友', icon: 'icon_menu_friend', action: () => navigate('/friends') },
-                    { key: 'mission', label: '任务', icon: 'icon_menu_mission', action: () => navigate('/missions') },
+                    { key: 'ranking', label: '排行榜', icon: 'icon_menu_ranking', action: () => setLeaderboardOpen(true), showBadge: false },
+                    { key: 'shop', label: '商城', icon: 'icon_menu_shop', action: () => navigate('/shop'), showBadge: false },
+                    { key: 'present', label: '礼物', icon: 'icon_menu_present', action: () => setPresentBoxOpen(true), showBadge: (userData?.presentCount ?? 0) > 0 },
+                    { key: 'news', label: '公告', icon: 'icon_menu_news', action: () => setNoticeOpen(true), showBadge: (mypageData?.unreadIndividualNotificationIdList?.length ?? 0) > 0 },
+                    { key: 'friend', label: '好友', icon: 'icon_menu_friend', action: () => navigate('/friends'), showBadge: mypageData?.existNewFriendPointTransfer ?? false },
+                    { key: 'mission', label: '任务', icon: 'icon_menu_mission', action: () => navigate('/missions'), showBadge: mypageData?.existNotReceivedMissionReward ?? false },
                 ];
                 return (
                     <div className="flex flex-wrap gap-4">
@@ -383,6 +362,12 @@ export function DashboardPage() {
                                         {item.label}
                                     </span>
                                 </div>
+                                {item.showBadge && (
+                                    <span className="absolute top-0 right-0 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-background"></span>
+                                    </span>
+                                )}
                             </div>
                         ))}
                     </div>
