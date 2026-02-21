@@ -24,7 +24,7 @@ import { toast } from '@/hooks/use-toast';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useItemName } from '@/hooks/useItemName';
 import { useMasterTable } from '@/hooks/useMasterData';
-import { timeManager } from '@/lib/time-manager';
+import { useTimeManager } from '@/hooks/useTimeManager';
 import { ItemType } from '@/api/generated/itemType';
 import { BountyQuestType } from '@/api/generated/bountyQuestType';
 import { BountyQuestRarityFlags } from '@/api/generated/bountyQuestRarityFlags';
@@ -65,11 +65,12 @@ interface ProcessedQuest {
 
 export function WishingFountainPage() {
     const { t } = useTranslation();
+    const timeManager = useTimeManager();
     const [loading, setLoading] = useState(true);
     const [dispatching, setDispatching] = useState<number | string | null>(null);
     const [quests, setQuests] = useState<ProcessedQuest[]>([]);
-    const [serverTime, setServerTime] = useState(timeManager.getServerNowMs());
-    
+    const [serverTime, setServerTime] = useState(() => timeManager.getServerNowMs());
+
     const { data: timeServers } = useMasterTable<TimeServerMB>('TimeServerTable');
     const { getItemName } = useItemName();
 
@@ -97,7 +98,7 @@ export function WishingFountainPage() {
         try {
             if (!silent) setLoading(true);
             const response = await ortegaApi.bountyQuest.getList({});
-            
+
             const templates: BountyQuestInfo[] = response.bountyQuestInfos || [];
             const userQuests: UserBountyQuestDtoInfo[] = response.userBountyQuestDtoInfos || [];
 
@@ -105,7 +106,7 @@ export function WishingFountainPage() {
 
             const processed = templates.map((tpl: BountyQuestInfo) => {
                 const instance = userQuests.find((uq: UserBountyQuestDtoInfo) => uq.bountyQuestId === tpl.bountyQuestId);
-                
+
                 let status: ProcessedQuest['status'] = 'NotStarted';
                 let startTime = 0;
                 let endTime = 0;
@@ -131,10 +132,10 @@ export function WishingFountainPage() {
 
                 const durationMs = tpl.bountyQuestClearTime;
                 const remainingMs = status === 'OnGoing' ? Math.max(0, endTime - nowMs) :
-                                   status === 'NotReceived' ? Math.max(0, rewardEndTime - nowMs) : 0;
-                
+                    status === 'NotReceived' ? Math.max(0, rewardEndTime - nowMs) : 0;
+
                 const progress = status === 'Received' || status === 'NotReceived' ? 100 :
-                               status === 'OnGoing' ? Math.min(100, Math.floor(((durationMs - remainingMs) / durationMs) * 100)) : 0;
+                    status === 'OnGoing' ? Math.min(100, Math.floor(((durationMs - remainingMs) / durationMs) * 100)) : 0;
 
                 return {
                     id: tpl.bountyQuestId,
@@ -181,7 +182,7 @@ export function WishingFountainPage() {
         const timer = setInterval(() => {
             const nowMs = timeManager.getServerNowMs();
             setServerTime(nowMs);
-            
+
             setQuests(prev => prev.map(q => {
                 if (q.status === 'OnGoing') {
                     const rem = Math.max(0, q.endTime - nowMs);
@@ -224,7 +225,7 @@ export function WishingFountainPage() {
         try {
             const dispatchKey = id ? id : (type === BountyQuestType.Solo ? 'solo' : type === BountyQuestType.Team ? 'team' : 'guerrilla');
             setDispatching(dispatchKey);
-            
+
             const res = await bountyQuestService.dispatch({
                 bountyQuestId: id,
                 bountyQuestType: type

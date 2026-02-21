@@ -27,7 +27,7 @@ import { ortegaApi } from '@/api/ortega-client';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useAccountStore } from '@/store/accountStore';
-import { timeManager } from '@/lib/time-manager';
+import { useTimeManager } from '@/hooks/useTimeManager';
 import { useItemName } from '@/hooks/useItemName';
 import {
     DungeonBattleGetDungeonBattleInfoResponse,
@@ -66,6 +66,7 @@ export function TimeSpaceCavePage() {
     const [selectedGuestCharacterId, setSelectedGuestCharacterId] = useState<number | null>(null);
 
     const { currentAccountId } = useAccountStore();
+    const timeManager = useTimeManager();
     const sync = useMasterStore(state => state.sync);
     const getTable = useMasterStore(state => state.getTable);
     const t = useLocalizationStore(state => state.t);

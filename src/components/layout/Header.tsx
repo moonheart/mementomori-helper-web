@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, ChevronDown, Diamond, Coins, Zap, Users, User, Star, Calendar, MessageSquare } from 'lucide-react';
+import { Bell, ChevronDown, Users, User, Star, Calendar, MessageSquare, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -17,23 +17,37 @@ import { UserStatusDtoInfo } from '@/api/generated/userStatusDtoInfo';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useAccountStore } from '@/store/accountStore';
 import { useUserStore } from '@/store/userStore';
-import { mockCurrency } from '@/mocks/data';
+import { useTimeManager } from '@/hooks/useTimeManager';
+import { useMasterStore } from '@/store/masterStore';
+import { TimeServerMB } from '@/api/generated/timeServerMB';
 
 export function Header() {
     const navigate = useNavigate();
     const { t } = useLocalizationStore();
     const currentAccountId = useAccountStore((state) => state.currentAccountId);
     const setUserInfo = useUserStore((state) => state.setUserInfo);
+    const timeManager = useTimeManager();
+    const getTable = useMasterStore((state) => state.getTable);
     const [status, setStatus] = useState<UserStatusDtoInfo | null>(null);
+    const [serverTimeStr, setServerTimeStr] = useState('--:--:--');
 
+    // 获取用户数据，并初始化时间偏移
     useEffect(() => {
         async function fetchHeaderData() {
             try {
                 const response = await ortegaApi.user.getUserData({}) as UserGetUserDataResponse;
                 if (response?.userSyncData?.userStatusDtoInfo) {
                     setStatus(response.userSyncData.userStatusDtoInfo);
-                    // 更新全局用户状态
                     setUserInfo(response.userSyncData.userStatusDtoInfo);
+                }
+                // 初始化服务器时间偏移
+                const timeServerId = response?.userSyncData?.timeServerId;
+                if (timeServerId) {
+                    const timeServers = await getTable<TimeServerMB>('TimeServerTable');
+                    const ts = timeServers.find(s => s.timeServerType === timeServerId);
+                    if (ts?.differenceDateTimeFromUtc) {
+                        timeManager.setDiffFromUtc(ts.differenceDateTimeFromUtc);
+                    }
                 }
             } catch (error) {
                 console.error('Failed to fetch header user data:', error);
@@ -41,7 +55,22 @@ export function Header() {
         }
 
         fetchHeaderData();
-    }, [currentAccountId, setUserInfo]);
+    }, [currentAccountId, setUserInfo, getTable, timeManager]);
+
+    // 每秒刷新服务器时间显示
+    useEffect(() => {
+        const update = () => {
+            const d = new Date(timeManager.getServerNowMs());
+            const pad = (n: number) => n.toString().padStart(2, '0');
+            setServerTimeStr(
+                `${d.getFullYear()}/${pad(d.getMonth() + 1)}/${pad(d.getDate())} ` +
+                `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
+            );
+        };
+        update();
+        const timer = setInterval(update, 1000);
+        return () => clearInterval(timer);
+    }, [timeManager]);
 
     const formatTimestamp = (timestamp?: number) => {
         if (!timestamp) return '-';
@@ -98,20 +127,10 @@ export function Header() {
 
                 {/* Currency & Actions */}
                 <div className="flex items-center gap-4">
-                    {/* Currencies */}
-                    <div className="hidden items-center gap-4 2xl:flex">
-                        <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5">
-                            <Diamond className="h-4 w-4 text-blue-500" />
-                            <span className="text-sm font-medium">{mockCurrency.diamond.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5">
-                            <Coins className="h-4 w-4 text-yellow-500" />
-                            <span className="text-sm font-medium">{mockCurrency.gold.toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5">
-                            <Zap className="h-4 w-4 text-green-500" />
-                            <span className="text-sm font-medium">{mockCurrency.stamina}/{mockCurrency.maxStamina}</span>
-                        </div>
+                    {/* Server Time */}
+                    <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title="服务器时间">
+                        <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <span className="tabular-nums">{serverTimeStr}</span>
                     </div>
 
                     {/* Notifications */}

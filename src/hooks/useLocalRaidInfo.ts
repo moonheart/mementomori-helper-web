@@ -6,7 +6,7 @@ import { LocalRaidBonusScheduleMB } from '@/api/generated/localRaidBonusSchedule
 import { LocalRaidQuestInfo } from '@/api/generated/localRaidQuestInfo';
 import { LocalRaidEnemyInfo } from '@/api/generated/localRaidEnemyInfo';
 import { LocalRaidBattleLogInfo } from '@/api/generated/localRaidBattleLogInfo';
-import { timeManager } from '@/lib/time-manager';
+import { useTimeManager } from '@/hooks/useTimeManager';
 import { useUserStore } from '@/store/userStore';
 
 /**
@@ -21,9 +21,10 @@ export function useLocalRaidInfo() {
     const [eventQuestIds, setEventQuestIds] = useState<number[]>([]);
     const [clearCountDict, setClearCountDict] = useState<Record<number, number>>({});
     const [challengeCount, setChallengeCount] = useState(0);
-    
+
     // 从全局 store 获取 playerId
     const playerId = useUserStore((state) => state.userInfo?.playerId || 0);
+    const timeManager = useTimeManager();
 
     // 获取 Master 数据
     const { data: bannerTable, loading: bannerLoading } = useMasterTable<LocalRaidBannerMB>('LocalRaidBannerTable');
@@ -66,10 +67,10 @@ export function useLocalRaidInfo() {
 
         for (const time of schedule.localRaidStartEndTimes) {
             if (currentMinutes >= time.startTime && currentMinutes <= time.endTime) {
-                return { 
-                    inBonus: true, 
-                    nextBonusTime: null, 
-                    bonusRate: schedule.rewardBonusRate / 100 
+                return {
+                    inBonus: true,
+                    nextBonusTime: null,
+                    bonusRate: schedule.rewardBonusRate / 100
                 };
             }
         }
@@ -87,10 +88,10 @@ export function useLocalRaidInfo() {
             nextTime = schedule.localRaidStartEndTimes[0].startTime;
         }
 
-        return { 
-            inBonus: false, 
-            nextBonusTime: nextTime, 
-            bonusRate: schedule.rewardBonusRate / 100 
+        return {
+            inBonus: false,
+            nextBonusTime: nextTime,
+            bonusRate: schedule.rewardBonusRate / 100
         };
     }, [bonusScheduleTable]);
 

@@ -1,18 +1,11 @@
 /**
  * 时间管理器 - 处理服务器时间与本地时间的差异
+ * 每个账户（userId）持有独立的实例
  */
 export class TimeManager {
-    private static instance: TimeManager;
     private diffFromUtcMs: number = 0;
 
-    private constructor() {}
-
-    public static getInstance(): TimeManager {
-        if (!TimeManager.instance) {
-            TimeManager.instance = new TimeManager();
-        }
-        return TimeManager.instance;
-    }
+    constructor() { }
 
     /**
      * 设置时间偏移量
@@ -71,4 +64,23 @@ export class TimeManager {
     }
 }
 
-export const timeManager = TimeManager.getInstance();
+/** 按 userId 缓存的实例注册表 */
+const registry = new Map<number, TimeManager>();
+
+/**
+ * 获取指定账户的 TimeManager 实例
+ * @param userId 账户 ID（number）
+ */
+export function getTimeManager(userId: number): TimeManager {
+    if (!registry.has(userId)) {
+        registry.set(userId, new TimeManager());
+    }
+    return registry.get(userId)!;
+}
+
+/**
+ * 清除指定账户的 TimeManager 实例（账户登出时调用）
+ */
+export function removeTimeManager(userId: number): void {
+    registry.delete(userId);
+}

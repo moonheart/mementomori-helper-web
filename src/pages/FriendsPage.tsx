@@ -25,7 +25,7 @@ import { toast } from '@/hooks/use-toast';
 import { FriendInfoType } from '@/api/generated/friendInfoType';
 import { LanguageType } from '@/api/generated/languageType';
 import { PlayerInfo } from '@/api/generated/playerInfo';
-import { timeManager } from '@/lib/time-manager';
+import { useTimeManager } from '@/hooks/useTimeManager';
 import { AssetManager } from '@/lib/asset-manager';
 import { parseOrtegaError } from '@/lib/errorHandler';
 
@@ -50,6 +50,7 @@ interface FriendStats {
 }
 
 export function FriendsPage() {
+    const timeManager = useTimeManager();
     const [activeTab, setActiveTab] = useState('friends');
     const [searchId, setSearchId] = useState('');
     const [searching, setSearching] = useState(false);
