@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
     Dialog,
     DialogContent,
@@ -23,15 +24,23 @@ import {
     Loader2,
     Swords,
     RefreshCw,
-    History
+    History,
+    Sword,
+    Target,
 } from 'lucide-react';
 import { useLocalRaidInfo, useLocalRaidBattleLogs } from '@/hooks/useLocalRaidInfo';
+import { BattleLogModal } from '@/components/battle-log';
+import { BattleSimulationResult } from '@/api/generated/battleSimulationResult';
 import { useItemName } from '@/hooks/useItemName';
 import { useTranslation } from '@/hooks/useTranslation';
 import { LocalRaidQuestInfo } from '@/api/generated/localRaidQuestInfo';
 import { LocalRaidEnemyInfo } from '@/api/generated/localRaidEnemyInfo';
 import { ElementType } from '@/api/generated/elementType';
+import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 import { clsx } from 'clsx';
+import { LocalRaidLobbyDialog } from '@/components/localRaid';
+import { ortegaApi } from '@/api/ortega-client';
+import { toast } from '@/hooks/use-toast';
 
 // 格式化时间为 HH:MM 格式
 function formatTimeNumber(timeNum: number | null): string {
@@ -78,13 +87,58 @@ export function PhantomTemplePage() {
         getTempleName,
         getQuestEnemies,
         isQuestCleared,
+        playerId,
         refresh
     } = useLocalRaidInfo();
 
     const { logs: battleLogs, loading: logsLoading, refresh: refreshLogs } = useLocalRaidBattleLogs();
 
+    // 战斗记录详情弹窗
+    const [selectedLog, setSelectedLog] = useState<BattleSimulationResult | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [battleDetailLoading, setBattleDetailLoading] = useState(false);
+
+    const handleViewLog = async (battleToken: string, leaderPlayerId: number) => {
+        setBattleDetailLoading(true);
+        try {
+            const result = await ortegaApi.localRaid.getLocalRaidBattleResultOld({
+                battleToken,
+                leaderPlayerId,
+            });
+            if (result?.battleResult?.simulationResult) {
+                setSelectedLog(result.battleResult.simulationResult);
+                setIsModalOpen(true);
+            } else {
+                toast({ title: '无法获取战斗详情', variant: 'destructive' });
+            }
+        } catch (e) {
+            console.error('Failed to fetch battle result old:', e);
+            toast({ title: '获取战斗详情失败', variant: 'destructive' });
+        } finally {
+            setBattleDetailLoading(false);
+        }
+    };
+
+    const formatTime = (battleTime: number) => {
+        const date = new Date(battleTime * 1000);
+        return date.toLocaleString('zh-CN', {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+        });
+    };
+
     const [selectedQuest, setSelectedQuest] = useState<LocalRaidQuestInfo | null>(null);
     const [detailOpen, setDetailOpen] = useState(false);
+    const [lobbyOpen, setLobbyOpen] = useState(false);
+    const [lobbyQuest, setLobbyQuest] = useState<LocalRaidQuestInfo | null>(null);
+
+    // 打开组队大厅
+    const openLobby = (quest: LocalRaidQuestInfo) => {
+        setLobbyQuest(quest);
+        setLobbyOpen(true);
+    };
 
     // 打开任务详情
     const openDetail = (quest: LocalRaidQuestInfo) => {
@@ -350,9 +404,13 @@ export function PhantomTemplePage() {
                                                 <Trophy className="mr-2 h-4 w-4" />
                                                 查看详情
                                             </Button>
-                                            <Button className="flex-1" disabled>
+                                            <Button
+                                                className="flex-1"
+                                                onClick={() => openLobby(quest)}
+                                                disabled={remainingCount <= 0}
+                                            >
                                                 <Users className="mr-2 h-4 w-4" />
-                                                挑战（暂未开放）
+                                                {remainingCount <= 0 ? '今日次数已用完' : '挑战'}
                                             </Button>
                                         </div>
                                     </CardContent>
@@ -377,36 +435,84 @@ export function PhantomTemplePage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        battleLogs.map((log, index) => {
-                            const isWin = log.battleEndInfo?.winGroupType === 1; // Attacker = 1
-                            return (
-                                <Card key={index}>
-                                    <CardContent className="py-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className={clsx(
-                                                    "w-10 h-10 rounded-full flex items-center justify-center",
-                                                    isWin ? "bg-green-500" : "bg-red-500"
-                                                )}>
-                                                    <Trophy className="h-5 w-5 text-white" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-medium">
-                                                        任务 ID: {log.questId}
+                        <Card>
+                            <CardContent className="p-0">
+                                <ScrollArea className="h-[500px]">
+                                    <div className="space-y-0 divide-y">
+                                        {battleLogs.map((log, index) => {
+                                            const isWin = log.battleEndInfo?.winGroupType === BattleFieldCharacterGroupType.Attacker;
+                                            return (
+                                                <div
+                                                    key={log.battleToken || index}
+                                                    className={clsx(
+                                                        "flex items-center gap-4 p-3 cursor-pointer transition-colors hover:bg-muted/50",
+                                                        isWin
+                                                            ? "bg-green-50/30 dark:bg-green-900/10"
+                                                            : "bg-red-50/30 dark:bg-red-900/10"
+                                                    )}
+                                                    onClick={() => {
+                                                        if (log.battleToken && log.localRaidPartyInfo?.leaderPlayerId) {
+                                                            handleViewLog(log.battleToken, log.localRaidPartyInfo.leaderPlayerId);
+                                                        }
+                                                    }}
+                                                >
+                                                    {/* 胜负标识 */}
+                                                    <div className={clsx(
+                                                        "w-10 h-10 rounded-lg flex items-center justify-center shrink-0",
+                                                        isWin
+                                                            ? "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300"
+                                                            : "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300"
+                                                    )}>
+                                                        {isWin ? (
+                                                            <Trophy className="h-5 w-5" />
+                                                        ) : (
+                                                            <Sword className="h-5 w-5" />
+                                                        )}
                                                     </div>
-                                                    <div className="text-sm text-muted-foreground">
-                                                        {log.battleEndInfo?.endTurn || 0} 回合
+
+                                                    {/* 信息 */}
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2">
+                                                            <Badge
+                                                                variant={isWin ? 'default' : 'destructive'}
+                                                                className="text-xs"
+                                                            >
+                                                                {isWin ? '胜利' : '失败'}
+                                                            </Badge>
+                                                            <span className="text-sm font-medium">
+                                                                任务 {log.questId}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                                                            <span className="flex items-center gap-1">
+                                                                <Target className="w-3 h-3" />
+                                                                {log.battleEndInfo?.endTurn || 0} 回合
+                                                            </span>
+                                                            {log.battleTime > 0 && (
+                                                                <span className="flex items-center gap-1">
+                                                                    <Clock className="w-3 h-3" />
+                                                                    {formatTime(log.battleTime)}
+                                                                </span>
+                                                            )}
+                                                            {log.clearLevel > 0 && (
+                                                                <span>清除等级: {log.clearLevel}</span>
+                                                            )}
+                                                        </div>
+                                                    </div>
+
+                                                    {/* 层级 */}
+                                                    <div className="text-xs text-muted-foreground shrink-0">
+                                                        {log.isAutoStart && (
+                                                            <Badge variant="outline" className="text-xs">自动</Badge>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </div>
-                                            <Badge className={isWin ? "bg-green-500" : "bg-red-500"}>
-                                                {isWin ? "胜利" : "失败"}
-                                            </Badge>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })
+                                            );
+                                        })}
+                                    </div>
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
                     )}
                 </TabsContent>
             </Tabs>
@@ -463,15 +569,42 @@ export function PhantomTemplePage() {
                                 </div>
                             </div>
 
-                            {/* 组队大厅提示 */}
-                            <div className="p-4 border-2 border-dashed rounded-lg text-center text-muted-foreground">
-                                <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                                <div className="text-sm">组队功能暂未开放</div>
+                            {/* 组队大厅入口 */}
+                            <div className="flex justify-center">
+                                <Button
+                                    size="lg"
+                                    onClick={() => {
+                                        setDetailOpen(false);
+                                        openLobby(selectedQuest);
+                                    }}
+                                    disabled={remainingCount <= 0}
+                                >
+                                    <Users className="mr-2 h-5 w-5" />
+                                    {remainingCount <= 0 ? '今日次数已用完' : '前往组队挑战'}
+                                </Button>
                             </div>
                         </div>
                     )}
                 </DialogContent>
             </Dialog>
+
+            {/* 组队大厅弹窗 */}
+            <LocalRaidLobbyDialog
+                open={lobbyOpen}
+                onOpenChange={setLobbyOpen}
+                quest={lobbyQuest}
+                myPlayerId={playerId}
+            />
+
+            {/* 战斗记录详情弹窗 */}
+            <BattleLogModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedLog(null);
+                }}
+                battleData={selectedLog}
+            />
         </div>
     );
 }

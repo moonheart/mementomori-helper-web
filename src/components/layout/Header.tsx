@@ -16,12 +16,14 @@ import { UserGetUserDataResponse } from '@/api/generated/UsergetUserDataResponse
 import { UserStatusDtoInfo } from '@/api/generated/userStatusDtoInfo';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useAccountStore } from '@/store/accountStore';
+import { useUserStore } from '@/store/userStore';
 import { mockCurrency } from '@/mocks/data';
 
 export function Header() {
     const navigate = useNavigate();
     const { t } = useLocalizationStore();
     const currentAccountId = useAccountStore((state) => state.currentAccountId);
+    const setUserInfo = useUserStore((state) => state.setUserInfo);
     const [status, setStatus] = useState<UserStatusDtoInfo | null>(null);
 
     useEffect(() => {
@@ -30,6 +32,8 @@ export function Header() {
                 const response = await ortegaApi.user.getUserData({}) as UserGetUserDataResponse;
                 if (response?.userSyncData?.userStatusDtoInfo) {
                     setStatus(response.userSyncData.userStatusDtoInfo);
+                    // 更新全局用户状态
+                    setUserInfo(response.userSyncData.userStatusDtoInfo);
                 }
             } catch (error) {
                 console.error('Failed to fetch header user data:', error);
@@ -37,7 +41,7 @@ export function Header() {
         }
 
         fetchHeaderData();
-    }, [currentAccountId]);
+    }, [currentAccountId, setUserInfo]);
 
     const formatTimestamp = (timestamp?: number) => {
         if (!timestamp) return '-';

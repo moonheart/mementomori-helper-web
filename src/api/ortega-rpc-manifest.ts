@@ -195,6 +195,8 @@ import type {
     LocalGvgReceiveLocalGvgRewardResponse,
     LocalRaidGetLocalRaidBattleLogsRequest,
     LocalRaidGetLocalRaidBattleLogsResponse,
+    LocalRaidGetLocalRaidBattleResultOldRequest,
+    LocalRaidGetLocalRaidBattleResultOldResponse,
     LocalRaidGetLocalRaidBattleResultRequest,
     LocalRaidGetLocalRaidBattleResultResponse,
     LocalRaidGetLocalRaidFriendInfoRequest,
@@ -665,6 +667,10 @@ export interface OrtegaRpcMap {
     "localRaid/getLocalRaidBattleResult": {
         request: LocalRaidGetLocalRaidBattleResultRequest;
         response: LocalRaidGetLocalRaidBattleResultResponse;
+    };
+    "localRaid/getLocalRaidBattleResultOld": {
+        request: LocalRaidGetLocalRaidBattleResultOldRequest;
+        response: LocalRaidGetLocalRaidBattleResultOldResponse;
     };
     "localRaid/getLocalRaidFriendInfo": {
         request: LocalRaidGetLocalRaidFriendInfoRequest;

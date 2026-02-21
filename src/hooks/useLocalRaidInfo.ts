@@ -7,6 +7,7 @@ import { LocalRaidQuestInfo } from '@/api/generated/localRaidQuestInfo';
 import { LocalRaidEnemyInfo } from '@/api/generated/localRaidEnemyInfo';
 import { LocalRaidBattleLogInfo } from '@/api/generated/localRaidBattleLogInfo';
 import { timeManager } from '@/lib/time-manager';
+import { useUserStore } from '@/store/userStore';
 
 /**
  * 幻影神殿信息 Hook
@@ -20,6 +21,9 @@ export function useLocalRaidInfo() {
     const [eventQuestIds, setEventQuestIds] = useState<number[]>([]);
     const [clearCountDict, setClearCountDict] = useState<Record<number, number>>({});
     const [challengeCount, setChallengeCount] = useState(0);
+    
+    // 从全局 store 获取 playerId
+    const playerId = useUserStore((state) => state.userInfo?.playerId || 0);
 
     // 获取 Master 数据
     const { data: bannerTable, loading: bannerLoading } = useMasterTable<LocalRaidBannerMB>('LocalRaidBannerTable');
@@ -47,8 +51,8 @@ export function useLocalRaidInfo() {
         fetchData();
     }, [fetchData]);
 
-    // 计算剩余次数（每天最多6次）
-    const remainingCount = useMemo(() => 6 - challengeCount, [challengeCount]);
+    // 剩余次数（localRaidChallengeCount 就是剩余可用次数）
+    const remainingCount = challengeCount;
 
     // 判断当前是否在加成时段
     const bonusTimeInfo = useMemo(() => {
@@ -124,6 +128,7 @@ export function useLocalRaidInfo() {
         challengeCount,
         bonusTimeInfo,
         bannerTable,
+        playerId,
         getTempleName,
         getEnemyInfo,
         getQuestEnemies,
