@@ -247,6 +247,8 @@ import type {
     NoticeGetMyPageNoticeInfoListResponse,
     NoticeGetNoticeInfoListRequest,
     NoticeGetNoticeInfoListResponse,
+    PresentDeletePresentRequest,
+    PresentDeletePresentResponse,
     PresentGetListRequest,
     PresentGetListResponse,
     PresentReceiveItemRequest,
@@ -787,6 +789,10 @@ export interface OrtegaRpcMap {
     "notice/getNoticeInfoList": {
         request: NoticeGetNoticeInfoListRequest;
         response: NoticeGetNoticeInfoListResponse;
+    };
+    "present/deletePresent": {
+        request: PresentDeletePresentRequest;
+        response: PresentDeletePresentResponse;
     };
     "present/getList": {
         request: PresentGetListRequest;

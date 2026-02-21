@@ -1,5 +1,6 @@
 import { ItemType } from '@/api/generated/itemType';
 import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
+import AssetManager from '@/lib/asset-manager';
 import {
     ItemMB,
     EquipmentMB,
@@ -151,5 +152,39 @@ function formatItemName(
         }
         default:
             return `道具 ${itemId}`;
+    }
+}
+
+/**
+ * 根据 ItemType 和 ItemId 获取道具图标 URL
+ * 适用于需要显示道具图标的任意场景
+ *
+ * 注意：对于普通道具 (default 分支)，图标文件名使用的是 ItemMB.id（主键），
+ * 而非 UserItem.itemId。传入 masterTables 时会自动查表取 ItemMB.id；
+ * 不传时降级直接使用 itemId（图标可能不准确）。
+ */
+export function getItemIconUrl(
+    itemType: ItemType,
+    itemId: number,
+    masterTables?: Pick<ItemMasterTables, 'ItemTable'>
+): string {
+    switch (itemType) {
+        case ItemType.Equipment:
+        case ItemType.EquipmentFragment:
+            return AssetManager.equipment.getUrl(itemId);
+        case ItemType.Character:
+        case ItemType.CharacterFragment:
+            return AssetManager.character.getUrl(itemId);
+        case ItemType.DungeonBattleRelic:
+            return AssetManager.relic.getUrl(itemId);
+        case ItemType.Sphere:
+            return AssetManager.sphere.getUrl(itemId);
+        default: {
+            // 图标文件名使用的是 ItemMB.id（主键），需要从 master table 查找
+            const mbId = masterTables?.ItemTable?.find(
+                m => m.itemType === itemType && m.itemId === itemId
+            )?.id;
+            return AssetManager.item.getUrl(mbId ?? itemId);
+        }
     }
 }

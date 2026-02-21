@@ -784,6 +784,8 @@ export * from './popularityVoteRewardInfo';
 export * from './popularityVoteSortType';
 export * from './popularityVoteType';
 export * from './popularityVoteVotingType';
+export * from './PresentdeletePresentRequest';
+export * from './PresentdeletePresentResponse';
 export * from './PresentgetListRequest';
 export * from './PresentgetListResponse';
 export * from './presentItem';

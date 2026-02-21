@@ -17,10 +17,12 @@ import { LanguageType } from '@/api/generated/languageType';
 import { TransferSpotType } from '@/api/generated/transferSpotType';
 import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
-import AssetManager from '@/lib/asset-manager';
+import AssetManager, { AtlasManager } from '@/lib/asset-manager';
 import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
 import { NoticeDialog } from '@/components/notice/NoticeDialog';
 import { BookSortDialog } from '@/components/booksort/BookSortDialog';
+import { LeaderboardDialog } from '@/components/leaderboard/LeaderboardDialog';
+import { PresentBoxDialog } from '@/components/present/PresentBoxDialog';
 
 export function DashboardPage() {
     const navigate = useNavigate();
@@ -31,6 +33,8 @@ export function DashboardPage() {
     const [monthlyLoginBonusOpen, setMonthlyLoginBonusOpen] = useState(false);
     const [noticeOpen, setNoticeOpen] = useState(false);
     const [bookSortOpen, setBookSortOpen] = useState(false);
+    const [leaderboardOpen, setLeaderboardOpen] = useState(false);
+    const [presentBoxOpen, setPresentBoxOpen] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -347,21 +351,50 @@ export function DashboardPage() {
                 </div>
             )}
 
+            {/* Quick Menu Icons */}
+            {(() => {
+                const quickMenuItems = [
+                    { key: 'ranking', label: '排行榜', icon: 'icon_menu_ranking', action: () => setLeaderboardOpen(true) },
+                    { key: 'shop', label: '商城', icon: 'icon_menu_shop', action: () => navigate('/shop') },
+                    { key: 'present', label: '礼物', icon: 'icon_menu_present', action: () => setPresentBoxOpen(true) },
+                    { key: 'news', label: '公告', icon: 'icon_menu_news', action: () => setNoticeOpen(true) },
+                    { key: 'friend', label: '好友', icon: 'icon_menu_friend', action: () => navigate('/friends') },
+                    { key: 'mission', label: '任务', icon: 'icon_menu_mission', action: () => navigate('/missions') },
+                ];
+                return (
+                    <div className="flex flex-wrap gap-4">
+                        {quickMenuItems.map((item) => (
+                            <div
+                                key={item.key}
+                                className="relative group flex flex-col items-center justify-center w-[64px] h-[64px] cursor-pointer hover:scale-105 transition-transform"
+                                onClick={item.action}
+                                title={item.label}
+                            >
+                                <img
+                                    src={AtlasManager.getUrl(item.icon)}
+                                    alt={item.label}
+                                    className="w-full h-full object-contain drop-shadow-md"
+                                />
+                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-max px-0.5 flex flex-col justify-end pointer-events-none z-10">
+                                    <span
+                                        className="text-[13px] font-bold text-center leading-[1] text-white"
+                                        style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 1px 1px rgba(0,0,0,0.8)' }}
+                                    >
+                                        {item.label}
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            })()}
+
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-2xl font-bold">每日清单</h1>
                     <p className="text-muted-foreground">今天的任务进度 • 重置时间: 凌晨 4:00</p>
                 </div>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setNoticeOpen(true)}
-                    className="flex items-center gap-1.5"
-                >
-                    <Bell className="h-4 w-4" />
-                    活动 &amp; 公告
-                </Button>
             </div>
 
             {/* Alerts */}
@@ -506,6 +539,18 @@ export function DashboardPage() {
             <BookSortDialog
                 open={bookSortOpen}
                 onOpenChange={setBookSortOpen}
+            />
+
+            {/* Leaderboard Dialog */}
+            <LeaderboardDialog
+                open={leaderboardOpen}
+                onOpenChange={setLeaderboardOpen}
+            />
+
+            {/* Present Box Dialog */}
+            <PresentBoxDialog
+                open={presentBoxOpen}
+                onOpenChange={setPresentBoxOpen}
             />
         </div>
     );

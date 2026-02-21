@@ -417,6 +417,9 @@ export const ortegaApi = {
             rpcClient.call<OrtegaRpcMap["notice/getNoticeInfoList"]["response"]>("notice/getNoticeInfoList", request),
     },
     present: {
+        /** present/deletePresent */
+        deletePresent: (request: OrtegaRpcMap["present/deletePresent"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["present/deletePresent"]["response"]>("present/deletePresent", request),
         /** present/getList */
         getList: (request: OrtegaRpcMap["present/getList"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["present/getList"]["response"]>("present/getList", request),
