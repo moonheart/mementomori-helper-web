@@ -72,6 +72,40 @@ export const ortegaApi = {
         rewardAutoBattle: (request: OrtegaRpcMap["battle/rewardAutoBattle"]["request"]) =>
             rpcClient.call<OrtegaRpcMap["battle/rewardAutoBattle"]["response"]>("battle/rewardAutoBattle", request),
     },
+    bookSort: {
+        /** bookSort/bulkUnlockGridCell */
+        bulkUnlockGridCell: (request: OrtegaRpcMap["bookSort/bulkUnlockGridCell"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/bulkUnlockGridCell"]["response"]>("bookSort/bulkUnlockGridCell", request),
+        /** bookSort/getInfo */
+        getInfo: (request: OrtegaRpcMap["bookSort/getInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/getInfo"]["response"]>("bookSort/getInfo", request),
+        /** bookSort/getRewardInfo */
+        getRewardInfo: (request: OrtegaRpcMap["bookSort/getRewardInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/getRewardInfo"]["response"]>("bookSort/getRewardInfo", request),
+        /** bookSort/selectBonusFloorReward */
+        selectBonusFloorReward: (request: OrtegaRpcMap["bookSort/selectBonusFloorReward"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/selectBonusFloorReward"]["response"]>("bookSort/selectBonusFloorReward", request),
+        /** bookSort/unlockGridCell */
+        unlockGridCell: (request: OrtegaRpcMap["bookSort/unlockGridCell"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/unlockGridCell"]["response"]>("bookSort/unlockGridCell", request),
+        /** bookSort/upFloor */
+        upFloor: (request: OrtegaRpcMap["bookSort/upFloor"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSort/upFloor"]["response"]>("bookSort/upFloor", request),
+    },
+    bookSortAssistance: {
+        /** bookSortAssistance/addAssistance */
+        addAssistance: (request: OrtegaRpcMap["bookSortAssistance/addAssistance"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSortAssistance/addAssistance"]["response"]>("bookSortAssistance/addAssistance", request),
+        /** bookSortAssistance/dispatch */
+        dispatch: (request: OrtegaRpcMap["bookSortAssistance/dispatch"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSortAssistance/dispatch"]["response"]>("bookSortAssistance/dispatch", request),
+        /** bookSortAssistance/getInfo */
+        getInfo: (request: OrtegaRpcMap["bookSortAssistance/getInfo"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSortAssistance/getInfo"]["response"]>("bookSortAssistance/getInfo", request),
+        /** bookSortAssistance/reward */
+        reward: (request: OrtegaRpcMap["bookSortAssistance/reward"]["request"]) =>
+            rpcClient.call<OrtegaRpcMap["bookSortAssistance/reward"]["response"]>("bookSortAssistance/reward", request),
+    },
     bountyQuest: {
         /** bountyQuest/getList */
         getList: (request: OrtegaRpcMap["bountyQuest/getList"]["request"]) =>

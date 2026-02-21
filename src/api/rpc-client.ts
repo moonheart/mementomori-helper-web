@@ -17,14 +17,14 @@ export const rpcClient = {
         request: unknown
     ): Promise<TResponse> {
         const [category, action] = uri.split('/');
-        
+
         // 保持目前的 API 代理格式: /api/ortega/{category}/{action}
         // 如果后端改为真正的单一入口 JSON-RPC，只需在此处修改 URL 和 Body 结构
         const response = await apiClient.post<TResponse>(
             `/api/ortega/${category.trim()}/${action.trim()}`,
             request
         );
-        
+
         return response.data;
     },
 

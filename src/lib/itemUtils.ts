@@ -2,15 +2,15 @@ import { ItemType } from '@/api/generated/itemType';
 import { UserItemDtoInfo } from '@/api/generated/userItemDtoInfo';
 import {
     ItemMB,
-    EquipmentMB, 
-    CharacterMB, 
-    EquipmentCompositeMB, 
-    SphereMB, 
-    TreasureChestMB, 
-    EquipmentSetMaterialMB, 
-    LevelLinkMB, 
-    DungeonBattleRelicMB, 
-    EquipmentSetMaterialBoxMB 
+    EquipmentMB,
+    CharacterMB,
+    EquipmentCompositeMB,
+    SphereMB,
+    TreasureChestMB,
+    EquipmentSetMaterialMB,
+    LevelLinkMB,
+    DungeonBattleRelicMB,
+    EquipmentSetMaterialBoxMB
 } from '@/api/generated';
 
 export interface ItemMasterTables {
@@ -95,6 +95,7 @@ function formatItemName(
         case ItemType.PanelGetJudgmentItem:
         case ItemType.UnlockPanelGridItem:
         case ItemType.PanelUnlockItem:
+        case ItemType.BookSortGridCellUnlockItem:
         case ItemType.MusicTicket: {
             const itemMb = masterTables.ItemTable?.find(m => m.itemType === itemType && m.itemId === itemId);
             return t(itemMb?.nameKey) || itemMb?.memo || `道具 ${itemId}`;

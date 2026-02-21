@@ -19,6 +19,7 @@ import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
 import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
 import { NoticeDialog } from '@/components/notice/NoticeDialog';
+import { BookSortDialog } from '@/components/booksort/BookSortDialog';
 
 export function DashboardPage() {
     const navigate = useNavigate();
@@ -28,6 +29,7 @@ export function DashboardPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [monthlyLoginBonusOpen, setMonthlyLoginBonusOpen] = useState(false);
     const [noticeOpen, setNoticeOpen] = useState(false);
+    const [bookSortOpen, setBookSortOpen] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -252,6 +254,8 @@ export function DashboardPage() {
         const transferSpotType = info.transferDetailInfo?.transferSpotType;
         if (transferSpotType === TransferSpotType.MonthlyLoginBonus) {
             setMonthlyLoginBonusOpen(true);
+        } else if (transferSpotType === TransferSpotType.BookSort) {
+            setBookSortOpen(true);
         }
         // 可以在这里添加其他 TransferSpotType 的处理
     };
@@ -259,7 +263,7 @@ export function DashboardPage() {
     // 判断是否可点击
     const isClickableIcon = (info: MypageIconInfo): boolean => {
         const transferSpotType = info.transferDetailInfo?.transferSpotType;
-        return transferSpotType === TransferSpotType.MonthlyLoginBonus;
+        return transferSpotType === TransferSpotType.MonthlyLoginBonus || transferSpotType === TransferSpotType.BookSort;
     };
 
     return (
@@ -478,6 +482,12 @@ export function DashboardPage() {
             <NoticeDialog
                 open={noticeOpen}
                 onOpenChange={setNoticeOpen}
+            />
+
+            {/* BookSort Dialog */}
+            <BookSortDialog
+                open={bookSortOpen}
+                onOpenChange={setBookSortOpen}
             />
         </div>
     );

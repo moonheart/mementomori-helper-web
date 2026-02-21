@@ -43,6 +43,26 @@ import type {
     BattleQuickResponse,
     BattleRewardAutoBattleRequest,
     BattleRewardAutoBattleResponse,
+    BookSortAssistanceBookSortAssistanceAddAssistanceRequest,
+    BookSortAssistanceBookSortAssistanceAddAssistanceResponse,
+    BookSortAssistanceBookSortAssistanceDispatchRequest,
+    BookSortAssistanceBookSortAssistanceDispatchResponse,
+    BookSortAssistanceBookSortAssistanceGetInfoRequest,
+    BookSortAssistanceBookSortAssistanceGetInfoResponse,
+    BookSortAssistanceBookSortAssistanceRewardRequest,
+    BookSortAssistanceBookSortAssistanceRewardResponse,
+    BookSortBookSortBulkUnlockGridCellRequest,
+    BookSortBookSortBulkUnlockGridCellResponse,
+    BookSortBookSortGetInfoRequest,
+    BookSortBookSortGetInfoResponse,
+    BookSortBookSortGetRewardInfoRequest,
+    BookSortBookSortGetRewardInfoResponse,
+    BookSortBookSortSelectBonusFloorRewardRequest,
+    BookSortBookSortSelectBonusFloorRewardResponse,
+    BookSortBookSortUnlockGridCellRequest,
+    BookSortBookSortUnlockGridCellResponse,
+    BookSortBookSortUpFloorRequest,
+    BookSortBookSortUpFloorResponse,
     BountyQuestGetListRequest,
     BountyQuestGetListResponse,
     BountyQuestRemakeRequest,
@@ -359,6 +379,46 @@ export interface OrtegaRpcMap {
     "battle/rewardAutoBattle": {
         request: BattleRewardAutoBattleRequest;
         response: BattleRewardAutoBattleResponse;
+    };
+    "bookSort/bulkUnlockGridCell": {
+        request: BookSortBookSortBulkUnlockGridCellRequest;
+        response: BookSortBookSortBulkUnlockGridCellResponse;
+    };
+    "bookSort/getInfo": {
+        request: BookSortBookSortGetInfoRequest;
+        response: BookSortBookSortGetInfoResponse;
+    };
+    "bookSort/getRewardInfo": {
+        request: BookSortBookSortGetRewardInfoRequest;
+        response: BookSortBookSortGetRewardInfoResponse;
+    };
+    "bookSort/selectBonusFloorReward": {
+        request: BookSortBookSortSelectBonusFloorRewardRequest;
+        response: BookSortBookSortSelectBonusFloorRewardResponse;
+    };
+    "bookSort/unlockGridCell": {
+        request: BookSortBookSortUnlockGridCellRequest;
+        response: BookSortBookSortUnlockGridCellResponse;
+    };
+    "bookSort/upFloor": {
+        request: BookSortBookSortUpFloorRequest;
+        response: BookSortBookSortUpFloorResponse;
+    };
+    "bookSortAssistance/addAssistance": {
+        request: BookSortAssistanceBookSortAssistanceAddAssistanceRequest;
+        response: BookSortAssistanceBookSortAssistanceAddAssistanceResponse;
+    };
+    "bookSortAssistance/dispatch": {
+        request: BookSortAssistanceBookSortAssistanceDispatchRequest;
+        response: BookSortAssistanceBookSortAssistanceDispatchResponse;
+    };
+    "bookSortAssistance/getInfo": {
+        request: BookSortAssistanceBookSortAssistanceGetInfoRequest;
+        response: BookSortAssistanceBookSortAssistanceGetInfoResponse;
+    };
+    "bookSortAssistance/reward": {
+        request: BookSortAssistanceBookSortAssistanceRewardRequest;
+        response: BookSortAssistanceBookSortAssistanceRewardResponse;
     };
     "bountyQuest/getList": {
         request: BountyQuestGetListRequest;

@@ -19,80 +19,61 @@ import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, Mis
 import { useMasterData, useMasterTable } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
 
-interface UIStoreMission {
-    id: number;
-    missionType: number;
-    status: MissionStatusType;
-    progress: number;
-    // 以下通过 Master 数据填充
+import { MissionRow, UIStoreMission } from '@/components/mission/MissionRow';
+
+function MeritRewardCard({
+    title = "功勋奖励",
+    totalMerit,
+    meritBoxes,
+    groupType,
+    onClaim,
+}: {
     title?: string;
-    description?: string;
-    target?: number;
-}
-
-/**
- * 提取任务卡片组件以使用 useMasterData
- */
-function MissionRow({ mission, onClaim, isClaiming }: { 
-    mission: UIStoreMission, 
-    onClaim: () => void,
-    isClaiming: boolean
+    totalMerit: number;
+    meritBoxes: { id: number; required: number; status: number; claimed: boolean }[];
+    groupType: MissionGroupType;
+    onClaim: (groupType: MissionGroupType, required: number) => void;
 }) {
-    const { data: mb } = useMasterData<MissionMB>('MissionTable', mission.id);
-    const t = useLocalizationStore(state => state.t);
-    
-    const title = mb ? t(mb.nameKey) : `任务 ${mission.id}`;
-    const description = mb ? t(mb.descriptionKey) : `类型: ${mission.missionType}`;
-    const target = mb ? mb.requireValue : 0;
-
-    const isCompleted = mission.status === MissionStatusType.NotReceived || mission.status === MissionStatusType.Received;
-    const isClaimed = mission.status === MissionStatusType.Received;
-    const canClaim = mission.status === MissionStatusType.NotReceived;
-
-    const progress = target ? (mission.progress / target) * 100 : 0;
+    if (meritBoxes.length === 0) return null;
 
     return (
-        <Card className={canClaim ? 'border-2 border-primary shadow-md h-full' : 'h-full'}>
-            <CardContent className="flex flex-col gap-3 p-4 h-full">
-                <div className="flex items-center gap-3">
-                    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${canClaim ? 'bg-primary text-primary-foreground' : isClaimed ? 'bg-green-100 dark:bg-green-950 text-green-600' : 'bg-muted'}`}>
-                        {isClaimed ? <CheckCircle2 className="h-6 w-6" /> : <Target className="h-6 w-6" />}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                        <h3 className="font-semibold text-sm truncate">{title}</h3>
-                        <p className="text-xs text-muted-foreground truncate">{description}</p>
-                    </div>
+        <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950 dark:to-yellow-950 mb-6">
+            <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                    <Trophy className="h-5 w-5 text-orange-500" />
+                    {title}
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">当前功勋: <span className="font-bold text-orange-600">{totalMerit}</span></span>
                 </div>
 
-                <div className="flex-1 flex flex-col justify-end space-y-3">
-                    <div className="flex items-center justify-between">
-                        {isCompleted ? (
-                            <Badge variant={canClaim ? 'default' : 'secondary'}>
-                                {canClaim ? '可领取' : '已领取'}
-                            </Badge>
-                        ) : mission.status === MissionStatusType.Locked ? (
-                            <Badge variant="outline">未解锁</Badge>
-                        ) : (
-                            <Badge variant="outline">进行中</Badge>
-                        )}
-                    </div>
-
-                    {mission.status === MissionStatusType.Progress && target > 0 && (
-                        <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                <span>进度</span>
-                                <span>{mission.progress}/{target}</span>
+                <div className="grid gap-2 grid-cols-5">
+                    {meritBoxes.map((box) => {
+                        const canOpen = box.status === MissionActivityRewardStatusType.NotReceived;
+                        return (
+                            <div
+                                key={box.id}
+                                className={`p-2 rounded-md text-center transition-all border ${box.claimed
+                                    ? 'bg-muted opacity-50'
+                                    : canOpen
+                                        ? 'bg-yellow-100 border-yellow-400 text-yellow-800 cursor-pointer hover:scale-105'
+                                        : 'bg-muted border-transparent'
+                                    }`}
+                                onClick={() => {
+                                    if (canOpen) {
+                                        onClaim(groupType, box.required);
+                                    }
+                                }}
+                            >
+                                <div className="text-xl mb-1">
+                                    {box.claimed ? '✅' : canOpen ? '🎁' : '🔒'}
+                                </div>
+                                <div className="text-[10px] font-semibold">{box.required}</div>
                             </div>
-                            <Progress value={progress} className="h-1.5" />
-                        </div>
-                    )}
-
-                    {canClaim && (
-                        <Button className="w-full mt-2" size="sm" onClick={onClaim} disabled={isClaiming}>
-                            {isClaiming ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
-                            领取奖励
-                        </Button>
-                    )}
+                        );
+                    })}
                 </div>
             </CardContent>
         </Card>
@@ -176,18 +157,11 @@ export function MissionsPage() {
                 });
             }
 
-            // 2. 领取功勋奖励
-            const claimableMeritBoxes = meritBoxes.filter(box => box.status === MissionActivityRewardStatusType.NotReceived);
-            for (const box of claimableMeritBoxes) {
-                // 目前只处理 Daily 和 Weekly 的功勋
-                await handleClaimActivityReward(MissionGroupType.Daily, box.required);
-            }
-            
-            // 尝试领取周常功勋
-            const weeklyGroupInfo = getGroupInfo(MissionGroupType.Weekly);
-            if (weeklyGroupInfo?.userMissionActivityDtoInfo?.rewardStatusDict) {
-                const weeklyActivityInfo = weeklyGroupInfo.userMissionActivityDtoInfo;
-                const weeklyMeritBoxes = Object.entries(weeklyActivityInfo.rewardStatusDict)
+            // 2. 领取每天功勋奖励
+            const dailyGroupInfo = getGroupInfo(MissionGroupType.Daily);
+            if (dailyGroupInfo?.userMissionActivityDtoInfo?.rewardStatusDict) {
+                const dailyActivityInfo = dailyGroupInfo.userMissionActivityDtoInfo;
+                const dailyBoxes = Object.entries(dailyActivityInfo.rewardStatusDict)
                     .map(([rewardIdStr, status]) => {
                         const rewardId = Number(rewardIdStr);
                         const rewardMb = Object.values(totalActivityMedalRewardTable || {}).find(mb => mb.id === rewardId);
@@ -197,8 +171,28 @@ export function MissionsPage() {
                         };
                     })
                     .filter(box => box.status === MissionActivityRewardStatusType.NotReceived);
-                
-                for (const box of weeklyMeritBoxes) {
+
+                for (const box of dailyBoxes) {
+                    await handleClaimActivityReward(MissionGroupType.Daily, box.required);
+                }
+            }
+
+            // 3. 尝试领取周常功勋
+            const weeklyGroupInfo = getGroupInfo(MissionGroupType.Weekly);
+            if (weeklyGroupInfo?.userMissionActivityDtoInfo?.rewardStatusDict) {
+                const weeklyActivityInfo = weeklyGroupInfo.userMissionActivityDtoInfo;
+                const weeklyBoxes = Object.entries(weeklyActivityInfo.rewardStatusDict)
+                    .map(([rewardIdStr, status]) => {
+                        const rewardId = Number(rewardIdStr);
+                        const rewardMb = Object.values(totalActivityMedalRewardTable || {}).find(mb => mb.id === rewardId);
+                        return {
+                            required: rewardMb?.requiredActivityMedalCount ?? 0,
+                            status: Number(status)
+                        };
+                    })
+                    .filter(box => box.status === MissionActivityRewardStatusType.NotReceived);
+
+                for (const box of weeklyBoxes) {
                     await handleClaimActivityReward(MissionGroupType.Weekly, box.required);
                 }
             }
@@ -232,7 +226,7 @@ export function MissionsPage() {
     const mapMissions = (groupType: MissionGroupType): UIStoreMission[] => {
         const groupInfo = getGroupInfo(groupType);
         if (!groupInfo || !groupInfo.userMissionDtoInfoDict) return [];
-        
+
         const missions: UIStoreMission[] = [];
 
         Object.values(groupInfo.userMissionDtoInfoDict).forEach((dtoList) => {
@@ -285,15 +279,9 @@ export function MissionsPage() {
     const weeklyMissions = useMemo(() => mapMissions(MissionGroupType.Weekly), [missionData]);
     const mainMissions = useMemo(() => mapMissions(MissionGroupType.Main), [missionData]);
 
-    const currentGroupType = activeTab === 'daily' ? MissionGroupType.Daily :
-                           activeTab === 'weekly' ? MissionGroupType.Weekly :
-                           MissionGroupType.Main;
+    const getActivityInfo = (groupType: MissionGroupType) => getGroupInfo(groupType)?.userMissionActivityDtoInfo;
 
-    const activityInfo = useMemo(() => getGroupInfo(currentGroupType)?.userMissionActivityDtoInfo, [missionData, currentGroupType]);
-    const totalMerit = activityInfo?.progressCount || 0;
-    
-    // 功勋宝箱
-    const meritBoxes = useMemo(() => {
+    const getMeritBoxes = (activityInfo?: MissionInfo['userMissionActivityDtoInfo']) => {
         if (!activityInfo?.rewardStatusDict || !totalActivityMedalRewardTable) return [];
 
         const tableArray = Object.values(totalActivityMedalRewardTable);
@@ -312,7 +300,19 @@ export function MissionsPage() {
                 };
             })
             .sort((a, b) => a.required - b.required);
-    }, [activityInfo, totalActivityMedalRewardTable]);
+    };
+
+    const dailyActivityInfo = useMemo(() => getActivityInfo(MissionGroupType.Daily), [missionData]);
+    const dailyMeritBoxes = useMemo(() => getMeritBoxes(dailyActivityInfo), [dailyActivityInfo, totalActivityMedalRewardTable]);
+    const dailyTotalMerit = dailyActivityInfo?.progressCount || 0;
+
+    const weeklyActivityInfo = useMemo(() => getActivityInfo(MissionGroupType.Weekly), [missionData]);
+    const weeklyMeritBoxes = useMemo(() => getMeritBoxes(weeklyActivityInfo), [weeklyActivityInfo, totalActivityMedalRewardTable]);
+    const weeklyTotalMerit = weeklyActivityInfo?.progressCount || 0;
+
+    const onClaimMerit = (groupType: MissionGroupType, required: number) => {
+        handleClaimActivityReward(groupType, required).then(() => fetchMissionInfo());
+    };
 
     if (!currentAccountId) {
         return (
@@ -364,49 +364,6 @@ export function MissionsPage() {
                 </AlertDescription>
             </Alert>
 
-            {/* 功勋进度 */}
-            <Card className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950 dark:to-yellow-950">
-                <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-lg">
-                        <Trophy className="h-5 w-5 text-orange-500" />
-                        功勋奖励
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">当前功勋: <span className="font-bold text-orange-600">{totalMerit}</span></span>
-                    </div>
-
-                    <div className="grid gap-2 grid-cols-5">
-                        {meritBoxes.map((box) => {
-                            const canOpen = box.status === MissionActivityRewardStatusType.NotReceived;
-                            return (
-                                <div
-                                    key={box.id}
-                                    className={`p-2 rounded-md text-center transition-all border ${box.claimed
-                                        ? 'bg-muted opacity-50'
-                                        : canOpen
-                                            ? 'bg-yellow-100 border-yellow-400 text-yellow-800 cursor-pointer hover:scale-105'
-                                            : 'bg-muted border-transparent'
-                                        }`}
-                                    onClick={() => {
-                                        if (canOpen) {
-                                            handleClaimActivityReward(currentGroupType, box.required)
-                                                .then(() => fetchMissionInfo());
-                                        }
-                                    }}
-                                >
-                                    <div className="text-xl mb-1">
-                                        {box.claimed ? '✅' : canOpen ? '🎁' : '🔒'}
-                                    </div>
-                                    <div className="text-[10px] font-semibold">{box.required}</div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </CardContent>
-            </Card>
-
             <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full max-w-md grid-cols-3">
                     <TabsTrigger value="daily">每日</TabsTrigger>
@@ -414,34 +371,52 @@ export function MissionsPage() {
                     <TabsTrigger value="main">主线</TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="daily" className="grid gap-4 mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                    {dailyMissions.length === 0 ? (
-                        <div className="col-span-full text-center py-8 text-muted-foreground">暂无每日任务</div>
-                    ) : (
-                        dailyMissions.map(m => (
-                            <MissionRow 
-                                key={m.id} 
-                                mission={m} 
-                                onClaim={() => handleClaimMission(m.id)}
-                                isClaiming={claiming.has(m.id)}
-                            />
-                        ))
-                    )}
+                <TabsContent value="daily" className="mt-6">
+                    <MeritRewardCard
+                        title="每日功勋奖励"
+                        totalMerit={dailyTotalMerit}
+                        meritBoxes={dailyMeritBoxes}
+                        groupType={MissionGroupType.Daily}
+                        onClaim={onClaimMerit}
+                    />
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                        {dailyMissions.length === 0 ? (
+                            <div className="col-span-full text-center py-8 text-muted-foreground">暂无每日任务</div>
+                        ) : (
+                            dailyMissions.map(m => (
+                                <MissionRow
+                                    key={m.id}
+                                    mission={m}
+                                    onClaim={() => handleClaimMission(m.id)}
+                                    isClaiming={claiming.has(m.id)}
+                                />
+                            ))
+                        )}
+                    </div>
                 </TabsContent>
 
-                <TabsContent value="weekly" className="grid gap-4 mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-                    {weeklyMissions.length === 0 ? (
-                        <div className="col-span-full text-center py-8 text-muted-foreground">暂无每周任务</div>
-                    ) : (
-                        weeklyMissions.map(m => (
-                            <MissionRow 
-                                key={m.id} 
-                                mission={m} 
-                                onClaim={() => handleClaimMission(m.id)}
-                                isClaiming={claiming.has(m.id)}
-                            />
-                        ))
-                    )}
+                <TabsContent value="weekly" className="mt-6">
+                    <MeritRewardCard
+                        title="每周功勋奖励"
+                        totalMerit={weeklyTotalMerit}
+                        meritBoxes={weeklyMeritBoxes}
+                        groupType={MissionGroupType.Weekly}
+                        onClaim={onClaimMerit}
+                    />
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+                        {weeklyMissions.length === 0 ? (
+                            <div className="col-span-full text-center py-8 text-muted-foreground">暂无每周任务</div>
+                        ) : (
+                            weeklyMissions.map(m => (
+                                <MissionRow
+                                    key={m.id}
+                                    mission={m}
+                                    onClaim={() => handleClaimMission(m.id)}
+                                    isClaiming={claiming.has(m.id)}
+                                />
+                            ))
+                        )}
+                    </div>
                 </TabsContent>
 
                 <TabsContent value="main" className="grid gap-4 mt-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
@@ -449,9 +424,9 @@ export function MissionsPage() {
                         <div className="col-span-full text-center py-8 text-muted-foreground">暂无主线任务</div>
                     ) : (
                         mainMissions.map(m => (
-                            <MissionRow 
-                                key={m.id} 
-                                mission={m} 
+                            <MissionRow
+                                key={m.id}
+                                mission={m}
                                 onClaim={() => handleClaimMission(m.id)}
                                 isClaiming={claiming.has(m.id)}
                             />

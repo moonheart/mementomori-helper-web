@@ -400,3 +400,30 @@ const allCurrency = getUserItemCount(
     true  // 同时计算 CurrencyFree 和 CurrencyPaid
 );
 ```
+
+---
+
+## IDA 反编译与函数搜索指南
+
+在进行后端代理层 (`api/MementoMori.Ortega`) 的开发和补全时，我们经常需要借助 IDA 反编译游戏原始代码。
+
+### 搜索特定名称的函数
+
+由于直接使用工具搜索可能会受限，推荐使用以下 Python 片段通过 `mcp_ida-pro-mcp_py_eval` 搜索函数：
+
+```python
+import ida_funcs, ida_name
+res = []
+# 遍历所有已知函数
+for i in range(ida_funcs.get_func_qty()):
+    f = ida_funcs.getn_func(i)
+    if f:
+        # 获取函数名称
+        name = ida_name.get_name(f.start_ea)
+        # 根据名称进行过滤，例如搜索类名或方法名
+        if name and "需要搜索的函数或类名" in name:
+            res.append({"ea": hex(f.start_ea), "name": name})
+res
+```
+
+获取到函数的地址 (`ea`) 后，可以使用 `mcp_ida-pro-mcp_decompile` 工具对该地址进行反编译。然后根据反编译的伪代码来实现 `api/MementoMori.Ortega` 中的 C# 逻辑。
