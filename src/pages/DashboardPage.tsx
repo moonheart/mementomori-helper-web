@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2, ScrollText, Target, MessageCircle } from 'lucide-react';
+import { CheckCircle2, Circle, Zap, Trophy, Users, Swords, MapPin, Gift, Diamond, Coins, Heart, FlaskConical, Package, Loader2, ScrollText, Target, MessageCircle, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserSyncData } from '@/api/generated/userSyncData';
@@ -18,6 +18,7 @@ import { TransferSpotType } from '@/api/generated/transferSpotType';
 import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
 import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
+import { NoticeDialog } from '@/components/notice/NoticeDialog';
 
 export function DashboardPage() {
     const navigate = useNavigate();
@@ -26,6 +27,7 @@ export function DashboardPage() {
     const [mypageData, setMypageData] = useState<UserGetMypageResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [monthlyLoginBonusOpen, setMonthlyLoginBonusOpen] = useState(false);
+    const [noticeOpen, setNoticeOpen] = useState(false);
 
     useEffect(() => {
         async function fetchData() {
@@ -120,7 +122,7 @@ export function DashboardPage() {
     if (userData?.existVipDailyGift) {
         alerts.push({ type: 'success', message: '有可领取的 VIP 每日福利' });
     }
-    
+
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -128,8 +130,8 @@ export function DashboardPage() {
 
     // 幻影神殿活跃时段: 12:30-13:30, 19:30-20:30
     const isInPhantomTime = (currentTimeMinutes >= 12 * 60 + 30 && currentTimeMinutes <= 13 * 60 + 30) ||
-                             (currentTimeMinutes >= 19 * 60 + 30 && currentTimeMinutes <= 20 * 60 + 30);
-    
+        (currentTimeMinutes >= 19 * 60 + 30 && currentTimeMinutes <= 20 * 60 + 30);
+
     if (isInPhantomTime) {
         alerts.push({ type: 'info', message: '幻影神殿当前正处于活跃时段 (报酬增加)' });
     } else {
@@ -324,9 +326,20 @@ export function DashboardPage() {
             )}
 
             {/* Page Header */}
-            <div>
-                <h1 className="text-2xl font-bold">每日清单</h1>
-                <p className="text-muted-foreground">今天的任务进度 • 重置时间: 凌晨 4:00</p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-bold">每日清单</h1>
+                    <p className="text-muted-foreground">今天的任务进度 • 重置时间: 凌晨 4:00</p>
+                </div>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setNoticeOpen(true)}
+                    className="flex items-center gap-1.5"
+                >
+                    <Bell className="h-4 w-4" />
+                    活动 &amp; 公告
+                </Button>
             </div>
 
             {/* Alerts */}
@@ -335,8 +348,8 @@ export function DashboardPage() {
                     <div
                         key={idx}
                         className={`rounded-lg border-l-4 p-3 text-sm ${alert.type === 'warning' ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950' :
-                                alert.type === 'info' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' :
-                                    'border-green-500 bg-green-50 dark:bg-green-950'
+                            alert.type === 'info' ? 'border-blue-500 bg-blue-50 dark:bg-blue-950' :
+                                'border-green-500 bg-green-50 dark:bg-green-950'
                             }`}
                     >
                         {alert.message}
@@ -459,6 +472,12 @@ export function DashboardPage() {
             <MonthlyLoginBonusDialog
                 open={monthlyLoginBonusOpen}
                 onOpenChange={setMonthlyLoginBonusOpen}
+            />
+
+            {/* Notice Dialog */}
+            <NoticeDialog
+                open={noticeOpen}
+                onOpenChange={setNoticeOpen}
             />
         </div>
     );

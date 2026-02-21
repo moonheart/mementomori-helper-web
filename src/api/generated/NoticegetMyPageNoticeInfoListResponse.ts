@@ -8,4 +8,5 @@ import { NoticeInfo } from "./noticeInfo";
 
 export class NoticeGetMyPageNoticeInfoListResponse extends ApiResponseBase {
     noticeInfoList: NoticeInfo[];
+    eventInfoList: NoticeInfo[];
 }
