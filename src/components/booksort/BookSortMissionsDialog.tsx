@@ -6,11 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Gift, CheckCircle2, Target, Loader2 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
-import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, UserMissionDtoInfo, MissionInfo, MissionMB } from '@/api/generated';
+import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionInfo, MissionMB } from '@/api/generated';
 import { useMasterData } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
 
 import { MissionRow, UIStoreMission } from '@/components/mission/MissionRow';
+import { mapMissionsFromGroupInfo } from '@/components/mission/mission-utils';
 
 interface BookSortMissionsDialogProps {
     open: boolean;
@@ -29,70 +30,8 @@ export function BookSortMissionsDialog({ open, onOpenChange, missionData, onFetc
         return dict[MissionGroupType.BookSort] || dict[MissionGroupType[MissionGroupType.BookSort]];
     };
 
-    const mapMissions = (): UIStoreMission[] => {
-        const groupInfo = getGroupInfo();
-        if (!groupInfo || !groupInfo.userMissionDtoInfoDict) return [];
-
-        const missions: UIStoreMission[] = [];
-
-        Object.values(groupInfo.userMissionDtoInfoDict).forEach((dtoList) => {
-            if (!dtoList) return;
-            (dtoList as UserMissionDtoInfo[]).forEach((dto) => {
-                const history = dto.missionStatusHistory as Record<string | number, number[]>;
-                if (!history) return;
-
-                const getList = (type: MissionStatusType) => history[type] || history[MissionStatusType[type]] || [];
-
-                let status: MissionStatusType | null = null;
-                let missionId: number | null = null;
-
-                const progressList = getList(MissionStatusType.Progress);
-                const notReceivedList = getList(MissionStatusType.NotReceived);
-                const lockedList = getList(MissionStatusType.Locked);
-                const receivedList = getList(MissionStatusType.Received);
-
-                if (progressList.length > 0) {
-                    status = MissionStatusType.Progress;
-                    missionId = progressList[progressList.length - 1];
-                } else if (notReceivedList.length > 0) {
-                    status = MissionStatusType.NotReceived;
-                    missionId = notReceivedList[notReceivedList.length - 1];
-                } else if (lockedList.length > 0) {
-                    status = MissionStatusType.Locked;
-                    missionId = lockedList[lockedList.length - 1];
-                } else if (receivedList.length > 0) {
-                    status = MissionStatusType.Received;
-                    missionId = receivedList[receivedList.length - 1];
-                }
-
-                if (missionId !== null && status !== null) {
-                    missions.push({
-                        id: missionId,
-                        missionType: dto.missionType,
-                        status: status,
-                        progress: dto.progressCount
-                    });
-                }
-            });
-        });
-
-        // Sort by claimable (first) -> progress (second) -> locked -> received
-        return missions.sort((a, b) => {
-            const getPriority = (status: MissionStatusType) => {
-                if (status === MissionStatusType.NotReceived) return 0;
-                if (status === MissionStatusType.Progress) return 1;
-                if (status === MissionStatusType.Locked) return 2;
-                if (status === MissionStatusType.Received) return 3;
-                return 4;
-            };
-            const priorityA = getPriority(a.status);
-            const priorityB = getPriority(b.status);
-            if (priorityA !== priorityB) {
-                return priorityA - priorityB;
-            }
-            return a.id - b.id;
-        });
-    };
+    const mapMissions = (): UIStoreMission[] =>
+        mapMissionsFromGroupInfo(getGroupInfo(), true);
 
     const missions = useMemo(() => mapMissions(), [missionData]);
 

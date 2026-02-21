@@ -15,11 +15,12 @@ import {
 } from 'lucide-react';
 import { useAccountStore } from '@/store/accountStore';
 import { ortegaApi } from '@/api/ortega-client';
-import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionActivityRewardStatusType, UserMissionDtoInfo, MissionInfo, TotalActivityMedalRewardMB, MissionMB } from '@/api/generated';
+import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionActivityRewardStatusType, MissionInfo, TotalActivityMedalRewardMB, MissionMB } from '@/api/generated';
 import { useMasterData, useMasterTable } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
 
 import { MissionRow, UIStoreMission } from '@/components/mission/MissionRow';
+import { mapMissionsFromGroupInfo } from '@/components/mission/mission-utils';
 
 function MeritRewardCard({
     title = "功勋奖励",
@@ -221,59 +222,10 @@ export function MissionsPage() {
     };
 
     /**
-     * 参考 Blazor 的逻辑解析任务状态
+     * 参考 Blazor 的逻辑解析任务状态（委托给共享工具函数）
      */
-    const mapMissions = (groupType: MissionGroupType): UIStoreMission[] => {
-        const groupInfo = getGroupInfo(groupType);
-        if (!groupInfo || !groupInfo.userMissionDtoInfoDict) return [];
-
-        const missions: UIStoreMission[] = [];
-
-        Object.values(groupInfo.userMissionDtoInfoDict).forEach((dtoList) => {
-            if (!dtoList) return;
-            (dtoList as UserMissionDtoInfo[]).forEach((dto) => {
-                const history = dto.missionStatusHistory as Record<string | number, number[]>;
-                if (!history) return;
-
-                // 辅助获取 ID 列表 (兼容 Key)
-                const getList = (type: MissionStatusType) => history[type] || history[MissionStatusType[type]] || [];
-
-                let status: MissionStatusType | null = null;
-                let missionId: number | null = null;
-
-                const progressList = getList(MissionStatusType.Progress);
-                const notReceivedList = getList(MissionStatusType.NotReceived);
-                const lockedList = getList(MissionStatusType.Locked);
-                const receivedList = getList(MissionStatusType.Received);
-
-                // 优先级顺序：进行中 > 可领取 > 未解锁 > 已领取 (针对日常/周常)
-                if (progressList.length > 0) {
-                    status = MissionStatusType.Progress;
-                    missionId = progressList[progressList.length - 1];
-                } else if (notReceivedList.length > 0) {
-                    status = MissionStatusType.NotReceived;
-                    missionId = notReceivedList[notReceivedList.length - 1];
-                } else if (lockedList.length > 0) {
-                    status = MissionStatusType.Locked;
-                    missionId = lockedList[lockedList.length - 1];
-                } else if (receivedList.length > 0) {
-                    status = MissionStatusType.Received;
-                    missionId = receivedList[receivedList.length - 1];
-                }
-
-                if (missionId !== null && status !== null) {
-                    missions.push({
-                        id: missionId,
-                        missionType: dto.missionType,
-                        status: status,
-                        progress: dto.progressCount
-                    });
-                }
-            });
-        });
-
-        return missions;
-    };
+    const mapMissions = (groupType: MissionGroupType): UIStoreMission[] =>
+        mapMissionsFromGroupInfo(getGroupInfo(groupType), true);
 
     const dailyMissions = useMemo(() => mapMissions(MissionGroupType.Daily), [missionData]);
     const weeklyMissions = useMemo(() => mapMissions(MissionGroupType.Weekly), [missionData]);
