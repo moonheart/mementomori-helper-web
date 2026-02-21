@@ -17,6 +17,7 @@ import { LanguageType } from '@/api/generated/languageType';
 import { TransferSpotType } from '@/api/generated/transferSpotType';
 import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
+import AssetManager from '@/lib/asset-manager';
 import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
 import { NoticeDialog } from '@/components/notice/NoticeDialog';
 import { BookSortDialog } from '@/components/booksort/BookSortDialog';
@@ -292,7 +293,7 @@ export function DashboardPage() {
             </div>
 
             {/* Notification Badges */}
-            {(visibleBadges.length > 0 || mypageIconInfos.length > 0) && (
+            {visibleBadges.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                     {visibleBadges.map((badge) => {
                         const Icon = badge.icon;
@@ -307,23 +308,40 @@ export function DashboardPage() {
                             </Badge>
                         );
                     })}
+                </div>
+            )}
+
+            {/* MyPage Icons */}
+            {mypageIconInfos.length > 0 && (
+                <div className="flex flex-wrap gap-4">
                     {mypageIconInfos.map((info) => {
                         const clickable = isClickableIcon(info);
                         return (
-                            <Badge
+                            <div
                                 key={info.id}
-                                variant="secondary"
-                                className={`px-3 py-1.5 text-sm flex items-center gap-1.5 ${clickable ? 'cursor-pointer hover:bg-primary/20 transition-colors' : ''}`}
+                                className={`relative group flex flex-col items-center justify-center w-[64px] h-[64px] ${clickable ? 'cursor-pointer hover:scale-105 transition-transform' : ''}`}
                                 onClick={() => clickable && handleMypageIconClick(info)}
+                                title={t(info.iconNameKey)}
                             >
+                                <img
+                                    src={AssetManager.myPage.getUrl(info.imageId)}
+                                    alt={t(info.iconNameKey)}
+                                    className="w-full h-full object-contain drop-shadow-md"
+                                />
+                                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-max px-0.5 flex flex-col justify-end pointer-events-none z-10">
+                                    <span
+                                        className="text-[13px] font-bold text-center leading-[1] text-white"
+                                        style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 1px 1px rgba(0,0,0,0.8)' }}
+                                        dangerouslySetInnerHTML={{ __html: t(info.iconNameKey) }}
+                                    />
+                                </div>
                                 {info.isDisplayBadge && (
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                    <span className="absolute top-0 right-0 flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-background"></span>
                                     </span>
                                 )}
-                                {t(info.iconNameKey)}
-                            </Badge>
+                            </div>
                         );
                     })}
                 </div>

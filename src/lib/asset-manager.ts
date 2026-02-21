@@ -243,6 +243,33 @@ export class EnemyIconManager {
 }
 
 /**
+ * Atlas图片管理
+ */
+export class AtlasManager {
+    /**
+     * 获取Atlas图片URL
+     * @param name Atlas图片文件名 (不含扩展名，如 'icon_guild_raid_world_reward')
+     */
+    static getUrl(name: string): string {
+        return `${BASE_URL_LOCAL}/Atlas/${name}.png`;
+    }
+}
+
+/**
+ * MyPage图标管理
+ */
+export class MyPageIconManager {
+    /**
+     * 获取MyPage图标URL
+     * @param imageId 图片ID
+     */
+    static getUrl(imageId: number): string {
+        const paddedId = imageId.toString().padStart(6, '0');
+        return `${BASE_URL}/Icon/MyPage/MYPAGE_ICON_${paddedId}.png`;
+    }
+}
+
+/**
  * 统一的资源管理器入口
  */
 export const AssetManager = {
@@ -253,6 +280,8 @@ export const AssetManager = {
     relic: RelicIconManager,
     sphere: SphereIconManager,
     skill: SkillIconManager,
+    myPage: MyPageIconManager,
+    atlas: AtlasManager,
 } as const;
 
 export default AssetManager;

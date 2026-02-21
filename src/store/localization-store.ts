@@ -111,7 +111,6 @@ export const useLocalizationStore = create<LocalizationState>((set, get) => ({
             });
         }
 
-        // 处理 <br> 标签为换行符
-        return text.replace(/<br>/g, '\n');
+        return text;
     }
 }));

@@ -133,14 +133,6 @@ export function Header() {
                         <span className="tabular-nums">{serverTimeStr}</span>
                     </div>
 
-                    {/* Notifications */}
-                    <Button variant="ghost" size="icon" className="relative">
-                        <Bell className="h-5 w-5" />
-                        <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                            3
-                        </span>
-                    </Button>
-
                     {/* Account Menu */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
