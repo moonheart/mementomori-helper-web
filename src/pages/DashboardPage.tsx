@@ -333,12 +333,12 @@ export function DashboardPage() {
             {/* Quick Menu Icons */}
             {(() => {
                 const quickMenuItems = [
-                    { key: 'ranking', label: '排行榜', icon: 'icon_menu_ranking', action: () => setLeaderboardOpen(true), showBadge: false },
-                    { key: 'shop', label: '商城', icon: 'icon_menu_shop', action: () => navigate('/shop'), showBadge: false },
-                    { key: 'present', label: '礼物', icon: 'icon_menu_present', action: () => setPresentBoxOpen(true), showBadge: (userData?.presentCount ?? 0) > 0 },
-                    { key: 'news', label: '公告', icon: 'icon_menu_news', action: () => setNoticeOpen(true), showBadge: (mypageData?.unreadIndividualNotificationIdList?.length ?? 0) > 0 },
-                    { key: 'friend', label: '好友', icon: 'icon_menu_friend', action: () => navigate('/friends'), showBadge: mypageData?.existNewFriendPointTransfer ?? false },
-                    { key: 'mission', label: '任务', icon: 'icon_menu_mission', action: () => navigate('/missions'), showBadge: mypageData?.existNotReceivedMissionReward ?? false },
+                    { key: 'ranking', labelKey: '[MyPageMenuButtonRankingLabel]', icon: 'icon_menu_ranking', action: () => setLeaderboardOpen(true), showBadge: false },
+                    { key: 'shop', labelKey: '[MyPageMenuButtonTradingPostLabel]', icon: 'icon_menu_shop', action: () => navigate('/shop'), showBadge: false },
+                    { key: 'present', labelKey: '[MyPageMenuButtonPresentBoxLabel]', icon: 'icon_menu_present', action: () => setPresentBoxOpen(true), showBadge: (userData?.presentCount ?? 0) > 0 },
+                    { key: 'news', labelKey: '[MyPageMenuButtonNewsLabel]', icon: 'icon_menu_news', action: () => setNoticeOpen(true), showBadge: (mypageData?.unreadIndividualNotificationIdList?.length ?? 0) > 0 },
+                    { key: 'friend', labelKey: '[MyPageMenuButtonFriendLabel]', icon: 'icon_menu_friend', action: () => navigate('/friends'), showBadge: mypageData?.existNewFriendPointTransfer ?? false },
+                    { key: 'mission', labelKey: '[MyPageMenuButtonMissionLabel]', icon: 'icon_menu_mission', action: () => navigate('/missions'), showBadge: mypageData?.existNotReceivedMissionReward ?? false },
                 ];
                 return (
                     <div className="flex flex-wrap gap-4">
@@ -347,11 +347,11 @@ export function DashboardPage() {
                                 key={item.key}
                                 className="relative group flex flex-col items-center justify-center w-[64px] h-[64px] cursor-pointer hover:scale-105 transition-transform"
                                 onClick={item.action}
-                                title={item.label}
+                                title={t(item.labelKey)}
                             >
                                 <img
                                     src={AtlasManager.getUrl(item.icon)}
-                                    alt={item.label}
+                                    alt={t(item.labelKey)}
                                     className="w-full h-full object-contain drop-shadow-md"
                                 />
                                 <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-max px-0.5 flex flex-col justify-end pointer-events-none z-10">
@@ -359,7 +359,7 @@ export function DashboardPage() {
                                         className="text-[13px] font-bold text-center leading-[1] text-white"
                                         style={{ textShadow: '-1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 0px 1px 1px rgba(0,0,0,0.8)' }}
                                     >
-                                        {item.label}
+                                        {t(item.labelKey)}
                                     </span>
                                 </div>
                                 {item.showBadge && (

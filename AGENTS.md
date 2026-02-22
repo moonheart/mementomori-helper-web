@@ -403,6 +403,51 @@ const allCurrency = getUserItemCount(
 
 ---
 
+## 前端多语言与本地化 (Localization)
+
+### 概述
+
+前端项目统一使用游戏原生的文本资源键 (TextResource Key) 进行多语言本地化。UI 中的各种标签和提示信息应尽可能使用已存在于游戏文本资源中的 Key。
+
+### 导入和使用方式
+
+在 React 组件中，请使用自定义 Hook `@/hooks/useTranslation` 来获取翻译函数 `t`。
+
+```typescript
+import { useTranslation } from '@/hooks/useTranslation';
+
+export function SomeComponent({ chapter }: { chapter: any }) {
+    // 引入翻译函数 t
+    const { t } = useTranslation();
+
+    // 1. 直接翻译已知的 Game Text Key (通常由中括号包裹)
+    const title = t('[UI_Common_Confirm]');
+
+    // 2. 翻译来自 Master 数据表的 nameKey 字段
+    const chapterName = t(chapter.territoryNameKey);
+
+    // 3. 根据 ID 动态拼接 Key (如关卡名、角色名等)
+    const questName = t(`[QuestName${chapter.id}]`);
+
+    return (
+        <div>
+            <h1>{title}</h1>
+            <p>{chapterName}</p>
+            <p>{questName}</p>
+        </div>
+    );
+}
+```
+
+### 最佳实践与注意事项
+
+0. 游戏内置的Key都是 `[XXX]` 这样的格式, 用户如果提供就直接用
+1. **寻找 Key 的方法**：游戏相关的中文字符映射表保存在 `E:\Git_Github\MementoMoriData\Master\TextResourceZhCnMB.json`。**这是一个巨型文件，请勿直接全量读取它**。如果需要查找特定中文对应的 Key，请在文件中搜索这段中文以获得对应的 `StringKey`。
+2. **返回值判断**：如果传入的 Key 找不到对应的翻译，`t(key)` 将原样返回传入的 `key` (`t('[NotExist]') === '[NotExist]'`)。可以利用这一特性做容错或回退逻辑（比如 `translated !== key ? translated : '默认文本'`）。
+3. **避免自定义 Key**：请避免在前端定义不属于游戏原生字典的新词条键。应当尽可能复用系统现有的文本资源键。
+
+---
+
 ## IDA 反编译与函数搜索指南
 
 在进行后端代理层 (`api/MementoMori.Ortega`) 的开发和补全时，我们经常需要借助 IDA 反编译游戏原始代码。

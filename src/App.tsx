@@ -64,7 +64,6 @@ function App() {
           <Route path="/guild" element={<GuildPage />} />
           <Route path="/cave" element={<TimeSpaceCavePage />} />
           <Route path="/temple" element={<PhantomTemplePage />} />
-          <Route path="/leaderboard" element={<LeaderboardPage />} />
           <Route path="/friends" element={<FriendsPage />} />
           <Route path="/battle-logs" element={<BattleLogPage />} />
           <Route path="/automation" element={<AutomationPage />} />

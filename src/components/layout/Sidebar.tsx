@@ -5,7 +5,7 @@ import { useLocalizationStore } from '@/store/localization-store';
 
 const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = [
     {
-        titleKey: '每日清单',
+        titleKey: '[CommonFooterHomeButtonLabel]',
         href: '/dashboard',
         icon: Home
     },
@@ -15,27 +15,27 @@ const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = 
         icon: Bot
     },
     {
-        titleKey: '角色',
+        titleKey: '[CommonFooterCharacterButtonLabel]',
         href: '/characters',
         icon: Users
     },
     {
-        titleKey: '装备',
+        titleKey: '[ItemBoxTabEquipment]',
         href: '/equipment',
         icon: Package
     },
     {
-        titleKey: '道具',
+        titleKey: '[CommonFooterItemBoxButtonLabel]',
         href: '/items',
         icon: Boxes
     },
     {
-        titleKey: '战斗',
+        titleKey: '[CommonFooterAutoBattleButtonLabel]',
         href: '/battle',
         icon: Swords
     },
     {
-        titleKey: '塔攻略',
+        titleKey: '[CommonHeaderTowerBattleLabel]',
         href: '/tower',
         icon: MapPin
     },
@@ -45,57 +45,52 @@ const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = 
         icon: Sparkles
     },
     {
-        titleKey: '时空洞窟',
+        titleKey: '[CommonHeaderDungeonBattleLabel]',
         href: '/cave',
         icon: Mountain
     },
     {
-        titleKey: '幻影神殿',
+        titleKey: '[CommonHeaderLocalRaidLabel]',
         href: '/temple',
         icon: Ghost
     },
     {
-        titleKey: '竞技场',
+        titleKey: '[LockEquipmentDeckTypeLeague]',
         href: '/pvp',
         icon: Shield
     },
     {
-        titleKey: '公会',
+        titleKey: '[CommonFooterGuildButtonLabel]',
         href: '/guild',
         icon: Users
     },
     {
-        titleKey: '任务',
+        titleKey: '[MyPageMenuButtonMissionLabel]',
         href: '/missions',
         icon: ListTodo
     },
     {
-        titleKey: '抽卡',
+        titleKey: '[CommonFooterGachaButtonLabel]',
         href: '/gacha',
         icon: Sparkles
     },
     {
-        titleKey: '商店',
+        titleKey: '[CommonHeaderExchangeLabel]',
         href: '/shop',
         icon: ShoppingCart
     },
     {
-        titleKey: '好友',
+        titleKey: '[CommonHeaderFriendLabel]',
         href: '/friends',
         icon: Users
     },
     {
-        titleKey: '战斗记录',
+        titleKey: '[LocalRaidBattleHistoryDialogTitle]',
         href: '/battle-logs',
         icon: ScrollText
     },
     {
-        titleKey: '排行榜',
-        href: '/leaderboard',
-        icon: TrendingUp
-    },
-    {
-        titleKey: '设置',
+        titleKey: '[MenuSettingButton]',
         href: '/settings',
         icon: Settings
     }

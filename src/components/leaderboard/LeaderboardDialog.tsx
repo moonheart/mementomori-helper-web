@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -131,10 +132,10 @@ function PlayerCard({ player, rank, currentUserId, onClick, highlightColor, valu
     return (
         <div
             className={`flex flex-col p-4 rounded-lg border cursor-pointer transition-all hover:bg-accent ${player.playerId === currentUserId
-                    ? 'border-2 border-primary bg-primary/5'
-                    : rank <= 3
-                        ? `bg-gradient-to-r ${bgGradientFrom} ${bgGradientTo} dark:${darkBgGradientFrom} dark:${darkBgGradientTo}`
-                        : ''
+                ? 'border-2 border-primary bg-primary/5'
+                : rank <= 3
+                    ? `bg-gradient-to-r ${bgGradientFrom} ${bgGradientTo} dark:${darkBgGradientFrom} dark:${darkBgGradientTo}`
+                    : ''
                 }`}
             onClick={() => onClick(player)}
         >
@@ -200,6 +201,7 @@ interface GuildCardProps {
 }
 
 function GuildCard({ guild, rank, onClick, highlightColor, valueLabel, value }: GuildCardProps) {
+    const { t } = useTranslation();
     const getGradientClass = () => {
         if (guild.isApplying) return 'border-2 border-primary bg-primary/5';
         if (rank > 3) return '';
@@ -250,7 +252,7 @@ function GuildCard({ guild, rank, onClick, highlightColor, valueLabel, value }: 
                 )}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base truncate">{guild.guildInfo?.guildOverView?.guildName || '未知公会'}</span>
+                        <span className="font-semibold text-base truncate">{guild.guildInfo?.guildOverView?.guildName || '未知公会'}  {t('[CommonCurrentMaxFormatWithBrackets]', [guild.guildInfo.guildMemberCount, 50])}</span>
                         {guild.isApplying && <Badge className="shrink-0">我的公会</Badge>}
                     </div>
                 </div>
@@ -276,13 +278,13 @@ interface LeaderboardDialogProps {
 }
 
 export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps) {
+    const { t } = useTranslation();
     const [playerData, setPlayerData] = useState<PlayerRankingData | null>(null);
     const [guildData, setGuildData] = useState<GuildRankingData | null>(null);
     const [towerData, setTowerData] = useState<TowerRankingData | null>(null);
     const [userData, setUserData] = useState<UserSyncData | null>(null);
     const [loading, setLoading] = useState(false);
     const [fetched, setFetched] = useState(false);
-    const [rewardDialogOpen, setRewardDialogOpen] = useState(false);
     const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
     const [guildDialogOpen, setGuildDialogOpen] = useState(false);
     const [selectedPlayer, setSelectedPlayer] = useState<PlayerInfo | null>(null);
@@ -370,50 +372,32 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-2xl">
                             <Trophy className="h-6 w-6 text-yellow-500" />
-                            排行榜
+                            {t('[RankingMenuTitle]')}
                         </DialogTitle>
-                        <DialogDescription>查看各类排名，与顶尖玩家竞争</DialogDescription>
                     </DialogHeader>
 
                     {loading ? (
                         <div className="flex h-48 items-center justify-center">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <span className="ml-2">加载排行榜数据中...</span>
+                            <span className="ml-2">{t('[Loading]')}</span>
                         </div>
                     ) : (
                         <div className="space-y-4">
-                            {/* 操作栏 */}
-                            <div className="flex justify-end">
-                                <Button variant="outline" size="sm" onClick={() => setRewardDialogOpen(true)}>
-                                    <Award className="h-4 w-4 mr-2" />
-                                    查看奖励
-                                </Button>
-                            </div>
-
-                            {/* 说明 */}
-                            <Alert>
-                                <BookOpen className="h-4 w-4" />
-                                <AlertDescription>
-                                    <strong>排行榜说明：</strong>
-                                    排行榜每天更新，不同类型排行榜有不同的评分标准。排名靠前的玩家可获得丰厚奖励和专属称号。
-                                </AlertDescription>
-                            </Alert>
-
                             {/* 主 Tabs */}
                             <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-4">
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="player">玩家排行榜</TabsTrigger>
-                                    <TabsTrigger value="guild">公会排行榜</TabsTrigger>
+                                    <TabsTrigger value="player">{t('[RankingMenuButtonPlayer]')}</TabsTrigger>
+                                    <TabsTrigger value="guild">{t('[RankingMenuButtonGuild]')}</TabsTrigger>
                                 </TabsList>
 
                                 {/* 玩家排行榜 */}
                                 <TabsContent value="player" className="space-y-4">
                                     <Tabs value={playerSubTab} onValueChange={setPlayerSubTab} className="space-y-4">
                                         <TabsList className="grid w-full grid-cols-5">
-                                            <TabsTrigger value="player-power">战力</TabsTrigger>
-                                            <TabsTrigger value="player-level">等级</TabsTrigger>
-                                            <TabsTrigger value="player-quest">主线</TabsTrigger>
-                                            <TabsTrigger value="player-tower-infinite">无穷塔</TabsTrigger>
+                                            <TabsTrigger value="player-power">{t('[PlayerRankingTypeBattlePower]')}</TabsTrigger>
+                                            <TabsTrigger value="player-level">{t('[PlayerRankingTypePlayerRank]')}</TabsTrigger>
+                                            <TabsTrigger value="player-quest">{t('[PlayerRankingTypeStage]')}</TabsTrigger>
+                                            <TabsTrigger value="player-tower-infinite">{t('[PlayerRankingTypeTowerBattle]')}</TabsTrigger>
                                             <TabsTrigger value="player-tower">元素塔</TabsTrigger>
                                         </TabsList>
 
@@ -421,14 +405,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <Trophy className="h-6 w-6 text-yellow-500" />战力排行榜
+                                                        <Trophy className="h-6 w-6 text-yellow-500" />{t('[PlayerRankingTypeBattlePower]')}
                                                     </CardTitle>
                                                     <CardDescription>根据玩家总战力排名 • 你的排名: #{playerData?.battlePowerRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {playerData?.battlePowerList.map((player, index) => (
-                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="yellow" valueLabel="战力" value={player.battlePower.toLocaleString()} />
+                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="yellow" valueLabel={t('[CommonBattlePowerLabel]')} value={player.battlePower.toLocaleString()} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -439,14 +423,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <TrendingUp className="h-6 w-6 text-green-500" />玩家等级排行榜
+                                                        <TrendingUp className="h-6 w-6 text-green-500" />{t('[PlayerRankingTypePlayerRank]')}
                                                     </CardTitle>
                                                     <CardDescription>根据玩家账号等级排名 • 你的排名: #{playerData?.levelRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {playerData?.levelList.map((player, index) => (
-                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="green" valueLabel="等级" value={`Lv.${player.playerLevel}`} />
+                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="green" valueLabel={t('[CommonPlayerRankLabel]')} value={`Lv.${player.playerLevel}`} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -457,14 +441,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <Zap className="h-6 w-6 text-blue-500" />主线冒险排行榜
+                                                        <Zap className="h-6 w-6 text-blue-500" />{t('[PlayerRankingTypeStage]')}
                                                     </CardTitle>
                                                     <CardDescription>根据主线关卡推进进度排名 • 你的排名: #{playerData?.questRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {playerData?.questList.map((player, index) => (
-                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="blue" valueLabel="关卡" value={player.latestQuestId} />
+                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="blue" valueLabel={t('[RankingStageLabel]')} value={player.latestQuestId} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -475,14 +459,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <MapPin className="h-6 w-6 text-indigo-500" />无穷之塔排行榜
+                                                        <MapPin className="h-6 w-6 text-indigo-500" />{t('[PlayerRankingTypeTowerBattle]')}
                                                     </CardTitle>
                                                     <CardDescription>根据无穷之塔通关层数排名 • 你的排名: #{playerData?.towerBattleRanking || '-'} (今日: #{playerData?.towerBattleRankingToday || '-'})</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {playerData?.towerBattleList.map((player, index) => (
-                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="purple" valueLabel="层数" value={`第${player.latestTowerBattleQuestId}层`} />
+                                                            <PlayerCard key={player.playerId || index} player={player} rank={index + 1} currentUserId={currentUserId} onClick={handlePlayerClick} highlightColor="purple" valueLabel={t('[RankingTowerBattleLabel]')} value={player.latestTowerBattleQuestId} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -493,17 +477,17 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <MapPin className="h-6 w-6 text-purple-500" />元素塔排行榜
+                                                        <MapPin className="h-6 w-6 text-purple-500" />{t('[RankingGroupTypeElementTower]')}
                                                     </CardTitle>
                                                     <CardDescription>根据元素塔通关层数和进度排名</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <Tabs defaultValue={String(TowerType.Blue)} className="space-y-4">
                                                         <TabsList className="grid w-full grid-cols-4">
-                                                            <TabsTrigger value={String(TowerType.Blue)}>忧蓝之塔</TabsTrigger>
-                                                            <TabsTrigger value={String(TowerType.Red)}>业红之塔</TabsTrigger>
-                                                            <TabsTrigger value={String(TowerType.Green)}>苍翠之塔</TabsTrigger>
-                                                            <TabsTrigger value={String(TowerType.Yellow)}>流金之塔</TabsTrigger>
+                                                            <TabsTrigger value={String(TowerType.Blue)}>{t('[TowerTypeBlue]')}</TabsTrigger>
+                                                            <TabsTrigger value={String(TowerType.Red)}>{t('[TowerTypeRed]')}</TabsTrigger>
+                                                            <TabsTrigger value={String(TowerType.Green)}>{t('[TowerTypeGreen]')}</TabsTrigger>
+                                                            <TabsTrigger value={String(TowerType.Yellow)}>{t('[TowerTypeYellow]')}</TabsTrigger>
                                                         </TabsList>
                                                         {[TowerType.Blue, TowerType.Red, TowerType.Green, TowerType.Yellow].map(towerType => (
                                                             <TabsContent key={towerType} value={String(towerType)}>
@@ -519,8 +503,8 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                                             currentUserId={currentUserId}
                                                                             onClick={handlePlayerClick}
                                                                             highlightColor="purple"
-                                                                            valueLabel="层数"
-                                                                            value={`第${towerData?.maxClearQuestIdMap[getTowerTypeKey(towerType)]?.[player.playerId ?? 0] ?? '-'}层`}
+                                                                            valueLabel={t('[RankingTowerBattleLabel]')}
+                                                                            value={towerData?.maxClearQuestIdMap[getTowerTypeKey(towerType)]?.[player.playerId ?? 0] ?? '-'}
                                                                         />
                                                                     ))}
                                                                 </div>
@@ -537,23 +521,23 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                 <TabsContent value="guild" className="space-y-4">
                                     <Tabs value={guildSubTab} onValueChange={setGuildSubTab} className="space-y-4">
                                         <TabsList className="grid w-full grid-cols-3">
-                                            <TabsTrigger value="guild-level">等级</TabsTrigger>
-                                            <TabsTrigger value="guild-stock">积分</TabsTrigger>
-                                            <TabsTrigger value="guild-battle-power">总战力</TabsTrigger>
+                                            <TabsTrigger value="guild-level">{t('[GuildRankingTypeLevel]')}</TabsTrigger>
+                                            <TabsTrigger value="guild-stock">{t('[GuildRankingTypeStock]')}</TabsTrigger>
+                                            <TabsTrigger value="guild-battle-power">{t('[GuildRankingTypeBattlePower]')}</TabsTrigger>
                                         </TabsList>
 
                                         <TabsContent value="guild-level">
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <TrendingUp className="h-6 w-6 text-green-500" />公会等级排行榜
+                                                        <TrendingUp className="h-6 w-6 text-green-500" />{t('[GuildRankingTypeLevel]')}
                                                     </CardTitle>
                                                     <CardDescription>根据公会等级排名 • 你的公会排名: #{guildData?.levelRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {guildData?.levelList.map((guild, index) => (
-                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="green" valueLabel="总战力" value={guild.battlePower.toLocaleString()} />
+                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="green" valueLabel={t('[RankingGuildLevelLabel]')} value={guild.guildInfo.guildLevel.toLocaleString()} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -564,14 +548,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <Gem className="h-6 w-6 text-blue-500" />公会积分排行榜
+                                                        <Gem className="h-6 w-6 text-blue-500" />{t('[GuildRankingTypeStock]')}
                                                     </CardTitle>
                                                     <CardDescription>根据公会今日获得积分排名 • 你的公会排名: #{guildData?.stockRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {guildData?.stockList.map((guild, index) => (
-                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="blue" valueLabel="今日积分" value={guild.guildStock.toLocaleString()} />
+                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="blue" valueLabel={t('[RankingGuildStockLabel]')} value={guild.guildStock.toLocaleString()} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -582,14 +566,14 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <Card>
                                                 <CardHeader>
                                                     <CardTitle className="flex items-center gap-2">
-                                                        <Shield className="h-6 w-6 text-orange-500" />公会总战力排行榜
+                                                        <Shield className="h-6 w-6 text-orange-500" />{t('[GuildRankingTypeBattlePower]')}
                                                     </CardTitle>
                                                     <CardDescription>根据公会成员总战力排名 • 你的公会排名: #{guildData?.battlePowerRanking || '-'}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                         {guildData?.battlePowerList.map((guild, index) => (
-                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="orange" valueLabel="总战力" value={guild.battlePower.toLocaleString()} />
+                                                            <GuildCard key={guild.rank} guild={guild} rank={index + 1} onClick={handleGuildClick} highlightColor="orange" valueLabel={t('[RankingGuildBattlePowerLabel]')} value={guild.battlePower.toLocaleString()} />
                                                         ))}
                                                     </div>
                                                 </CardContent>
@@ -608,7 +592,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />玩家详情
+                            <User className="h-5 w-5" />{t('[PlayerProfileDialogTitle]')}
                         </DialogTitle>
                     </DialogHeader>
                     {selectedPlayer && (
@@ -622,28 +606,28 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                             </div>
                             <div className="grid gap-3">
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">战力</span>
+                                    <span className="text-sm text-muted-foreground">{t('[CommonTotalBattlePowerLabel]')}</span>
                                     <span className="font-semibold">{selectedPlayer.battlePower.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">主线关卡</span>
+                                    <span className="text-sm text-muted-foreground">{t('[RankingStageLabel]')}</span>
                                     <span className="font-semibold">{selectedPlayer.latestQuestId}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">最高塔层</span>
-                                    <span className="font-semibold">第{selectedPlayer.latestTowerBattleQuestId}层</span>
+                                    <span className="text-sm text-muted-foreground">{t('[TowerQuestTitle]')}</span>
+                                    <span className="font-semibold">{selectedPlayer.latestTowerBattleQuestId}</span>
                                 </div>
                                 {selectedPlayer.guildName && (
                                     <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
                                         <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <Users className="h-4 w-4" />所属公会
+                                            <Users className="h-4 w-4" />{t('[MyPagePlayerInformationBelongingGuildLabel]')}
                                         </span>
                                         <span className="font-semibold">{selectedPlayer.guildName}</span>
                                     </div>
                                 )}
                                 {selectedPlayer.comment && (
                                     <div className="p-3 bg-muted rounded-lg">
-                                        <div className="text-sm text-muted-foreground mb-1">个性签名</div>
+                                        <div className="text-sm text-muted-foreground mb-1">{t('[ProfileSelfIntroductionLabel]')}</div>
                                         <div className="text-sm">{selectedPlayer.comment}</div>
                                     </div>
                                 )}
@@ -658,7 +642,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                 <DialogContent>
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            <Shield className="h-5 w-5" />公会详情
+                            <Shield className="h-5 w-5" />{t('[GuildDetailDialogTitle]')}
                         </DialogTitle>
                     </DialogHeader>
                     {selectedGuild && (
@@ -672,75 +656,36 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                             </div>
                             <div className="grid gap-3">
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">总战力</span>
+                                    <span className="text-sm text-muted-foreground">{t('[CommonTotalBattlePowerLabel]')}</span>
                                     <span className="font-semibold">{selectedGuild.battlePower.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">今日积分</span>
+                                    <span className="text-sm text-muted-foreground">{t('[GuildStockRankingLabel]')}</span>
                                     <span className="font-semibold">{selectedGuild.guildStock.toLocaleString()}</span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">成员数量</span>
+                                    <span className="text-sm text-muted-foreground">{t('[MemberNumber]')}</span>
                                     <span className="font-semibold">{selectedGuild.guildInfo?.guildMemberCount}/50</span>
                                 </div>
                                 <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">公会荣誉</span>
+                                    <span className="text-sm text-muted-foreground">{t('[GuildFameLabel]')}</span>
                                     <span className="font-semibold">{selectedGuild.guildInfo?.guildFame.toLocaleString()}</span>
                                 </div>
                                 {selectedGuild.guildTowerMaxFloor > 0 && (
                                     <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                        <span className="text-sm text-muted-foreground">公会塔最高层</span>
-                                        <span className="font-semibold">{selectedGuild.guildTowerMaxFloor}层</span>
+                                        <span className="text-sm text-muted-foreground">{t('[GuildTowerMaxFloorLabel]')}</span>
+                                        <span className="font-semibold">{selectedGuild.guildTowerMaxFloor}</span>
                                     </div>
                                 )}
                                 {selectedGuild.guildInfo?.guildOverView?.guildDescription && (
                                     <div className="p-3 bg-muted rounded-lg">
-                                        <div className="text-sm text-muted-foreground mb-1">公会宣言</div>
+                                        <div className="text-sm text-muted-foreground mb-1">{t('[GuildDescriptionLabel]')}</div>
                                         <div className="text-sm">{selectedGuild.guildInfo.guildOverView.guildDescription}</div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     )}
-                </DialogContent>
-            </Dialog>
-
-            {/* 奖励弹窗 */}
-            <Dialog open={rewardDialogOpen} onOpenChange={setRewardDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Award className="h-5 w-5" />排行榜奖励
-                        </DialogTitle>
-                        <DialogDescription>排名越靠前，奖励越丰厚</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <Alert>
-                            <BookOpen className="h-4 w-4" />
-                            <AlertDescription>排行榜奖励每日结算，请在结算后及时领取</AlertDescription>
-                        </Alert>
-                        <div className="grid gap-2">
-                            {[
-                                { rank: '第1名', reward: '钻石 x5000 + 稀有称号' },
-                                { rank: '第2-3名', reward: '钻石 x3000 + 稀有称号' },
-                                { rank: '第4-10名', reward: '钻石 x2000' },
-                                { rank: '第11-50名', reward: '钻石 x1000' },
-                                { rank: '第51-100名', reward: '钻石 x500' },
-                                { rank: '第101-500名', reward: '钻石 x200' }
-                            ].map((item, index) => (
-                                <div
-                                    key={index}
-                                    className={`flex justify-between items-center p-3 rounded-lg ${index < 3
-                                            ? 'bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950'
-                                            : 'bg-muted'
-                                        }`}
-                                >
-                                    <span className="font-semibold">{item.rank}</span>
-                                    <span className="text-sm">{item.reward}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
                 </DialogContent>
             </Dialog>
         </>
