@@ -33,4 +33,6 @@ export class AutoJobModel {
     autoDeployGuildDefenseJobCron: string = "0 20 19 ? * *";
     autoChangeGachaRelicJobCron: string = "0 40 4 ? * MON *";
     autoDrawGachaRelicJobCron: string = "0 0 6 ? * SUN *";
+    disabledDailyActions: string[] = [];
+    disabledHourlyActions: string[] = [];
 }
