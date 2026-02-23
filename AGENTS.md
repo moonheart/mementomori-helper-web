@@ -442,7 +442,7 @@ export function SomeComponent({ chapter }: { chapter: any }) {
 ### 最佳实践与注意事项
 
 0. 游戏内置的Key都是 `[XXX]` 这样的格式, 用户如果提供就直接用
-1. **寻找 Key 的方法**：游戏相关的中文字符映射表保存在 `E:\Git_Github\MementoMoriData\Master\TextResourceZhCnMB.json`。**这是一个巨型文件，请勿直接全量读取它**。如果需要查找特定中文对应的 Key，请在文件中搜索这段中文以获得对应的 `StringKey`。
+1. **寻找 Key 的方法**：游戏相关的中文字符映射表保存在 `E:\Git_Github\MementoMoriData\Master\TextResourceZhCnMB.json`。**这是一个巨型文件，请勿直接全量读取它**。请务必使用配置好的 **Find Translation Key Skill**！你可以直接运行 `python .agent/skills/find_translation_key/scripts/search.py "<关键词>"` 去搜索对应的 `StringKey` 或中文文本。该脚本支持同时搜索多个词（例如 `"领取" "累计"`），并默认截断前 50 个结果，也可使用 `--all` 标志显示全部匹配项。
 2. **返回值判断**：如果传入的 Key 找不到对应的翻译，`t(key)` 将原样返回传入的 `key` (`t('[NotExist]') === '[NotExist]'`)。可以利用这一特性做容错或回退逻辑（比如 `translated !== key ? translated : '默认文本'`）。
 3. **避免自定义 Key**：请避免在前端定义不属于游戏原生字典的新词条键。应当尽可能复用系统现有的文本资源键。
 
