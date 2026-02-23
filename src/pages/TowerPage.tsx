@@ -29,48 +29,59 @@ import { TowerType } from '@/api/generated/towerType';
 import { UserTowerBattleDtoInfo } from '@/api/generated/userTowerBattleDtoInfo';
 import { UserItem } from '@/api/generated/userItem';
 import { useItemName } from '@/hooks/useItemName';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // 塔类型配置
-const TOWER_CONFIGS = {
+type TowerConfig = {
+    name?: string;
+    nameKey?: string;
+    icon: any;
+    color: string;
+    element?: string;
+    elementKey?: string;
+};
+
+const TOWER_CONFIGS: Record<number, TowerConfig> = {
     [TowerType.Infinite]: {
-        name: '无穷之塔',
+        nameKey: '[TowerTypeInfinite]',
         icon: Building2,
         color: 'gray',
         element: '全属性'
     },
     [TowerType.Blue]: {
-        name: '忧蓝之塔',
+        nameKey: '[TowerTypeBlue]',
         icon: Droplet,
         color: 'blue',
-        element: '忧蓝'
+        elementKey: '[ElementTypeBlue]'
     },
     [TowerType.Red]: {
-        name: '业红之塔',
+        nameKey: '[TowerTypeRed]',
         icon: Flame,
         color: 'red',
-        element: '业红'
+        elementKey: '[ElementTypeRed]'
     },
     [TowerType.Green]: {
-        name: '苍翠之塔',
+        nameKey: '[TowerTypeGreen]',
         icon: Wind,
         color: 'green',
-        element: '苍翠'
+        elementKey: '[ElementTypeGreen]'
     },
     [TowerType.Yellow]: {
-        name: '流金之塔',
+        nameKey: '[TowerTypeYellow]',
         icon: Mountain,
         color: 'yellow',
-        element: '流金'
+        elementKey: '[ElementTypeYellow]'
     },
     [TowerType.None]: {
         name: '未知',
         icon: Building2,
         color: 'gray',
-        element: '无'
+        elementKey: '[CommonNoneLabel]'
     }
 };
 
 export function TowerPage() {
+    const { t } = useTranslation();
     const { getItemName } = useItemName();
     const [userTowerProgress, setUserTowerProgress] = useState<UserTowerBattleDtoInfo[]>([]);
     const [loading, setLoading] = useState(true);
@@ -132,9 +143,9 @@ export function TowerPage() {
                 targetTowerType: type,
                 towerBattleQuestId: questId
             });
-            
+
             const isWin = res.battleResult?.simulationResult?.battleEndInfo?.winGroupType === BattleFieldCharacterGroupType.Attacker;
-            
+
             if (isWin) {
                 toast({ title: '挑战成功', description: `已通关第 ${questId} 层` });
             } else {
@@ -197,7 +208,7 @@ export function TowerPage() {
     // 根据 Blazor 代码，maxTowerBattleId 实际上就是楼层数 (Floor)
     const currentInfiniteFloor = infiniteProgress?.maxTowerBattleId || 0;
     const infiniteQuests = allTowerQuests[TowerType.Infinite] || [];
-    
+
     // 快速挑战次数
     const remainingQuickCount = Math.max(0, 3 - (infiniteProgress?.todayBattleCount || 0));
 
@@ -214,7 +225,7 @@ export function TowerPage() {
         <div className="space-y-6">
             {/* 页面标题 */}
             <div>
-                <h1 className="text-3xl font-bold">无穷之塔</h1>
+                <h1 className="text-3xl font-bold">{t('[TowerTypeInfinite]')}</h1>
                 <p className="text-muted-foreground mt-1">
                     挑战塔层，获取丰厚奖励
                 </p>
@@ -232,7 +243,7 @@ export function TowerPage() {
 
             <Tabs defaultValue="infinite" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="infinite">无穷之塔</TabsTrigger>
+                    <TabsTrigger value="infinite">{t('[TowerTypeInfinite]')}</TabsTrigger>
                     <TabsTrigger value="elemental">属性塔</TabsTrigger>
                 </TabsList>
 
@@ -340,7 +351,7 @@ export function TowerPage() {
                                 {displayInfiniteQuests.map((quest) => {
                                     const isCleared = quest.floor <= currentInfiniteFloor;
                                     const isCurrent = quest.floor === currentInfiniteFloor + 1;
-                                    
+
                                     return (
                                         <div
                                             key={quest.id}
@@ -390,7 +401,7 @@ export function TowerPage() {
                                                 {!isCleared && !isCurrent && (
                                                     <Button size="sm" disabled variant="ghost">
                                                         <Lock className="mr-1 h-4 w-4" />
-                                                        未解锁
+                                                        {t('[MissionLockedButton]')}
                                                     </Button>
                                                 )}
                                             </div>
@@ -410,7 +421,7 @@ export function TowerPage() {
                             const progress = elementalProgress.find(p => p.towerType === type);
                             const isAvailable = availableTowers.includes(type);
                             const Icon = config.icon;
-                            
+
                             const towerQuestsOfType = allTowerQuests[type] || [];
                             const currentFloor = progress?.maxTowerBattleId || 0;
                             const maxFloor = towerQuestsOfType.length > 0 ? towerQuestsOfType[towerQuestsOfType.length - 1].floor : 0;
@@ -432,7 +443,7 @@ export function TowerPage() {
                                                     <Icon className="h-6 w-6 text-white" />
                                                 </div>
                                                 <div>
-                                                    <CardTitle>{config.name}</CardTitle>
+                                                    <CardTitle>{config.nameKey ? t(config.nameKey) : config.name}</CardTitle>
                                                     <CardDescription>
                                                         {isAvailable ? '今日开放' : '今日未开放'}
                                                     </CardDescription>
@@ -476,7 +487,7 @@ export function TowerPage() {
                                         <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg border">
                                             <div className="text-xs text-muted-foreground mb-1">规则</div>
                                             <div className="text-sm">
-                                                • 仅可使用<span className="font-semibold text-primary">{config.element}</span>属性角色
+                                                • 仅可使用<span className="font-semibold text-primary">{config.elementKey ? t(config.elementKey) : config.element}</span>属性角色
                                             </div>
                                             <div className="text-sm">
                                                 • 每天最多通关10层
@@ -521,22 +532,22 @@ export function TowerPage() {
                                 <div className="p-3 border rounded-lg text-center">
                                     <div className="text-muted-foreground mb-1">周一 / 周五 / 周日</div>
                                     <Droplet className="h-6 w-6 mx-auto mb-1 text-blue-500" />
-                                    <div className="font-semibold">忧蓝之塔</div>
+                                    <div className="font-semibold">{t('[TowerTypeBlue]')}</div>
                                 </div>
                                 <div className="p-3 border rounded-lg text-center">
                                     <div className="text-muted-foreground mb-1">周二 / 周五 / 周日</div>
                                     <Flame className="h-6 w-6 mx-auto mb-1 text-red-500" />
-                                    <div className="font-semibold">业红之塔</div>
+                                    <div className="font-semibold">{t('[TowerTypeRed]')}</div>
                                 </div>
                                 <div className="p-3 border rounded-lg text-center">
                                     <div className="text-muted-foreground mb-1">周三 / 周六 / 周日</div>
                                     <Wind className="h-6 w-6 mx-auto mb-1 text-green-500" />
-                                    <div className="font-semibold">苍翠之塔</div>
+                                    <div className="font-semibold">{t('[TowerTypeGreen]')}</div>
                                 </div>
                                 <div className="p-3 border rounded-lg text-center">
                                     <div className="text-muted-foreground mb-1">周四 / 周六 / 周日</div>
                                     <Mountain className="h-6 w-6 mx-auto mb-1 text-yellow-500" />
-                                    <div className="font-semibold">流金之塔</div>
+                                    <div className="font-semibold">{t('[TowerTypeYellow]')}</div>
                                 </div>
                             </div>
                         </CardContent>

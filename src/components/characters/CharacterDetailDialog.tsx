@@ -33,22 +33,22 @@ interface Props {
 }
 
 function getElementData(element: ElementType) {
-    const data: Record<number, { name: string; color: string; icon: string }> = {
-        [ElementType.Red]: { name: '业红', color: 'text-red-500', icon: '🔥' },
-        [ElementType.Blue]: { name: '忧蓝', color: 'text-blue-500', icon: '💧' },
-        [ElementType.Green]: { name: '苍翠', color: 'text-green-500', icon: '🍃' },
-        [ElementType.Yellow]: { name: '流金', color: 'text-yellow-600', icon: '⚡' },
-        [ElementType.Light]: { name: '天光', color: 'text-yellow-400', icon: '☀️' },
-        [ElementType.Dark]: { name: '幽冥', color: 'text-purple-500', icon: '🌙' },
+    const data: Record<number, { nameKey: string; color: string; icon: string }> = {
+        [ElementType.Red]: { nameKey: '[ElementTypeRed]', color: 'text-red-500', icon: '🔥' },
+        [ElementType.Blue]: { nameKey: '[ElementTypeBlue]', color: 'text-blue-500', icon: '💧' },
+        [ElementType.Green]: { nameKey: '[ElementTypeGreen]', color: 'text-green-500', icon: '🍃' },
+        [ElementType.Yellow]: { nameKey: '[ElementTypeYellow]', color: 'text-yellow-600', icon: '⚡' },
+        [ElementType.Light]: { nameKey: '[ElementTypeLight]', color: 'text-yellow-400', icon: '☀️' },
+        [ElementType.Dark]: { nameKey: '[ElementTypeDark]', color: 'text-purple-500', icon: '🌙' },
     };
-    return data[element] || { name: '无', color: 'text-gray-500', icon: '❓' };
+    return data[element] || { nameKey: '无', color: 'text-gray-500', icon: '❓' };
 }
 
 function getJobData(job: JobFlags) {
-    if (job & JobFlags.Warrior) return { name: '战士', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
-    if (job & JobFlags.Sniper) return { name: '射手', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
-    if (job & JobFlags.Sorcerer) return { name: '法师', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
-    return { name: '未知', color: 'text-gray-600', icon: Swords, desc: '' };
+    if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
+    if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
+    if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
+    return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, desc: '' };
 }
 
 function getRarityData(rarity: CharacterRarityFlags) {
@@ -74,33 +74,33 @@ const PERCENT_KEYS: Array<keyof BattleParameter> = [
     'debuffResist', 'damageReflect', 'hpDrain',
 ];
 
-const BASE_PARAMETER_CONFIG: Array<{ type: BaseParameterType; label: string; key: 'muscle' | 'energy' | 'intelligence' | 'health' }> = [
-    { type: BaseParameterType.Muscle, label: '力量', key: 'muscle' },
-    { type: BaseParameterType.Energy, label: '能量', key: 'energy' },
-    { type: BaseParameterType.Intelligence, label: '智力', key: 'intelligence' },
-    { type: BaseParameterType.Health, label: '健康', key: 'health' },
+const BASE_PARAMETER_CONFIG: Array<{ type: BaseParameterType; labelKey: string; key: 'muscle' | 'energy' | 'intelligence' | 'health' }> = [
+    { type: BaseParameterType.Muscle, labelKey: '[BaseParameterTypeMuscle]', key: 'muscle' },
+    { type: BaseParameterType.Energy, labelKey: '[BaseParameterTypeEnergy]', key: 'energy' },
+    { type: BaseParameterType.Intelligence, labelKey: '[BaseParameterTypeIntelligence]', key: 'intelligence' },
+    { type: BaseParameterType.Health, labelKey: '[BaseParameterTypeHealth]', key: 'health' },
 ];
 
-const BATTLE_PARAMETER_CONFIG: Array<{ type: BattleParameterType; label: string; key: keyof BattleParameter }> = [
-    { type: BattleParameterType.Hp, label: '生命', key: 'hP' },
-    { type: BattleParameterType.AttackPower, label: '攻击力', key: 'attackPower' },
-    { type: BattleParameterType.PhysicalDamageRelax, label: '物理伤害缓和', key: 'physicalDamageRelax' },
-    { type: BattleParameterType.MagicDamageRelax, label: '魔法伤害缓和', key: 'magicDamageRelax' },
-    { type: BattleParameterType.Hit, label: '命中', key: 'hit' },
-    { type: BattleParameterType.Avoidance, label: '闪避', key: 'avoidance' },
-    { type: BattleParameterType.Critical, label: '暴击', key: 'critical' },
-    { type: BattleParameterType.CriticalResist, label: '暴击抗性', key: 'criticalResist' },
-    { type: BattleParameterType.CriticalDamageEnhance, label: '暴击伤害强化', key: 'criticalDamageEnhance' },
-    { type: BattleParameterType.PhysicalCriticalDamageRelax, label: '物理暴击伤害缓和', key: 'physicalCriticalDamageRelax' },
-    { type: BattleParameterType.MagicCriticalDamageRelax, label: '魔法暴击伤害缓和', key: 'magicCriticalDamageRelax' },
-    { type: BattleParameterType.DefensePenetration, label: '防御穿透', key: 'defensePenetration' },
-    { type: BattleParameterType.Defense, label: '防御力', key: 'defense' },
-    { type: BattleParameterType.DamageEnhance, label: '伤害强化', key: 'damageEnhance' },
-    { type: BattleParameterType.DebuffHit, label: '弱化命中', key: 'debuffHit' },
-    { type: BattleParameterType.DebuffResist, label: '弱化抗性', key: 'debuffResist' },
-    { type: BattleParameterType.DamageReflect, label: '伤害反射', key: 'damageReflect' },
-    { type: BattleParameterType.HpDrain, label: '吸血', key: 'hpDrain' },
-    { type: BattleParameterType.Speed, label: '速度', key: 'speed' },
+const BATTLE_PARAMETER_CONFIG: Array<{ type: BattleParameterType; labelKey: string; key: keyof BattleParameter }> = [
+    { type: BattleParameterType.Hp, labelKey: '[BattleParameterTypeHp]', key: 'hP' },
+    { type: BattleParameterType.AttackPower, labelKey: '[BattleParameterTypeAttackPower]', key: 'attackPower' },
+    { type: BattleParameterType.PhysicalDamageRelax, labelKey: '[BattleParameterTypePhysicalDamageRelax]', key: 'physicalDamageRelax' },
+    { type: BattleParameterType.MagicDamageRelax, labelKey: '[BattleParameterTypeMagicDamageRelax]', key: 'magicDamageRelax' },
+    { type: BattleParameterType.Hit, labelKey: '[BattleParameterTypeHit]', key: 'hit' },
+    { type: BattleParameterType.Avoidance, labelKey: '[BattleParameterTypeAvoidance]', key: 'avoidance' },
+    { type: BattleParameterType.Critical, labelKey: '[BattleParameterTypeCritical]', key: 'critical' },
+    { type: BattleParameterType.CriticalResist, labelKey: '[BattleParameterTypeCriticalResist]', key: 'criticalResist' },
+    { type: BattleParameterType.CriticalDamageEnhance, labelKey: '[BattleParameterTypeCriticalDamageEnhance]', key: 'criticalDamageEnhance' },
+    { type: BattleParameterType.PhysicalCriticalDamageRelax, labelKey: '[BattleParameterTypePhysicalCriticalDamageRelax]', key: 'physicalCriticalDamageRelax' },
+    { type: BattleParameterType.MagicCriticalDamageRelax, labelKey: '[BattleParameterTypeMagicCriticalDamageRelax]', key: 'magicCriticalDamageRelax' },
+    { type: BattleParameterType.DefensePenetration, labelKey: '[BattleParameterTypeDefensePenetration]', key: 'defensePenetration' },
+    { type: BattleParameterType.Defense, labelKey: '[BattleParameterTypeDefense]', key: 'defense' },
+    { type: BattleParameterType.DamageEnhance, labelKey: '[BattleParameterTypeDamageEnhance]', key: 'damageEnhance' },
+    { type: BattleParameterType.DebuffHit, labelKey: '[BattleParameterTypeDebuffHit]', key: 'debuffHit' },
+    { type: BattleParameterType.DebuffResist, labelKey: '[BattleParameterTypeDebuffResist]', key: 'debuffResist' },
+    { type: BattleParameterType.DamageReflect, labelKey: '[BattleParameterTypeDamageReflect]', key: 'damageReflect' },
+    { type: BattleParameterType.HpDrain, labelKey: '[BattleParameterTypeHpDrain]', key: 'hpDrain' },
+    { type: BattleParameterType.Speed, labelKey: '[BattleParameterTypeSpeed]', key: 'speed' },
 ];
 
 function formatBattleStatValue(key: keyof BattleParameter, value: number): string {
@@ -199,8 +199,8 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
         if (!base) return [];
         return BASE_PARAMETER_CONFIG
             .sort((a, b) => a.type - b.type)
-            .map(config => ({ label: config.label, value: base[config.key] ?? 0 }));
-    }, [character?.master?.baseParameterCoefficient, detailInfo?.baseParameter]);
+            .map(config => ({ label: t(config.labelKey), value: base[config.key] ?? 0 }));
+    }, [character?.master?.baseParameterCoefficient, detailInfo?.baseParameter, t]);
 
     const battleStats = useMemo(() => {
         if (!detailInfo?.battleParameter) return [] as Array<{ key: keyof BattleParameter; label: string; value: number }>;
@@ -209,11 +209,11 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
             .sort((a, b) => a.type - b.type)
             .map(config => {
                 if (config.key === 'hP') {
-                    return { key: config.key, label: config.label, value: getHpValue(bp) };
+                    return { key: config.key, label: t(config.labelKey), value: getHpValue(bp) };
                 }
-                return { key: config.key, label: config.label, value: bp[config.key] ?? 0 };
+                return { key: config.key, label: t(config.labelKey), value: bp[config.key] ?? 0 };
             });
-    }, [detailInfo]);
+    }, [detailInfo, t]);
 
     const potentialDetailGroups = useMemo(() => {
         const base = detailInfo?.baseParameter ?? character?.master?.baseParameterCoefficient;
@@ -222,84 +222,84 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
 
         return [
             {
-                title: '力量',
+                title: t('[BaseParameterTypeMuscle]'),
                 value: base.muscle ?? 0,
-                left: { label: '物理防御力', value: getBattleValue(bp, 'physicalDamageRelax') },
-                right: { label: '攻击力', value: getBattleValue(bp, 'attackPower') },
-                rightSub: { label: '命中', value: getBattleValue(bp, 'hit') },
+                left: { label: t('[BattleParameterTypePhysicalDamageRelax]'), value: getBattleValue(bp, 'physicalDamageRelax') },
+                right: { label: t('[BattleParameterTypeAttackPower]'), value: getBattleValue(bp, 'attackPower') },
+                rightSub: { label: t('[BattleParameterTypeHit]'), value: getBattleValue(bp, 'hit') },
             },
             {
-                title: '战技',
+                title: t('[BaseParameterTypeEnergy]'),
                 value: base.energy ?? 0,
-                left: { label: '闪避', value: getBattleValue(bp, 'avoidance') },
-                right: { label: '暴击', value: getBattleValue(bp, 'critical') },
+                left: { label: t('[BattleParameterTypeAvoidance]'), value: getBattleValue(bp, 'avoidance') },
+                right: { label: t('[BattleParameterTypeCritical]'), value: getBattleValue(bp, 'critical') },
             },
             {
-                title: '魔力',
+                title: t('[BaseParameterTypeIntelligence]'),
                 value: base.intelligence ?? 0,
-                left: { label: '魔法防御力', value: getBattleValue(bp, 'magicDamageRelax') },
-                right: { label: '弱化效果命中', value: getBattleValue(bp, 'debuffHit') },
+                left: { label: t('[BattleParameterTypeMagicDamageRelax]'), value: getBattleValue(bp, 'magicDamageRelax') },
+                right: { label: t('[BattleParameterTypeDebuffHit]'), value: getBattleValue(bp, 'debuffHit') },
             },
             {
-                title: '耐力',
+                title: t('[BaseParameterTypeHealth]'),
                 value: base.health ?? 0,
-                left: { label: '生命', value: getBattleValue(bp, 'hP') },
-                right: { label: '暴击抗性', value: getBattleValue(bp, 'criticalResist') },
+                left: { label: t('[BattleParameterTypeHp]'), value: getBattleValue(bp, 'hP') },
+                right: { label: t('[BattleParameterTypeCriticalResist]'), value: getBattleValue(bp, 'criticalResist') },
             },
         ];
-    }, [character?.master?.baseParameterCoefficient, detailInfo?.baseParameter, detailInfo?.battleParameter]);
+    }, [character?.master?.baseParameterCoefficient, detailInfo?.baseParameter, detailInfo?.battleParameter, t]);
 
     const abilityBasicRows = useMemo(() => {
         const bp = detailInfo?.battleParameter;
         if (!bp) return [];
         return [
-            { label: '生命', key: 'hP' as const },
-            { label: '攻击力', key: 'attackPower' as const },
-            { label: '防御力', key: 'defense' as const },
-            { label: '防御穿透', key: 'defensePenetration' as const },
-            { label: '速度', key: 'speed' as const },
+            { label: t('[BattleParameterTypeHp]'), key: 'hP' as const },
+            { label: t('[BattleParameterTypeAttackPower]'), key: 'attackPower' as const },
+            { label: t('[BattleParameterTypeDefense]'), key: 'defense' as const },
+            { label: t('[BattleParameterTypeDefensePenetration]'), key: 'defensePenetration' as const },
+            { label: t('[BattleParameterTypeSpeed]'), key: 'speed' as const },
         ].map(row => ({ label: row.label, value: getBattleValue(bp, row.key), key: row.key }));
-    }, [detailInfo?.battleParameter]);
+    }, [detailInfo?.battleParameter, t]);
 
     const abilityAdvancedLeftGroups = useMemo(() => {
         const bp = detailInfo?.battleParameter;
         if (!bp) return [];
         return [
             [
-                { label: '物魔防御穿透', value: getBattleValue(bp, 'defensePenetration') },
+                { label: t('[BattleParameterTypeDamageEnhance]'), value: getBattleValue(bp, 'damageEnhance'), key: 'damageEnhance' as const },
             ],
             [
-                { label: '命中', value: getBattleValue(bp, 'hit') },
-                { label: '暴击', value: getBattleValue(bp, 'critical') },
-                { label: '暴击伤害强化', value: getBattleValue(bp, 'criticalDamageEnhance'), key: 'criticalDamageEnhance' as const },
+                { label: t('[BattleParameterTypeHit]'), value: getBattleValue(bp, 'hit') },
+                { label: t('[BattleParameterTypeCritical]'), value: getBattleValue(bp, 'critical') },
+                { label: t('[BattleParameterTypeCriticalDamageEnhance]'), value: getBattleValue(bp, 'criticalDamageEnhance'), key: 'criticalDamageEnhance' as const },
             ],
             [
-                { label: '弱化效果命中', value: getBattleValue(bp, 'debuffHit') },
-                { label: '伤害反弹', value: getBattleValue(bp, 'damageReflect'), key: 'damageReflect' as const },
+                { label: t('[BattleParameterTypeDebuffHit]'), value: getBattleValue(bp, 'debuffHit') },
+                { label: t('[BattleParameterTypeDamageReflect]'), value: getBattleValue(bp, 'damageReflect'), key: 'damageReflect' as const },
             ],
         ];
-    }, [detailInfo?.battleParameter]);
+    }, [detailInfo?.battleParameter, t]);
 
     const abilityAdvancedRightGroups = useMemo(() => {
         const bp = detailInfo?.battleParameter;
         if (!bp) return [];
         return [
             [
-                { label: '物理防御力', value: getBattleValue(bp, 'physicalDamageRelax') },
-                { label: '魔法防御力', value: getBattleValue(bp, 'magicDamageRelax') },
+                { label: t('[BattleParameterTypePhysicalDamageRelax]'), value: getBattleValue(bp, 'physicalDamageRelax') },
+                { label: t('[BattleParameterTypeMagicDamageRelax]'), value: getBattleValue(bp, 'magicDamageRelax') },
             ],
             [
-                { label: '闪避', value: getBattleValue(bp, 'avoidance') },
-                { label: '暴击抗性', value: getBattleValue(bp, 'criticalResist') },
-                { label: '物理暴击伤害降低', value: getBattleValue(bp, 'physicalCriticalDamageRelax'), key: 'physicalCriticalDamageRelax' as const },
-                { label: '魔法暴击伤害降低', value: getBattleValue(bp, 'magicCriticalDamageRelax'), key: 'magicCriticalDamageRelax' as const },
+                { label: t('[BattleParameterTypeAvoidance]'), value: getBattleValue(bp, 'avoidance') },
+                { label: t('[BattleParameterTypeCriticalResist]'), value: getBattleValue(bp, 'criticalResist') },
+                { label: t('[BattleParameterTypePhysicalCriticalDamageRelax]'), value: getBattleValue(bp, 'physicalCriticalDamageRelax'), key: 'physicalCriticalDamageRelax' as const },
+                { label: t('[BattleParameterTypeMagicCriticalDamageRelax]'), value: getBattleValue(bp, 'magicCriticalDamageRelax'), key: 'magicCriticalDamageRelax' as const },
             ],
             [
-                { label: '弱化效果抗性', value: getBattleValue(bp, 'debuffResist') },
-                { label: '吸血', value: getBattleValue(bp, 'hpDrain'), key: 'hpDrain' as const },
+                { label: t('[BattleParameterTypeDebuffResist]'), value: getBattleValue(bp, 'debuffResist') },
+                { label: t('[BattleParameterTypeHpDrain]'), value: getBattleValue(bp, 'hpDrain'), key: 'hpDrain' as const },
             ],
         ];
-    }, [detailInfo?.battleParameter]);
+    }, [detailInfo?.battleParameter, t]);
 
     const equippedItems = useMemo(() => {
         if (!detailInfo?.userEquipmentDtoInfos) return [];
@@ -395,8 +395,8 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                     <DialogDescription asChild>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-3 flex-wrap text-sm">
-                                                <div className="flex items-center gap-1.5"><JobIcon className={`h-4 w-4 ${jobData.color}`} /><span className={jobData.color}>{jobData.name}</span></div>
-                                                <span>•</span><span className={elementData.color}>{elementData.icon} {elementData.name}</span><span>•</span>
+                                                <div className="flex items-center gap-1.5"><JobIcon className={`h-4 w-4 ${jobData.color}`} /><span className={jobData.color}>{jobData.nameKey.startsWith('[') ? t(jobData.nameKey) : jobData.nameKey}</span></div>
+                                                <span>•</span><span className={elementData.color}>{elementData.icon} {elementData.nameKey.startsWith('[') ? t(elementData.nameKey) : elementData.nameKey}</span><span>•</span>
                                                 <Badge variant="outline">Lv.{character.level}/{rarityData.max}</Badge>
                                                 {detailInfo?.battlePower ? <><span>•</span><span className="font-medium">战力 {detailInfo.battlePower.toLocaleString()}</span></> : null}
                                             </div>
@@ -510,10 +510,10 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                                                 </div>
                                                             </div>
                                                             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                                                                <div className="rounded bg-muted px-2 py-1">肌肉 +{(item.additionalParameterMuscle ?? 0).toLocaleString()}</div>
-                                                                <div className="rounded bg-muted px-2 py-1">能量 +{(item.additionalParameterEnergy ?? 0).toLocaleString()}</div>
-                                                                <div className="rounded bg-muted px-2 py-1">智力 +{(item.additionalParameterIntelligence ?? 0).toLocaleString()}</div>
-                                                                <div className="rounded bg-muted px-2 py-1">健康 +{(item.additionalParameterHealth ?? 0).toLocaleString()}</div>
+                                                                <div className="rounded bg-muted px-2 py-1">{t('[BaseParameterTypeMuscle]')} +{(item.additionalParameterMuscle ?? 0).toLocaleString()}</div>
+                                                                <div className="rounded bg-muted px-2 py-1">{t('[BaseParameterTypeEnergy]')} +{(item.additionalParameterEnergy ?? 0).toLocaleString()}</div>
+                                                                <div className="rounded bg-muted px-2 py-1">{t('[BaseParameterTypeIntelligence]')} +{(item.additionalParameterIntelligence ?? 0).toLocaleString()}</div>
+                                                                <div className="rounded bg-muted px-2 py-1">{t('[BaseParameterTypeHealth]')} +{(item.additionalParameterHealth ?? 0).toLocaleString()}</div>
                                                             </div>
                                                         </div>
                                                     );
@@ -662,7 +662,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                 {detailInfo?.battleParameter ? (
                                     <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
                                         <div className="rounded border px-3 py-2 text-center">
-                                            <div className="text-xs text-muted-foreground">战斗力</div>
+                                            <div className="text-xs text-muted-foreground">{t('[CommonBattlePowerLabel]')}</div>
                                             <div className="text-2xl font-semibold">{(detailInfo.battlePower ?? 0).toLocaleString()}</div>
                                         </div>
 

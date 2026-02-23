@@ -75,7 +75,7 @@ export function CharactersPage() {
     const filteredCharacters = useMemo(() => {
         const filtered = characters.filter(char => {
             const matchesSearch = char.name.toLowerCase().includes(search.toLowerCase());
-            
+
             let matchesRarity = true;
             if (selectedRarity !== 'all') {
                 const rarityValue = parseInt(selectedRarity);
@@ -121,22 +121,22 @@ export function CharactersPage() {
     }, [characters]);
 
     const getElementData = (element: ElementType) => {
-        const data: Record<number, { name: string, color: string, bg: string, icon: string }> = {
-            [ElementType.Red]: { name: '业红', color: 'text-red-500', bg: 'bg-red-500/10', icon: '🔥' },
-            [ElementType.Blue]: { name: '忧蓝', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '💧' },
-            [ElementType.Green]: { name: '苍翠', color: 'text-green-500', bg: 'bg-green-500/10', icon: '🍃' },
-            [ElementType.Yellow]: { name: '流金', color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: '⚡' },
-            [ElementType.Light]: { name: '天光', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: '☀️' },
-            [ElementType.Dark]: { name: '幽冥', color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🌙' }
+        const data: Record<number, { nameKey: string, color: string, bg: string, icon: string }> = {
+            [ElementType.Red]: { nameKey: '[ElementTypeRed]', color: 'text-red-500', bg: 'bg-red-500/10', icon: '🔥' },
+            [ElementType.Blue]: { nameKey: '[ElementTypeBlue]', color: 'text-blue-500', bg: 'bg-blue-500/10', icon: '💧' },
+            [ElementType.Green]: { nameKey: '[ElementTypeGreen]', color: 'text-green-500', bg: 'bg-green-500/10', icon: '🍃' },
+            [ElementType.Yellow]: { nameKey: '[ElementTypeYellow]', color: 'text-yellow-600', bg: 'bg-yellow-500/10', icon: '⚡' },
+            [ElementType.Light]: { nameKey: '[ElementTypeLight]', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: '☀️' },
+            [ElementType.Dark]: { nameKey: '[ElementTypeDark]', color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🌙' }
         };
-        return data[element] || { name: '无', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
+        return data[element] || { nameKey: '无', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
     };
 
     const getJobData = (job: JobFlags) => {
-        if (job & JobFlags.Warrior) return { name: '战士', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
-        if (job & JobFlags.Sniper) return { name: '射手', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
-        if (job & JobFlags.Sorcerer) return { name: '法师', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
-        return { name: '未知', color: 'text-gray-600', icon: Swords, desc: '' };
+        if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
+        if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
+        if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
+        return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, desc: '' };
     };
 
     const getRarityData = (rarity: CharacterRarityFlags) => {
@@ -273,12 +273,12 @@ export function CharactersPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部属性</SelectItem>
-                                <SelectItem value={ElementType.Red.toString()}>🔥 业红</SelectItem>
-                                <SelectItem value={ElementType.Blue.toString()}>💧 忧蓝</SelectItem>
-                                <SelectItem value={ElementType.Green.toString()}>🍃 苍翠</SelectItem>
-                                <SelectItem value={ElementType.Yellow.toString()}>⚡ 流金</SelectItem>
-                                <SelectItem value={ElementType.Light.toString()}>☀️ 天光</SelectItem>
-                                <SelectItem value={ElementType.Dark.toString()}>🌙 幽冥</SelectItem>
+                                <SelectItem value={ElementType.Red.toString()}>🔥 {t('[ElementTypeRed]')}</SelectItem>
+                                <SelectItem value={ElementType.Blue.toString()}>💧 {t('[ElementTypeBlue]')}</SelectItem>
+                                <SelectItem value={ElementType.Green.toString()}>🍃 {t('[ElementTypeGreen]')}</SelectItem>
+                                <SelectItem value={ElementType.Yellow.toString()}>⚡ {t('[ElementTypeYellow]')}</SelectItem>
+                                <SelectItem value={ElementType.Light.toString()}>☀️ {t('[ElementTypeLight]')}</SelectItem>
+                                <SelectItem value={ElementType.Dark.toString()}>🌙 {t('[ElementTypeDark]')}</SelectItem>
                             </SelectContent>
                         </Select>
 
@@ -288,9 +288,9 @@ export function CharactersPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">全部类型</SelectItem>
-                                <SelectItem value={JobFlags.Warrior.toString()}>⚔️ 战士</SelectItem>
-                                <SelectItem value={JobFlags.Sniper.toString()}>🏹 射手</SelectItem>
-                                <SelectItem value={JobFlags.Sorcerer.toString()}>📖 法师</SelectItem>
+                                <SelectItem value={JobFlags.Warrior.toString()}>⚔️ {t('[JobFlagsWarrior]')}</SelectItem>
+                                <SelectItem value={JobFlags.Sniper.toString()}>🏹 {t('[JobFlagsSniper]')}</SelectItem>
+                                <SelectItem value={JobFlags.Sorcerer.toString()}>📖 {t('[JobFlagsSorcerer]')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -305,83 +305,83 @@ export function CharactersPage() {
 
             {/* Characters Grid */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-                    {filteredCharacters.map((character) => {
-                        const elementData = getElementData(character.element);
-                        const jobData = getJobData(character.job);
-                        const rarityData = getRarityData(character.rarityFlags);
-                        const JobIcon = jobData.icon;
+                {filteredCharacters.map((character) => {
+                    const elementData = getElementData(character.element);
+                    const jobData = getJobData(character.job);
+                    const rarityData = getRarityData(character.rarityFlags);
+                    const JobIcon = jobData.icon;
 
-                        const handleCardClick = () => {
-                            setSelectedCharacter(character);
-                            setDetailDialogOpen(true);
-                        };
+                    const handleCardClick = () => {
+                        setSelectedCharacter(character);
+                        setDetailDialogOpen(true);
+                    };
 
-                        return (
-                            <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-sm" onClick={handleCardClick}>
-                                <div className="flex">
-                                    {/* 左侧方形头像区域 */}
-                                    <div className="relative w-24 h-24 shrink-0">
-                                        {/* 角色图片 */}
-                                        <img
-                                            src={AssetManager.character.getCardUrl(character.characterId)}
-                                            alt={character.name}
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                            onError={(e) => {
-                                                (e.target as HTMLImageElement).style.display = 'none';
-                                            }}
-                                        />
-                                        {/* 稀有度色条 */}
-                                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${rarityData.color}`} />
-                                        {/* 锁定图标 */}
-                                        {character.isLocked && (
-                                            <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
-                                                <Shield className="h-2.5 w-2.5 text-white" />
-                                            </div>
-                                        )}
+                    return (
+                        <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-sm" onClick={handleCardClick}>
+                            <div className="flex">
+                                {/* 左侧方形头像区域 */}
+                                <div className="relative w-24 h-24 shrink-0">
+                                    {/* 角色图片 */}
+                                    <img
+                                        src={AssetManager.character.getCardUrl(character.characterId)}
+                                        alt={character.name}
+                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none';
+                                        }}
+                                    />
+                                    {/* 稀有度色条 */}
+                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${rarityData.color}`} />
+                                    {/* 锁定图标 */}
+                                    {character.isLocked && (
+                                        <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">
+                                            <Shield className="h-2.5 w-2.5 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* 右侧信息区域 */}
+                                <div className="flex-1 p-2.5 min-w-0 flex flex-col justify-between">
+                                    {/* 顶部：名称和稀有度 */}
+                                    <div>
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                            <h3 className="font-bold text-sm text-gray-900 truncate">{character.name}</h3>
+                                            <span className={`text-[10px] px-1 py-0 rounded ${rarityData.color} text-white`}>
+                                                {rarityData.name}
+                                            </span>
+                                        </div>
+                                        {/* 职业和属性 */}
+                                        <div className="flex items-center gap-2 text-xs text-gray-500">
+                                            <span className="flex items-center gap-0.5">
+                                                <JobIcon className={`h-3 w-3 ${jobData.color}`} />
+                                                {jobData.nameKey.startsWith('[') ? t(jobData.nameKey) : jobData.nameKey}
+                                            </span>
+                                            <span className="flex items-center gap-0.5">
+                                                <span>{elementData.icon}</span>
+                                                {elementData.nameKey.startsWith('[') ? t(elementData.nameKey) : elementData.nameKey}
+                                            </span>
+                                        </div>
                                     </div>
 
-                                    {/* 右侧信息区域 */}
-                                    <div className="flex-1 p-2.5 min-w-0 flex flex-col justify-between">
-                                        {/* 顶部：名称和稀有度 */}
-                                        <div>
-                                            <div className="flex items-center gap-1.5 mb-1">
-                                                <h3 className="font-bold text-sm text-gray-900 truncate">{character.name}</h3>
-                                                <span className={`text-[10px] px-1 py-0 rounded ${rarityData.color} text-white`}>
-                                                    {rarityData.name}
-                                                </span>
-                                            </div>
-                                            {/* 职业和属性 */}
-                                            <div className="flex items-center gap-2 text-xs text-gray-500">
-                                                <span className="flex items-center gap-0.5">
-                                                    <JobIcon className={`h-3 w-3 ${jobData.color}`} />
-                                                    {jobData.name}
-                                                </span>
-                                                <span className="flex items-center gap-0.5">
-                                                    <span>{elementData.icon}</span>
-                                                    {elementData.name}
-                                                </span>
-                                            </div>
+                                    {/* 底部：等级和进度 */}
+                                    <div className="space-y-1">
+                                        <div className="flex items-center justify-between text-[10px]">
+                                            <span className="text-gray-400">等级</span>
+                                            <span className="font-medium text-gray-700">Lv.{character.level}/{rarityData.max}</span>
                                         </div>
-
-                                        {/* 底部：等级和进度 */}
-                                        <div className="space-y-1">
-                                            <div className="flex items-center justify-between text-[10px]">
-                                                <span className="text-gray-400">等级</span>
-                                                <span className="font-medium text-gray-700">Lv.{character.level}/{rarityData.max}</span>
-                                            </div>
-                                            <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                                                <div
-                                                    className={`h-full ${rarityData.color}`}
-                                                    style={{ width: `${Math.min((character.level / rarityData.max) * 100, 100)}%` }}
-                                                />
-                                            </div>
+                                        <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full ${rarityData.color}`}
+                                                style={{ width: `${Math.min((character.level / rarityData.max) * 100, 100)}%` }}
+                                            />
                                         </div>
                                     </div>
                                 </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                            </div>
+                        </Card>
+                    );
+                })}
+            </div>
 
             {filteredCharacters.length === 0 && !loading && (
                 <Card>

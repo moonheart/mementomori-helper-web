@@ -138,7 +138,7 @@ export function Header() {
                     {/* Server Time */}
                     <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title="服务器时间">
                         <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <span className="tabular-nums">{serverTimeStr}</span>
+                        <span className="tabular-nums">{t('[MyPagePlayerInformationServerTimeLabel]')} {serverTimeStr}</span>
                     </div>
 
                     {/* Language Switcher */}

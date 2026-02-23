@@ -74,7 +74,7 @@ export function BattlePage() {
 
     // 计算逻辑
     const maxQuestId = userData?.userBattleBossDtoInfo?.bossClearMaxQuestId || 0;
-    
+
     // 当前正在挂机的关卡（通常是已通关的最大关卡）
     const currentQuest = useMemo(() => {
         if (!questTable) return null;
@@ -90,16 +90,16 @@ export function BattlePage() {
     // 自动战斗时长计算
     const autoBattleStats = useMemo(() => {
         if (!userData || !currentQuest) return { timeStr: '0分钟', minutes: 0, gold: 0, exp: 0, progress: 0 };
-        
+
         const lastRewardTime = (userData.receivedAutoBattleRewardLastTime || 0) * 1000;
         const diffMs = Math.max(0, currentTime - lastRewardTime);
         const diffMinutes = Math.floor(diffMs / 60000);
-        
-        const hours = Math.floor(diffMinutes / 60) ;
+
+        const hours = Math.floor(diffMinutes / 60);
         const mins = diffMinutes % 60;
-        
+
         return {
-            timeStr: hours > 0 ? `${hours}小时${mins}分` : `${mins}分`,
+            timeStr: hours > 0 ? `${hours}小时${mins}${t('[CommonMinuteLabel]')}` : `${mins}${t('[CommonMinuteLabel]')}`,
             minutes: diffMinutes,
             gold: diffMinutes * (currentQuest.goldPerMinute || 0),
             exp: diffMinutes * (currentQuest.minPlayerExp || 0),
@@ -110,7 +110,7 @@ export function BattlePage() {
     // 领民数据汇总
     const citizenStats = useMemo(() => {
         if (!questTable || !chapterTable) return { total: 0, byRegion: [] };
-        
+
         const stats = chapterTable.map(chapter => {
             const chapterQuests = questTable.filter(q => q.chapterId === chapter.id && q.id <= maxQuestId);
             const population = chapterQuests.reduce((sum, q) => sum + (q.population || 0), 0);
@@ -149,11 +149,11 @@ export function BattlePage() {
             const questName = translatedQuestName !== questNameKey ? translatedQuestName : '';
 
             return {
-            id: q.id,
-            name: questName ? `${q.chapterId}-${stageNumber} ${questName}` : `${chapterName} ${q.chapterId}-${stageNumber}`,
-            cleared: q.id <= maxQuestId,
-            stars: q.id <= maxQuestId ? 3 : 0,
-            power: q.baseBattlePower
+                id: q.id,
+                name: questName ? `${q.chapterId}-${stageNumber} ${questName}` : `${chapterName} ${q.chapterId}-${stageNumber}`,
+                cleared: q.id <= maxQuestId,
+                stars: q.id <= maxQuestId ? 3 : 0,
+                power: q.baseBattlePower
             };
         });
     }, [questTable, chapterTable, maxQuestId, t]);
@@ -191,7 +191,7 @@ export function BattlePage() {
         try {
             const res = await ortegaApi.battle.boss({ questId: nextQuest.id });
             const isWin = res.battleResult?.simulationResult?.battleEndInfo?.winGroupType === BattleFieldCharacterGroupType.Attacker;
-            
+
             if (isWin) {
                 toast({ title: '挑战成功', description: `已通关 ${nextQuest.id}` });
                 loadUserData();
@@ -216,7 +216,7 @@ export function BattlePage() {
         <div className="space-y-6">
             {/* 页面标题 */}
             <div>
-                <h1 className="text-3xl font-bold">主线冒险</h1>
+                <h1 className="text-3xl font-bold">{t('[CommonHeaderAutoBattleLabel]')}</h1>
                 <p className="text-muted-foreground mt-1">
                     挑战关卡、挑战首领、进行自动战斗获取资源
                 </p>
@@ -242,7 +242,7 @@ export function BattlePage() {
                                 <Clock className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div className="flex-1">
-                                <CardTitle>自动战斗</CardTitle>
+                                <CardTitle>{t('[AutoBattleQuestButtonAutoBattle]')}</CardTitle>
                                 <CardDescription>持续获取资源</CardDescription>
                             </div>
                         </div>
@@ -260,14 +260,14 @@ export function BattlePage() {
                             <div className="flex items-center gap-2 p-2 bg-muted rounded">
                                 <Coins className="h-4 w-4 text-yellow-600" />
                                 <div>
-                                    <div className="text-xs text-muted-foreground">金币</div>
+                                    <div className="text-xs text-muted-foreground">{t('[ItemName5]')}</div>
                                     <div className="font-semibold">{autoBattleStats.gold.toLocaleString()}</div>
                                 </div>
                             </div>
                             <div className="flex items-center gap-2 p-2 bg-muted rounded">
                                 <Star className="h-4 w-4 text-purple-600" />
                                 <div>
-                                    <div className="text-xs text-muted-foreground">经验</div>
+                                    <div className="text-xs text-muted-foreground">{t('[ItemName4]')}</div>
                                     <div className="font-semibold">{autoBattleStats.exp.toLocaleString()}</div>
                                 </div>
                             </div>
@@ -275,7 +275,7 @@ export function BattlePage() {
 
                         <Button className="w-full" onClick={handleClaimReward}>
                             <Target className="mr-2 h-4 w-4" />
-                            领取收益
+                            {t('[CommonClaimLabel]')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -288,7 +288,7 @@ export function BattlePage() {
                                 <Zap className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                             </div>
                             <div className="flex-1">
-                                <CardTitle>高速战斗</CardTitle>
+                                <CardTitle>{t('[AutoBattleButtonQuickForward]')}</CardTitle>
                                 <CardDescription>立即获得2小时收益</CardDescription>
                             </div>
                         </div>
@@ -300,7 +300,7 @@ export function BattlePage() {
                                 <span className="text-2xl font-bold text-orange-600">
                                     ~{Math.round((currentQuest?.goldPerMinute || 0) * 120 / 1000)}K
                                 </span>
-                                <span className="text-sm text-muted-foreground">金币</span>
+                                <span className="text-sm text-muted-foreground">{t('[ItemName5]')}</span>
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
                                 +其他战利品
@@ -342,7 +342,7 @@ export function BattlePage() {
                                 <Trophy className="h-6 w-6 text-red-600 dark:text-red-400" />
                             </div>
                             <div className="flex-1">
-                                <CardTitle>挑战首领</CardTitle>
+                                <CardTitle>{t('[AutoBattleButtonBoss]')}</CardTitle>
                                 <CardDescription>击败首领获取奖励</CardDescription>
                             </div>
                         </div>
@@ -385,7 +385,7 @@ export function BattlePage() {
                             onClick={handleChallengeBoss}
                         >
                             <Sword className="mr-2 h-4 w-4" />
-                            挑战首领
+                            {t('[AutoBattleButtonBoss]')}
                         </Button>
                     </CardContent>
                 </Card>
@@ -395,8 +395,8 @@ export function BattlePage() {
             <Tabs defaultValue="stages" className="space-y-4">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="stages">关卡进度</TabsTrigger>
-                    <TabsTrigger value="stats">战斗数据</TabsTrigger>
-                    <TabsTrigger value="citizens">领民数据</TabsTrigger>
+                    <TabsTrigger value="stats">{t('[DialogAutoBattleStatisticsTabBattle]')}</TabsTrigger>
+                    <TabsTrigger value="citizens">{t('[DialogAutoBattleStatisticsTabPopulation]')}</TabsTrigger>
                 </TabsList>
 
                 {/* 关卡进度 */}
@@ -409,8 +409,8 @@ export function BattlePage() {
                                         <div className="flex items-center gap-4 flex-1">
                                             <div className="flex flex-col items-center">
                                                 <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stage.cleared
-                                                        ? 'bg-green-100 dark:bg-green-900'
-                                                        : 'bg-gray-100 dark:bg-gray-800'
+                                                    ? 'bg-green-100 dark:bg-green-900'
+                                                    : 'bg-gray-100 dark:bg-gray-800'
                                                     }`}>
                                                     {stage.cleared ? (
                                                         <TrendingUp className="h-6 w-6 text-green-600" />
@@ -437,8 +437,8 @@ export function BattlePage() {
                                                                 <Star
                                                                     key={star}
                                                                     className={`h-4 w-4 ${star <= stage.stars
-                                                                            ? 'text-yellow-500 fill-yellow-500'
-                                                                            : 'text-gray-300'
+                                                                        ? 'text-yellow-500 fill-yellow-500'
+                                                                        : 'text-gray-300'
                                                                         }`}
                                                                 />
                                                             ))}
@@ -451,7 +451,7 @@ export function BattlePage() {
                                         <div className="flex gap-2">
                                             {stage.cleared && (
                                                 <Button variant="outline" size="sm">
-                                                    自动战斗
+                                                    {t('[AutoBattleQuestButtonAutoBattle]')}
                                                 </Button>
                                             )}
                                             <Button
