@@ -2,24 +2,20 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { PlayerInfoDialog } from '@/components/player/PlayerInfoDialog';
 import {
     Trophy,
     Crown,
     TrendingUp,
-    Users,
     Star,
     Award,
-    BookOpen,
     Loader2,
     Zap,
     MapPin,
     Shield,
-    Gem,
-    User
+    Gem
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
 import { RankingGetPlayerRankingResponse } from '@/api/generated/RankinggetPlayerRankingResponse';
@@ -588,54 +584,11 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
             </Dialog>
 
             {/* 玩家详情弹窗 */}
-            <Dialog open={playerDialogOpen} onOpenChange={setPlayerDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />{t('[PlayerProfileDialogTitle]')}
-                        </DialogTitle>
-                    </DialogHeader>
-                    {selectedPlayer && (
-                        <div className="space-y-4">
-                            <div className="flex items-center gap-4">
-                                <div className="text-4xl font-bold text-muted-foreground">#</div>
-                                <div>
-                                    <div className="text-2xl font-bold">{selectedPlayer.playerName}</div>
-                                    <div className="text-sm text-muted-foreground">Lv.{selectedPlayer.playerLevel}</div>
-                                </div>
-                            </div>
-                            <div className="grid gap-3">
-                                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">{t('[CommonTotalBattlePowerLabel]')}</span>
-                                    <span className="font-semibold">{selectedPlayer.battlePower.toLocaleString()}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">{t('[RankingStageLabel]')}</span>
-                                    <span className="font-semibold">{selectedPlayer.latestQuestId}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                    <span className="text-sm text-muted-foreground">{t('[TowerQuestTitle]')}</span>
-                                    <span className="font-semibold">{selectedPlayer.latestTowerBattleQuestId}</span>
-                                </div>
-                                {selectedPlayer.guildName && (
-                                    <div className="flex justify-between items-center p-3 bg-muted rounded-lg">
-                                        <span className="text-sm text-muted-foreground flex items-center gap-1">
-                                            <Users className="h-4 w-4" />{t('[MyPagePlayerInformationBelongingGuildLabel]')}
-                                        </span>
-                                        <span className="font-semibold">{selectedPlayer.guildName}</span>
-                                    </div>
-                                )}
-                                {selectedPlayer.comment && (
-                                    <div className="p-3 bg-muted rounded-lg">
-                                        <div className="text-sm text-muted-foreground mb-1">{t('[ProfileSelfIntroductionLabel]')}</div>
-                                        <div className="text-sm">{selectedPlayer.comment}</div>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
+            <PlayerInfoDialog
+                open={playerDialogOpen}
+                onOpenChange={setPlayerDialogOpen}
+                player={selectedPlayer}
+            />
 
             {/* 公会详情弹窗 */}
             <Dialog open={guildDialogOpen} onOpenChange={setGuildDialogOpen}>

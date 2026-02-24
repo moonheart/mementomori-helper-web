@@ -27,6 +27,7 @@ import { useTimeManager } from '@/hooks/useTimeManager';
 import { useTranslation } from '@/hooks/useTranslation';
 import { AssetManager } from '@/lib/asset-manager';
 import { parseOrtegaError } from '@/lib/errorHandler';
+import { PlayerInfoDialog } from '@/components/player/PlayerInfoDialog';
 
 // 玩家信息扩展类型
 interface FriendPlayerInfo extends PlayerInfo {
@@ -56,6 +57,8 @@ export function FriendsPage() {
     const [searching, setSearching] = useState(false);
     const [searchedPlayer, setSearchedPlayer] = useState<PlayerInfo | null>(null);
     const [actionLoading, setActionLoading] = useState<number | string | null>(null);
+    const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
+    const [playerDialogTarget, setPlayerDialogTarget] = useState<PlayerInfo | null>(null);
 
     // 各类玩家列表
     const [friends, setFriends] = useState<FriendPlayerInfo[]>([]);
@@ -466,7 +469,13 @@ export function FriendsPage() {
     }
 
     const FriendCard = ({ player, topLeft, topRight, actions, cardClassName = '' }: FriendCardProps) => (
-        <Card className={`hover:shadow-lg transition-shadow overflow-hidden ${cardClassName}`}>
+        <Card
+            className={`hover:shadow-lg transition-shadow overflow-hidden ${cardClassName}`}
+            onClick={() => {
+                setPlayerDialogTarget(player);
+                setPlayerDialogOpen(true);
+            }}
+        >
             {/* 顶部栏 */}
             <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
                 <span className="text-xs text-muted-foreground truncate max-w-[60%]">
@@ -502,7 +511,14 @@ export function FriendsPage() {
                     </div>
 
                     {/* 右侧操作按钮 */}
-                    {actions && <div className="shrink-0 flex flex-col gap-2">{actions}</div>}
+                    {actions && (
+                        <div
+                            className="shrink-0 flex flex-col gap-2"
+                            onClick={(event) => event.stopPropagation()}
+                        >
+                            {actions}
+                        </div>
+                    )}
                 </div>
 
                 {/* 底部个性签名 */}
@@ -538,6 +554,11 @@ export function FriendsPage() {
 
     return (
         <div className="space-y-6">
+            <PlayerInfoDialog
+                open={playerDialogOpen}
+                onOpenChange={setPlayerDialogOpen}
+                player={playerDialogTarget}
+            />
             {/* 页面标题 */}
             <div>
                 <h1 className="text-3xl font-bold">{t('[CommonHeaderFriendLabel]')}</h1>

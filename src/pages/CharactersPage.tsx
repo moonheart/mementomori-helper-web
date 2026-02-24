@@ -10,7 +10,8 @@ import { useLocalizationStore } from '@/store/localization-store';
 import { UserCharacterDtoInfo, CharacterRarityFlags, ElementType, JobFlags, CharacterMB } from '@/api/generated';
 import { CharacterDetailDialog } from '@/components/characters/CharacterDetailDialog';
 import type { UICharacter } from '@/components/characters/types';
-import { AssetManager } from '@/lib/asset-manager';
+import { CharacterIcon } from '@/components/character/CharacterIcon';
+import type { UserSyncData } from '@/api/generated/userSyncData';
 
 export function CharactersPage() {
     const { currentAccountId } = useAccountStore();
@@ -20,6 +21,7 @@ export function CharactersPage() {
     const [loading, setLoading] = useState(false);
     const [userCharacters, setUserCharacters] = useState<UserCharacterDtoInfo[]>([]);
     const [characterMasterMap, setCharacterMasterMap] = useState<Record<number, CharacterMB>>({});
+    const [userSyncData, setUserSyncData] = useState<UserSyncData | null>(null);
 
     const [search, setSearch] = useState('');
     const [selectedRarity, setSelectedRarity] = useState<string>('all');
@@ -37,8 +39,10 @@ export function CharactersPage() {
             try {
                 // 1. 获取用户角色
                 const userData = await ortegaApi.user.getUserData({});
-                const chars = userData.userSyncData?.userCharacterDtoInfos || [];
+                const syncData = userData.userSyncData ?? null;
+                const chars = syncData?.userCharacterDtoInfos || [];
                 setUserCharacters(chars);
+                setUserSyncData(syncData);
 
                 // 2. 获取 Master 数据
                 const masterTable = await getTable<CharacterMB>('CharacterTable');
@@ -320,18 +324,21 @@ export function CharactersPage() {
                         <Card key={character.guid} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-sm" onClick={handleCardClick}>
                             <div className="flex">
                                 {/* 左侧方形头像区域 */}
-                                <div className="relative w-24 h-24 shrink-0">
-                                    {/* 角色图片 */}
-                                    <img
-                                        src={AssetManager.character.getCardUrl(character.characterId)}
-                                        alt={character.name}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
+                                <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+                                    <CharacterIcon
+                                        size={96}
+                                        userSyncData={userSyncData}
+                                        userCharacterInfo={{
+                                            guid: character.guid,
+                                            playerId: character.playerId,
+                                            characterId: character.characterId,
+                                            level: character.level,
+                                            subLevel: 0,
+                                            exp: character.exp,
+                                            rarityFlags: character.rarityFlags,
+                                            isLocked: character.isLocked,
                                         }}
                                     />
-                                    {/* 稀有度色条 */}
-                                    <div className={`absolute left-0 top-0 bottom-0 w-1 ${rarityData.color}`} />
                                     {/* 锁定图标 */}
                                     {character.isLocked && (
                                         <div className="absolute top-1 right-1 bg-black/60 rounded-full p-0.5">

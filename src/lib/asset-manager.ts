@@ -8,6 +8,8 @@
  * - _w: 256*152 (宽屏图标)
  */
 
+import { CharacterRarityFlags } from '@/api/generated/characterRarityFlags';
+
 /** 资源服务器基础URL (AddressableConvertAssets) */
 const BASE_URL = 'https://list.moonheart.dev/d/public/mmtm/AddressableConvertAssets';
 
@@ -28,6 +30,12 @@ export interface IconOptions {
  * 角色图标管理
  */
 export class CharacterIconManager {
+    static readonly NEED_FRAME_DECORATION_FLAGS =
+        CharacterRarityFlags.RPlus |
+        CharacterRarityFlags.SRPlus |
+        CharacterRarityFlags.SSRPlus |
+        CharacterRarityFlags.URPlus;
+
     /**
      * 解码特殊头像ID
      * 大负数格式: 使用掩码 0x7FFFFFFFFFFFFFFF 解码出特殊头像ID
@@ -110,6 +118,111 @@ export class CharacterIconManager {
      */
     static getWideUrl(characterId: number): string {
         return this.getUrl(characterId, { size: 'w' });
+    }
+
+    /**
+     * 获取角色头像背景底板
+     */
+    static getFrameBackgroundUrl(): string {
+        return AtlasManager.getUrl('plate_character');
+    }
+
+    /**
+     * 获取角色头像边框
+     */
+    static getFrameUrl(rarity: CharacterRarityFlags): string {
+        if (rarity > CharacterRarityFlags.LR) {
+            return AtlasManager.getUrl('frame_common_lr_slice');
+        }
+        if (rarity === CharacterRarityFlags.None) {
+            return AtlasManager.getUrl('frame_common_watercolor');
+        }
+        if (rarity < CharacterRarityFlags.LR) {
+            return AtlasManager.getUrl('frame_common_slice');
+        }
+        return AtlasManager.getUrl('frame_common_lr_slice');
+    }
+
+    /**
+     * 获取边框装饰
+     */
+    static getDecorationUrl(rarity: CharacterRarityFlags): string | null {
+        if ((CharacterIconManager.NEED_FRAME_DECORATION_FLAGS & rarity) !== rarity) {
+            return null;
+        }
+        return AtlasManager.getUrl(`frame_decoration_${CharacterRarityFlags[rarity].toLowerCase()}`);
+    }
+
+    /**
+     * 获取角色元素图标
+     */
+    static getElementUrl(elementType?: number | null): string | null {
+        if (elementType === undefined || elementType === null) return null;
+        return AtlasManager.getUrl(`icon_element_${elementType}`);
+    }
+
+    /**
+     * 获取稀有度滤镜
+     */
+    static getRarityFilter(rarity: CharacterRarityFlags): string {
+        switch (rarity) {
+            case CharacterRarityFlags.N:
+                return 'url(#svgTintN)';
+            case CharacterRarityFlags.R:
+            case CharacterRarityFlags.RPlus:
+                return 'url(#svgTintR)';
+            case CharacterRarityFlags.SR:
+            case CharacterRarityFlags.SRPlus:
+                return 'url(#svgTintSR)';
+            case CharacterRarityFlags.SSR:
+            case CharacterRarityFlags.SSRPlus:
+                return 'url(#svgTintSSR)';
+            case CharacterRarityFlags.UR:
+            case CharacterRarityFlags.URPlus:
+                return 'url(#svgTintUR)';
+            default:
+                return 'none';
+        }
+    }
+
+    /**
+     * 获取稀有星级数量
+     */
+    static getRarityStarCount(rarity: CharacterRarityFlags): number {
+        switch (rarity) {
+            case CharacterRarityFlags.LRPlus:
+                return 1;
+            case CharacterRarityFlags.LRPlus2:
+                return 2;
+            case CharacterRarityFlags.LRPlus3:
+                return 3;
+            case CharacterRarityFlags.LRPlus4:
+                return 4;
+            case CharacterRarityFlags.LRPlus5:
+                return 5;
+            case CharacterRarityFlags.LRPlus6:
+                return 1;
+            case CharacterRarityFlags.LRPlus7:
+                return 2;
+            case CharacterRarityFlags.LRPlus8:
+                return 3;
+            case CharacterRarityFlags.LRPlus9:
+                return 4;
+            case CharacterRarityFlags.LRPlus10:
+                return 5;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * 获取稀有度星星图标
+     */
+    static getRarityStarIconUrl(rarity?: CharacterRarityFlags | null): string {
+        if (rarity && rarity >= CharacterRarityFlags.LRPlus6) {
+            return AtlasManager.getUrl('icon_rarity_plus_star_2');
+        }
+        return AtlasManager.getUrl('icon_rarity_plus_star_1');
     }
 }
 
