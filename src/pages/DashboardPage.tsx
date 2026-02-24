@@ -17,7 +17,8 @@ import { LanguageType } from '@/api/generated/languageType';
 import { TransferSpotType } from '@/api/generated/transferSpotType';
 import { MypageIconInfo } from '@/api/generated/mypageIconInfo';
 import { getUserItemCount } from '@/lib/itemUtils';
-import AssetManager, { AtlasManager } from '@/lib/asset-manager';
+import AssetManager from '@/lib/asset-manager';
+import OrtegaAtlasManager from '@/lib/atlas-manager';
 import { MonthlyLoginBonusDialog } from '@/components/loginBonus/MonthlyLoginBonusDialog';
 import { NoticeDialog } from '@/components/notice/NoticeDialog';
 import { BookSortDialog } from '@/components/booksort/BookSortDialog';
@@ -350,7 +351,7 @@ export function DashboardPage() {
                                 title={t(item.labelKey)}
                             >
                                 <img
-                                    src={AtlasManager.getUrl(item.icon)}
+                                    src={OrtegaAtlasManager.getSprite(item.icon)}
                                     alt={t(item.labelKey)}
                                     className="w-full h-full object-contain drop-shadow-md"
                                 />

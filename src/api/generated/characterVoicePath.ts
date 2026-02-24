@@ -3,9 +3,9 @@
  * Any changes made to this file can be lost when this file is regenerated.
  */
 
-import { TimelineType } from "./timelineType";
+import { CommonTimelineType } from "./CommontimelineType";
 
 export class CharacterVoicePath {
     timelineId: number;
-    timelineType: TimelineType;
+    timelineType: CommonTimelineType;
 }

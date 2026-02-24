@@ -9,12 +9,8 @@
  */
 
 import { CharacterRarityFlags } from '@/api/generated/characterRarityFlags';
-
-/** 资源服务器基础URL (AddressableConvertAssets) */
-const BASE_URL = 'https://list.moonheart.dev/d/public/mmtm/AddressableConvertAssets';
-
-/** 本地资源服务器基础URL (AddressableLocalAssets) */
-const BASE_URL_LOCAL = 'https://list.moonheart.dev/d/public/mmtm/AddressableLocalAssets';
+import { BASE_URL, BASE_URL_LOCAL } from '@/lib/asset-constants';
+import OrtegaAtlasManager from '@/lib/atlas-manager';
 
 /** 特殊头像解码掩码 (63个1，去掉最高位符号位) */
 const SPECIAL_ICON_MASK = 0x7FFFFFFFFFFFFFFFn;
@@ -124,23 +120,14 @@ export class CharacterIconManager {
      * 获取角色头像背景底板
      */
     static getFrameBackgroundUrl(): string {
-        return AtlasManager.getUrl('plate_character');
+        return OrtegaAtlasManager.getIconPlate();
     }
 
     /**
      * 获取角色头像边框
      */
     static getFrameUrl(rarity: CharacterRarityFlags): string {
-        if (rarity > CharacterRarityFlags.LR) {
-            return AtlasManager.getUrl('frame_common_lr_slice');
-        }
-        if (rarity === CharacterRarityFlags.None) {
-            return AtlasManager.getUrl('frame_common_watercolor');
-        }
-        if (rarity < CharacterRarityFlags.LR) {
-            return AtlasManager.getUrl('frame_common_slice');
-        }
-        return AtlasManager.getUrl('frame_common_lr_slice');
+        return OrtegaAtlasManager.getFrameCharacter(rarity);
     }
 
     /**
@@ -150,7 +137,7 @@ export class CharacterIconManager {
         if ((CharacterIconManager.NEED_FRAME_DECORATION_FLAGS & rarity) !== rarity) {
             return null;
         }
-        return AtlasManager.getUrl(`frame_decoration_${CharacterRarityFlags[rarity].toLowerCase()}`);
+        return OrtegaAtlasManager.getCharacterFrameDecoration(rarity);
     }
 
     /**
@@ -158,7 +145,7 @@ export class CharacterIconManager {
      */
     static getElementUrl(elementType?: number | null): string | null {
         if (elementType === undefined || elementType === null) return null;
-        return AtlasManager.getUrl(`icon_element_${elementType}`);
+        return OrtegaAtlasManager.getIconCharacterElement(elementType);
     }
 
     /**
@@ -220,9 +207,9 @@ export class CharacterIconManager {
      */
     static getRarityStarIconUrl(rarity?: CharacterRarityFlags | null): string {
         if (rarity && rarity >= CharacterRarityFlags.LRPlus6) {
-            return AtlasManager.getUrl('icon_rarity_plus_star_2');
+            return OrtegaAtlasManager.getSprite('icon_rarity_plus_star_2');
         }
-        return AtlasManager.getUrl('icon_rarity_plus_star_1');
+        return OrtegaAtlasManager.getSprite('icon_rarity_plus_star_1');
     }
 }
 
@@ -356,19 +343,6 @@ export class EnemyIconManager {
 }
 
 /**
- * Atlas图片管理
- */
-export class AtlasManager {
-    /**
-     * 获取Atlas图片URL
-     * @param name Atlas图片文件名 (不含扩展名，如 'icon_guild_raid_world_reward')
-     */
-    static getUrl(name: string): string {
-        return `${BASE_URL_LOCAL}/Atlas/${name}.png`;
-    }
-}
-
-/**
  * MyPage图标管理
  */
 export class MyPageIconManager {
@@ -394,7 +368,6 @@ export const AssetManager = {
     sphere: SphereIconManager,
     skill: SkillIconManager,
     myPage: MyPageIconManager,
-    atlas: AtlasManager,
 } as const;
 
 export default AssetManager;
