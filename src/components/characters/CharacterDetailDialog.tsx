@@ -4,32 +4,49 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { getCalculatedCharacterDetail } from '@/api/character-client';
 import { useMasterStore } from '@/store/masterStore';
 import { useLocalizationStore } from '@/store/localization-store';
+import { useAccountStore } from '@/store/accountStore';
 import {
     ActiveSkillMB,
     BattleParameter,
     BattleParameterType,
     BaseParameterType,
     CharacterDetailInfo,
+    CharacterMB,
     CharacterRarityFlags,
     ElementType,
     EquipmentMB,
     EquipmentRarityFlags,
     EquipmentSlotType,
     JobFlags,
+    LockEquipmentDeckType,
     PassiveSkillMB,
+    CharacterCollectionLevelMB,
+    CharacterCollectionMB,
+    CharacterPotentialCoefficientMB,
+    CharacterPotentialMB,
+    DeckUseContentType,
+    EquipmentExclusiveEffectMB,
+    EquipmentLegendSacredTreasureMB,
+    EquipmentMatchlessSacredTreasureMB,
+    EquipmentReinforcementParameterMB,
+    EquipmentSetMB,
+    PlayerRankMB,
+    SphereMB,
 } from '@/api/generated';
-import { getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
-import { AssetManager } from '@/lib/asset-manager';
+import { ortegaApi } from '@/api/ortega-client';
+import { getRuneSlotUsage, getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
+import { AssetManager, EquipmentIconManager, SphereIconManager } from '@/lib/asset-manager';
 import { BookOpen, ChevronRight, Loader2, Shield, Sparkles, Swords, TrendingUp, Zap } from 'lucide-react';
 import type { UICharacter } from './types';
+import { calculateCharacterDetailInfo, getUserCharacterInfoByGuid } from '@/lib/character-parameter-utils';
 
 interface Props {
     character: UICharacter | null;
     open: boolean;
     onOpenChange: (open: boolean) => void;
+    lockEquipmentDeckType?: LockEquipmentDeckType;
 }
 
 function getElementData(element: ElementType) {
@@ -129,9 +146,10 @@ function getEquipmentRarity(rarity: EquipmentRarityFlags): { name: string; cls: 
     return { name: 'N', cls: 'bg-gray-500' };
 }
 
-export function CharacterDetailDialog({ character, open, onOpenChange }: Props) {
+export function CharacterDetailDialog({ character, open, onOpenChange, lockEquipmentDeckType }: Props) {
     const t = useLocalizationStore(state => state.t);
     const getTable = useMasterStore(state => state.getTable);
+    const getCurrentUserSyncData = useAccountStore(state => state.getCurrentUserSyncData);
     const [detailInfo, setDetailInfo] = useState<CharacterDetailInfo | null>(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [detailError, setDetailError] = useState<string | null>(null);
@@ -139,6 +157,22 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
     const [equipmentMasterMap, setEquipmentMasterMap] = useState<Record<number, EquipmentMB>>({});
     const [activeSkillMap, setActiveSkillMap] = useState<Record<number, ActiveSkillMB>>({});
     const [passiveSkillMap, setPassiveSkillMap] = useState<Record<number, PassiveSkillMB>>({});
+    const [sphereMasterMap, setSphereMasterMap] = useState<Record<number, SphereMB>>({});
+    const [detailMasterTables, setDetailMasterTables] = useState<{
+        characterTable: CharacterMB[];
+        equipmentTable: EquipmentMB[];
+        sphereTable: SphereMB[];
+        equipmentSetTable: EquipmentSetMB[];
+        equipmentExclusiveEffectTable: EquipmentExclusiveEffectMB[];
+        equipmentReinforcementParameterTable: EquipmentReinforcementParameterMB[];
+        equipmentLegendSacredTreasureTable: EquipmentLegendSacredTreasureMB[];
+        equipmentMatchlessSacredTreasureTable: EquipmentMatchlessSacredTreasureMB[];
+        characterCollectionTable: CharacterCollectionMB[];
+        characterCollectionLevelTable: CharacterCollectionLevelMB[];
+        characterPotentialTable: CharacterPotentialMB[];
+        characterPotentialCoefficientTable: CharacterPotentialCoefficientMB[];
+        playerRankTable: PlayerRankMB[];
+    } | null>(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -146,7 +180,8 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
             getTable<EquipmentMB>('EquipmentTable'),
             getTable<ActiveSkillMB>('ActiveSkillTable'),
             getTable<PassiveSkillMB>('PassiveSkillTable'),
-        ]).then(([eqTable, activeTable, passiveTable]) => {
+            getTable<SphereMB>('SphereTable'),
+        ]).then(([eqTable, activeTable, passiveTable, sphereTable]) => {
             if (cancelled) return;
             const eqMap: Record<number, EquipmentMB> = {};
             eqTable.forEach(x => { eqMap[x.id] = x; });
@@ -157,11 +192,69 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
             const pMap: Record<number, PassiveSkillMB> = {};
             passiveTable.forEach(x => { pMap[x.id] = x; });
             setPassiveSkillMap(pMap);
+            const sMap: Record<number, SphereMB> = {};
+            sphereTable.forEach(x => { sMap[x.id] = x; });
+            setSphereMasterMap(sMap);
         }).catch(error => {
             console.error('Failed to load detail master data:', error);
         });
         return () => { cancelled = true; };
     }, [getTable]);
+
+    useEffect(() => {
+        if (!open) return;
+        let cancelled = false;
+        Promise.all([
+            getTable<CharacterMB>('CharacterTable'),
+            getTable<EquipmentMB>('EquipmentTable'),
+            getTable<SphereMB>('SphereTable'),
+            getTable<EquipmentSetMB>('EquipmentSetTable'),
+            getTable<EquipmentExclusiveEffectMB>('EquipmentExclusiveEffectTable'),
+            getTable<EquipmentReinforcementParameterMB>('EquipmentReinforcementParameterTable'),
+            getTable<EquipmentLegendSacredTreasureMB>('EquipmentLegendSacredTreasureTable'),
+            getTable<EquipmentMatchlessSacredTreasureMB>('EquipmentMatchlessSacredTreasureTable'),
+            getTable<CharacterCollectionMB>('CharacterCollectionTable'),
+            getTable<CharacterCollectionLevelMB>('CharacterCollectionLevelTable'),
+            getTable<CharacterPotentialMB>('CharacterPotentialTable'),
+            getTable<CharacterPotentialCoefficientMB>('CharacterPotentialCoefficientTable'),
+            getTable<PlayerRankMB>('PlayerRankTable'),
+        ]).then(([
+            characterTable,
+            equipmentTable,
+            sphereTable,
+            equipmentSetTable,
+            equipmentExclusiveEffectTable,
+            equipmentReinforcementParameterTable,
+            equipmentLegendSacredTreasureTable,
+            equipmentMatchlessSacredTreasureTable,
+            characterCollectionTable,
+            characterCollectionLevelTable,
+            characterPotentialTable,
+            characterPotentialCoefficientTable,
+            playerRankTable,
+        ]) => {
+            if (cancelled) return;
+            setDetailMasterTables({
+                characterTable,
+                equipmentTable,
+                sphereTable,
+                equipmentSetTable,
+                equipmentExclusiveEffectTable,
+                equipmentReinforcementParameterTable,
+                equipmentLegendSacredTreasureTable,
+                equipmentMatchlessSacredTreasureTable,
+                characterCollectionTable,
+                characterCollectionLevelTable,
+                characterPotentialTable,
+                characterPotentialCoefficientTable,
+                playerRankTable,
+            });
+        }).catch(error => {
+            console.error('Failed to load character detail master tables:', error);
+        });
+
+        return () => { cancelled = true; };
+    }, [getTable, open]);
 
     useEffect(() => {
         if (!open || !character) return;
@@ -170,13 +263,60 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
             setDetailLoading(true);
             setDetailError(null);
             try {
-                const res = await getCalculatedCharacterDetail(character.guid);
+                const currentUserSyncData = getCurrentUserSyncData();
+                const currentPlayerId = currentUserSyncData?.userStatusDtoInfo?.playerId ?? null;
+                const targetPlayerId = character.playerId ?? null;
+                if (targetPlayerId && targetPlayerId !== currentPlayerId) {
+                    try {
+                        const response = await ortegaApi.character.getDetailsInfo({
+                            deckType: DeckUseContentType.Auto,
+                            targetUserCharacterGuids: [character.guid],
+                            targetPlayerId,
+                        });
+                        const remoteDetail = response?.characterDetailInfos?.[0];
+                        if (remoteDetail) {
+                            if (!cancelled) setDetailInfo(remoteDetail);
+                            return;
+                        }
+                    } catch (error) {
+                        console.warn('Failed to fetch remote character detail, fallback to local:', error);
+                    }
+                }
+
+                if (!currentUserSyncData || !detailMasterTables) {
+                    if (cancelled) return;
+                    setDetailInfo(null);
+                    setDetailError('未同步到用户数据，无法计算角色详情');
+                    return;
+                }
+                const userCharacterInfo = getUserCharacterInfoByGuid(
+                    currentUserSyncData,
+                    character.guid,
+                    detailMasterTables.characterTable
+                );
+                if (!userCharacterInfo) {
+                    setDetailInfo(null);
+                    setDetailError('未找到角色数据');
+                    return;
+                }
+                const calculation = calculateCharacterDetailInfo({
+                    userSyncData: currentUserSyncData,
+                    userCharacterInfo,
+                    lockEquipmentDeckType: lockEquipmentDeckType ?? LockEquipmentDeckType.None,
+                    masters: detailMasterTables,
+                });
                 if (cancelled) return;
-                const info = res ?? null;
+                const info: CharacterDetailInfo = {
+                    userEquipmentDtoInfos: calculation.userEquipmentDtoInfos,
+                    baseParameter: calculation.baseParameter,
+                    battleParameter: calculation.battleParameter,
+                    battlePower: calculation.battlePower,
+                    level: userCharacterInfo.level,
+                    rarityFlags: userCharacterInfo.rarityFlags,
+                };
                 setDetailInfo(info);
-                if (!info) setDetailError('未获取到该角色详细数据');
             } catch (error) {
-                console.error('Failed to fetch character detail:', error);
+                console.error('Failed to calculate character detail:', error);
                 if (!cancelled) {
                     setDetailInfo(null);
                     setDetailError('获取角色详细数据失败');
@@ -187,7 +327,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
         };
         fetchDetail();
         return () => { cancelled = true; };
-    }, [character, open]);
+    }, [character, detailMasterTables, getCurrentUserSyncData, lockEquipmentDeckType, open]);
 
     const elementData = character ? getElementData(character.element) : null;
     const jobData = character ? getJobData(character.job) : null;
@@ -307,9 +447,22 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
             const master = equipmentMasterMap[eq.equipmentId];
             const rarity = master?.rarityFlags ?? EquipmentRarityFlags.None;
             const slot = master?.slotType ?? EquipmentSlotType.Weapon;
-            return { ...eq, master, rarity, slot, name: master ? t(master.nameKey) : `装备 ${eq.equipmentId}` };
+            const sphereCategoryIds = [
+                eq.sphereId1 ? sphereMasterMap[eq.sphereId1]?.categoryId : undefined,
+                eq.sphereId2 ? sphereMasterMap[eq.sphereId2]?.categoryId : undefined,
+                eq.sphereId3 ? sphereMasterMap[eq.sphereId3]?.categoryId : undefined,
+                eq.sphereId4 ? sphereMasterMap[eq.sphereId4]?.categoryId : undefined,
+            ];
+            return {
+                ...eq,
+                master,
+                rarity,
+                slot,
+                name: master ? t(master.nameKey) : `装备 ${eq.equipmentId}`,
+                sphereCategoryIds,
+            };
         }).sort((a, b) => a.slot - b.slot);
-    }, [detailInfo, equipmentMasterMap, t]);
+    }, [detailInfo, equipmentMasterMap, sphereMasterMap, t]);
 
     const getActiveSkillBaseInfo = (skill: ActiveSkillMB | undefined) => {
         if (!skill?.activeSkillInfos?.length) return null;
@@ -383,7 +536,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                     <div className="absolute bottom-1 right-1 z-10"><span className="text-xl">{elementData.icon}</span></div>
                                     <img
                                         src={AssetManager.character.getCardUrl(character.characterId)}
-                                        alt={character.name}
+                                        alt={t(character.nameKey)}
                                         className="h-full w-full object-cover"
                                         onError={(e) => {
                                             (e.target as HTMLImageElement).style.display = 'none';
@@ -391,7 +544,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                     />
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <DialogTitle className="text-2xl mb-1 truncate">{character.name}</DialogTitle>
+                                    <DialogTitle className="text-2xl mb-1 truncate">{t(character.nameKey)}</DialogTitle>
                                     <DialogDescription asChild>
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-3 flex-wrap text-sm">
@@ -490,18 +643,61 @@ export function CharacterDetailDialog({ character, open, onOpenChange }: Props) 
                                             <div className="space-y-3">
                                                 {equippedItems.map(item => {
                                                     const rarity = getEquipmentRarity(item.rarity);
+                                                    const runeUsage = getRuneSlotUsage(item);
                                                     return (
                                                         <div key={item.guid} className="rounded-lg border p-3">
                                                             <div className="flex items-start justify-between gap-3">
-                                                                <div className="min-w-0">
-                                                                    <div className="flex items-center gap-2 flex-wrap">
-                                                                        <span className="text-lg">{getSlotIcon(item.slot)}</span>
-                                                                        <span className="font-medium truncate">{item.name}</span>
-                                                                        <Badge className={rarity.cls}>{rarity.name}</Badge>
+                                                                <div className="flex items-start gap-3 min-w-0">
+                                                                    <div className="w-12 h-12 rounded-lg bg-muted flex items-center justify-center overflow-hidden border border-border/50 shrink-0">
+                                                                        <img
+                                                                            src={EquipmentIconManager.getUrl(item.equipmentId)}
+                                                                            alt={item.name}
+                                                                            className="w-full h-full object-contain"
+                                                                            onError={(e) => {
+                                                                                (e.target as HTMLImageElement).style.display = 'none';
+                                                                                (e.target as HTMLImageElement).parentElement!.innerHTML = getSlotIcon(item.slot);
+                                                                            }}
+                                                                        />
                                                                     </div>
-                                                                    <p className="text-xs text-muted-foreground mt-1">
-                                                                        {getSlotName(item.slot)} • Lv.{item.master?.equipmentLv ?? 0} • ID {item.equipmentId}
-                                                                    </p>
+                                                                    <div className="min-w-0">
+                                                                        <div className="flex items-center gap-2 flex-wrap">
+                                                                            <span className="font-medium truncate">{item.name}</span>
+                                                                            <Badge className={rarity.cls}>{rarity.name}</Badge>
+                                                                        </div>
+                                                                        <p className="text-xs text-muted-foreground mt-1">
+                                                                            {getSlotName(item.slot)} • Lv.{item.master?.equipmentLv ?? 0} • ID {item.equipmentId}
+                                                                        </p>
+                                                                        {runeUsage.total > 0 && (
+                                                                            <div className="mt-2 flex items-center gap-1">
+                                                                                {[...Array(runeUsage.total)].map((_, index) => {
+                                                                                    const categoryId = item.sphereCategoryIds?.[index];
+                                                                                    const hasSphere = index < runeUsage.used && categoryId !== undefined;
+                                                                                    return (
+                                                                                        <div
+                                                                                            key={index}
+                                                                                            className={`w-5 h-5 rounded border-2 flex items-center justify-center overflow-hidden ${hasSphere
+                                                                                                ? 'border-purple-500 bg-purple-100 dark:bg-purple-900'
+                                                                                                : 'border-gray-300 bg-gray-100 dark:bg-gray-800'
+                                                                                                }`}
+                                                                                        >
+                                                                                            {hasSphere ? (
+                                                                                                <img
+                                                                                                    src={SphereIconManager.getTinyUrl(categoryId)}
+                                                                                                    alt="符石"
+                                                                                                    className="w-4 h-4 object-contain"
+                                                                                                    onError={(e) => {
+                                                                                                        (e.target as HTMLImageElement).style.display = 'none';
+                                                                                                    }}
+                                                                                                />
+                                                                                            ) : (
+                                                                                                <span className="text-[10px] text-gray-400">◇</span>
+                                                                                            )}
+                                                                                        </div>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
                                                                 <div className="text-right text-xs text-muted-foreground shrink-0">
                                                                     <div>强化 +{item.reinforcementLv ?? 0}</div>

@@ -68,7 +68,7 @@ export function CharactersPage() {
             return {
                 ...char,
                 master,
-                name: master ? t(master.nameKey) : `Character ${char.characterId}`,
+                nameKey: master?.nameKey ?? `Character ${char.characterId}`,
                 element: master?.elementType ?? ElementType.None,
                 job: master?.jobFlags ?? JobFlags.None
             };
@@ -78,7 +78,8 @@ export function CharactersPage() {
     // 过滤和排序逻辑
     const filteredCharacters = useMemo(() => {
         const filtered = characters.filter(char => {
-            const matchesSearch = char.name.toLowerCase().includes(search.toLowerCase());
+            const resolvedName = char.nameKey.startsWith('[') ? t(char.nameKey) : char.nameKey;
+            const matchesSearch = resolvedName.toLowerCase().includes(search.toLowerCase());
 
             let matchesRarity = true;
             if (selectedRarity !== 'all') {
@@ -111,7 +112,7 @@ export function CharactersPage() {
             // 2. 稀有度降序
             return (b.rarityFlags || 0) - (a.rarityFlags || 0);
         });
-    }, [characters, search, selectedRarity, selectedElement, selectedClass]);
+    }, [characters, search, selectedRarity, selectedElement, selectedClass, t]);
 
     // 统计数据
     const stats = useMemo(() => {
@@ -352,7 +353,9 @@ export function CharactersPage() {
                                     {/* 顶部：名称和稀有度 */}
                                     <div>
                                         <div className="flex items-center gap-1.5 mb-1">
-                                            <h3 className="font-bold text-sm text-gray-900 truncate">{character.name}</h3>
+                                            <h3 className="font-bold text-sm text-gray-900 truncate">
+                                                {character.nameKey.startsWith('[') ? t(character.nameKey) : character.nameKey}
+                                            </h3>
                                             <span className={`text-[10px] px-1 py-0 rounded ${rarityData.color} text-white`}>
                                                 {rarityData.name}
                                             </span>
@@ -373,7 +376,7 @@ export function CharactersPage() {
                                     {/* 底部：等级和进度 */}
                                     <div className="space-y-1">
                                         <div className="flex items-center justify-between text-[10px]">
-                                            <span className="text-gray-400">等级</span>
+                                            <span className="text-gray-400">{t('[CommonPlayerRankLabel]')}</span>
                                             <span className="font-medium text-gray-700">Lv.{character.level}/{rarityData.max}</span>
                                         </div>
                                         <div className="h-1 bg-gray-100 rounded-full overflow-hidden">

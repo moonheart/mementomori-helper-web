@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Shield, UserPlus, Flag, MessageCircle } from 'lucide-react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CharacterIcon } from '@/components/character/CharacterIcon';
 import { useMasterData } from '@/hooks/useMasterData';
+import { CharacterDetailDialog } from '@/components/characters/CharacterDetailDialog';
+import { useMasterStore } from '@/store/masterStore';
 import { CharacterIconManager, AssetManager } from '@/lib/asset-manager';
+import { CharacterMB, ElementType, JobFlags } from '@/api/generated';
 import type { SpecialIconItemMB } from '@/api/generated/specialIconItemMB';
 import { PlayerInfo } from '@/api/generated/playerInfo';
+import type { UICharacter } from '@/components/characters/types';
 import styles from './PlayerInfoDialog.module.css';
 
 export interface PlayerInfoDialogProps {
@@ -29,6 +33,26 @@ export function PlayerInfoDialog({
     player,
 }: PlayerInfoDialogProps) {
     const { t } = useTranslation();
+    const getTable = useMasterStore(state => state.getTable);
+    const [characterMasterMap, setCharacterMasterMap] = useState<Record<number, CharacterMB>>({});
+    const [selectedCharacter, setSelectedCharacter] = useState<UICharacter | null>(null);
+    const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+
+    useEffect(() => {
+        let cancelled = false;
+        if (!open) return;
+        getTable<CharacterMB>('CharacterTable')
+            .then((table) => {
+                if (cancelled) return;
+                const map: Record<number, CharacterMB> = {};
+                table.forEach((entry) => { map[entry.id] = entry; });
+                setCharacterMasterMap(map);
+            })
+            .catch((error) => {
+                console.error('Failed to load character master table:', error);
+            });
+        return () => { cancelled = true; };
+    }, [getTable, open]);
 
     const decodedIcon = useMemo(() => {
         if (!player) return null;
@@ -55,6 +79,26 @@ export function PlayerInfoDialog({
         if (!characterId) return '';
         return AssetManager.character.getDetailUrl(characterId);
     }, [player, decodedIcon]);
+
+    const handleOpenCharacterDetail = (member: PlayerInfo['deckUserCharacterInfoList'][number]) => {
+        if (!player) return;
+        const master = characterMasterMap[member.characterId];
+        const uiCharacter: UICharacter = {
+            guid: member.guid,
+            playerId: player.playerId,
+            characterId: member.characterId,
+            level: member.level,
+            exp: member.exp,
+            rarityFlags: member.rarityFlags,
+            isLocked: false,
+            master,
+            nameKey: master?.nameKey ?? `Character ${member.characterId}`,
+            element: master?.elementType ?? ElementType.None,
+            job: master?.jobFlags ?? JobFlags.None,
+        };
+        setSelectedCharacter(uiCharacter);
+        setDetailDialogOpen(true);
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -109,7 +153,14 @@ export function PlayerInfoDialog({
                                 <div className={styles.sectionTitle}>{t('[DialogPlayerInformationAutoBattleFormationLabel]')}</div>
                                 <div className={styles.teamRow}>
                                     {player.deckUserCharacterInfoList?.slice(0, 5).map((member) => (
-                                        <CharacterIcon key={member.guid} userCharacterInfo={member} size={84} />
+                                        <button
+                                            key={member.guid}
+                                            type="button"
+                                            className={styles.teamCharacter}
+                                            onClick={() => handleOpenCharacterDetail(member)}
+                                        >
+                                            <CharacterIcon userCharacterInfo={member} size={84} />
+                                        </button>
                                     ))}
                                     {!player.deckUserCharacterInfoList?.length && (
                                         <div className={styles.emptyTeam}>{t('[NoData]')}</div>
@@ -167,6 +218,11 @@ export function PlayerInfoDialog({
                     </div>
                 )}
             </DialogContent>
+            <CharacterDetailDialog
+                character={selectedCharacter}
+                open={detailDialogOpen}
+                onOpenChange={setDetailDialogOpen}
+            />
         </Dialog>
     );
 }

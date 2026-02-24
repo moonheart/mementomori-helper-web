@@ -2,7 +2,7 @@ import { CharacterMB, ElementType, JobFlags, UserCharacterDtoInfo } from '@/api/
 
 export interface UICharacter extends UserCharacterDtoInfo {
     master?: CharacterMB;
-    name: string;
+    nameKey: string;
     element: ElementType;
     job: JobFlags;
 }
