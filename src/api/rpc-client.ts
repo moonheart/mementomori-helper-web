@@ -1,4 +1,6 @@
 import apiClient from './axios-client';
+import { useAccountStore } from '@/store/accountStore';
+import type { UserSyncData } from '@/api/generated/userSyncData';
 
 import type { OrtegaRpcMap } from './ortega-rpc-manifest';
 
@@ -25,7 +27,16 @@ export const rpcClient = {
             request
         );
 
-        return response.data;
+        const data = response.data as TResponse;
+        const userSyncData = (data as { userSyncData?: UserSyncData | null }).userSyncData;
+        if (userSyncData) {
+            const currentAccountId = useAccountStore.getState().currentAccountId;
+            if (currentAccountId) {
+                useAccountStore.getState().mergeUserSyncData(currentAccountId, userSyncData);
+            }
+        }
+
+        return data;
     },
 
     /**
