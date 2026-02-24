@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -18,7 +18,6 @@ import {
     Trophy,
     Clock,
     Star,
-    BookOpen,
     Crown,
     Zap,
     Loader2,
@@ -41,14 +40,6 @@ import { clsx } from 'clsx';
 import { LocalRaidLobbyDialog } from '@/components/localRaid';
 import { ortegaApi } from '@/api/ortega-client';
 import { toast } from '@/hooks/use-toast';
-
-// 格式化时间为 HH:MM 格式
-function formatTimeNumber(timeNum: number | null): string {
-    if (timeNum === null) return '--:--';
-    const hours = Math.floor(timeNum / 100);
-    const minutes = timeNum % 100;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-}
 
 // 获取属性颜色
 function getElementColor(elementType: ElementType): string {
@@ -84,22 +75,59 @@ export function PhantomTemplePage() {
         questInfos,
         remainingCount,
         bonusTimeInfo,
+        bonusScheduleTimes,
         getTempleName,
         getQuestEnemies,
         isQuestCleared,
+        localRaidLevel,
         playerId,
         refresh
     } = useLocalRaidInfo();
 
     const { logs: battleLogs, loading: logsLoading, refresh: refreshLogs } = useLocalRaidBattleLogs();
+    const bonusExtraRate = Math.max(bonusTimeInfo.bonusRate - 100, 0);
+    const eventTimeLabel = bonusScheduleTimes.length > 0
+        ? bonusScheduleTimes
+            .map((time) => {
+                const startHours = Math.floor(time.startTime / 10000);
+                const startMinutes = Math.floor((time.startTime % 10000) / 100);
+                const endHours = Math.floor(time.endTime / 10000);
+                const endMinutes = Math.floor((time.endTime % 10000) / 100);
+                return t('[LocalRaidEventTimeFormat]', [startHours, startMinutes, endHours, endMinutes]);
+            })
+            .join(' / ')
+        : '--:--';
+    const localRaidLevelKey = '[LocalRaidTrainingLevelFormat]';
+    const localRaidLevelText = t(localRaidLevelKey, [localRaidLevel ?? '--']);
+    const hasLocalRaidLevelText = localRaidLevelText !== localRaidLevelKey;
+    const bonusMultiplier = bonusTimeInfo.bonusRate / 100;
+    const bonusMultiplierText = Number.isInteger(bonusMultiplier)
+        ? bonusMultiplier.toString()
+        : bonusMultiplier.toFixed(1);
+    const nextEventTimeText = bonusTimeInfo.nextBonusTime !== null
+        ? t('[LocalRaidEventTimeFormat]', [
+            Math.floor(bonusTimeInfo.nextBonusTime / 100),
+            bonusTimeInfo.nextBonusTime % 100,
+            0,
+            0,
+        ]).split('~')[0]
+        : '--:--';
+    const formatRichText = (text: string) => text
+        .replace(/<br>/g, '<br/>')
+        .replace(/<color=([^>]+)>/g, '<span style="color:$1">')
+        .replace(/<\/color>/g, '</span>');
+    const inBonusMessage = formatRichText(
+        t('[LocalRaidCurrentEventTimeMessageFormat]', [bonusMultiplierText, eventTimeLabel])
+    );
+    const nextBonusMessage = formatRichText(
+        t('[LocalRaidNextEventTimeMessageFormat]', [nextEventTimeText])
+    );
 
     // 战斗记录详情弹窗
     const [selectedLog, setSelectedLog] = useState<BattleSimulationResult | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [battleDetailLoading, setBattleDetailLoading] = useState(false);
 
     const handleViewLog = async (battleToken: string, leaderPlayerId: number) => {
-        setBattleDetailLoading(true);
         try {
             const result = await ortegaApi.localRaid.getLocalRaidBattleResultOld({
                 battleToken,
@@ -115,7 +143,7 @@ export function PhantomTemplePage() {
             console.error('Failed to fetch battle result old:', e);
             toast({ title: '获取战斗详情失败', variant: 'destructive' });
         } finally {
-            setBattleDetailLoading(false);
+            // no-op
         }
     };
 
@@ -200,10 +228,7 @@ export function PhantomTemplePage() {
             {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">幻影神殿</h1>
-                    <p className="text-muted-foreground mt-1">
-                        组队探索神殿，挑战强大敌人获取奖励
-                    </p>
+                    <h1 className="text-3xl font-bold">{t('[CommonHeaderLocalRaidLabel]')}</h1>
                 </div>
                 <Button variant="outline" size="sm" onClick={() => { refresh(); refreshLogs(); }}>
                     <RefreshCw className="h-4 w-4 mr-2" />
@@ -211,23 +236,13 @@ export function PhantomTemplePage() {
                 </Button>
             </div>
 
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>幻影神殿说明：</strong>
-                    最多3人组队，24小时开放。每天最多6次挑战，难度越高奖励越丰厚。
-                    特定时段(12:30-13:30、19:30-20:30)挑战可获得额外奖励。
-                </AlertDescription>
-            </Alert>
-
             {/* 加成时段提示 */}
             {bonusTimeInfo.inBonus && (
                 <Alert className="bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 border-yellow-500">
                     <Zap className="h-4 w-4 text-yellow-600" />
                     <AlertDescription className="text-yellow-800 dark:text-yellow-200">
                         <strong>奖励加成时段！</strong>
-                        当前时段挑战可获得 {bonusTimeInfo.bonusRate}% 额外奖励
+                        当前时段挑战可获得 {bonusTimeInfo.bonusRate}% 奖励（额外 +{bonusExtraRate}%）
                     </AlertDescription>
                 </Alert>
             )}
@@ -267,10 +282,10 @@ export function PhantomTemplePage() {
                     <CardContent>
                         <div className="text-center py-2">
                             <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                                Lv.--
+                                {localRaidLevelText}
                             </div>
                             <div className="text-xs text-muted-foreground mt-1">
-                                随世界开设时长提升
+                                {hasLocalRaidLevelText ? null : '随世界开设时长提升'}
                             </div>
                         </div>
                     </CardContent>
@@ -280,27 +295,33 @@ export function PhantomTemplePage() {
                     <CardHeader className="pb-2">
                         <CardTitle className="flex items-center gap-2 text-base">
                             <Clock className="h-5 w-5 text-orange-500" />
-                            奖励加成
+                            {t('[LocalRaidQuestEventRewardLabel]')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="text-center py-2">
                             {bonusTimeInfo.inBonus ? (
-                                <div className="text-sm font-semibold text-green-600">
-                                    加成进行中 ({bonusTimeInfo.bonusRate}%)
-                                </div>
+                                <div
+                                    className="text-sm font-semibold text-green-600"
+                                    dangerouslySetInnerHTML={{
+                                        __html: inBonusMessage,
+                                    }}
+                                />
                             ) : (
                                 <>
-                                    <div className="text-sm text-muted-foreground mb-1">
-                                        下个时段
-                                    </div>
-                                    <div className="text-sm font-semibold">
-                                        {formatTimeNumber(bonusTimeInfo.nextBonusTime)}:00
-                                    </div>
+                                    <div
+                                        className="text-sm font-semibold"
+                                        dangerouslySetInnerHTML={{
+                                            __html: nextBonusMessage,
+                                        }}
+                                    />
                                 </>
                             )}
                             <div className="text-xs text-muted-foreground mt-1">
-                                12:30-13:30 / 19:30-20:30
+                                {eventTimeLabel}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-1">
+                                {t('[LocalRaidQuestEventRewardLabel]')}: x{bonusMultiplierText}（+{bonusExtraRate}%）
                             </div>
                         </div>
                     </CardContent>
@@ -310,7 +331,7 @@ export function PhantomTemplePage() {
             <Tabs defaultValue="quests" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="quests">探索任务</TabsTrigger>
-                    <TabsTrigger value="logs">战斗记录</TabsTrigger>
+                    <TabsTrigger value="logs">{t('[BattleReportTitle]')}</TabsTrigger>
                 </TabsList>
 
                 {/* 探索任务 */}
@@ -322,101 +343,100 @@ export function PhantomTemplePage() {
                             </CardContent>
                         </Card>
                     ) : (
-                        questInfos.map((quest) => {
-                            const templeName = t(getTempleName(quest.localRaidBannerId));
-                            const isCleared = isQuestCleared(quest.id);
-                            const enemies = getQuestEnemies(quest);
+                        <div className="grid gap-4 md:grid-cols-2">
+                            {[...questInfos].sort((a, b) => b.level - a.level).map((quest) => {
+                                const templeName = t(getTempleName(quest.localRaidBannerId));
+                                const isCleared = isQuestCleared(quest.id);
+                                const enemies = getQuestEnemies(quest);
 
-                            return (
-                                <Card
-                                    key={quest.id}
-                                    className={clsx(
-                                        "hover:shadow-lg transition-all",
-                                        isCleared && "border-green-200 dark:border-green-800"
-                                    )}
-                                >
-                                    <CardHeader>
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                                                    <Swords className="h-6 w-6 text-white" />
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <CardTitle className="text-lg">{templeName}</CardTitle>
-                                                        {!isCleared && (
-                                                            <Badge className="bg-red-500 text-xs">首次</Badge>
-                                                        )}
-                                                        {isCleared && (
-                                                            <Badge variant="outline" className="border-green-500 text-green-500 text-xs">
-                                                                已通关
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    <CardDescription>
-                                                        推荐战力: {quest.recommendedBattlePower.toLocaleString()}
-                                                    </CardDescription>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                {renderStars(quest.level)}
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        {/* 敌人预览 */}
-                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                            <Users className="h-4 w-4" />
-                                            <span>敌人: {enemies.length} 名</span>
-                                            <span>•</span>
-                                            <span>
-                                                总战力: {enemies.reduce((sum, e) => sum + e.battlePower, 0).toLocaleString()}
-                                            </span>
-                                        </div>
-
-                                        {/* 奖励预览 */}
-                                        <div>
-                                            <div className="text-sm font-medium mb-2">确定奖励</div>
-                                            <div className="flex flex-wrap gap-2">
-                                                {renderRewards(quest.fixedBattleRewards)}
-                                            </div>
-                                        </div>
-
-                                        {/* 首次通关奖励 */}
-                                        {!isCleared && quest.firstBattleRewards.length > 0 && (
-                                            <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 rounded-lg border border-yellow-200">
-                                                <div className="text-sm font-medium mb-2 text-yellow-800 dark:text-yellow-200">
-                                                    首次通关奖励
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {renderRewards(quest.firstBattleRewards)}
-                                                </div>
-                                            </div>
+                                return (
+                                    <Card
+                                        key={quest.id}
+                                        className={clsx(
+                                            "hover:shadow-lg transition-all",
+                                            isCleared && "border-green-200 dark:border-green-800"
                                         )}
+                                    >
+                                        <CardHeader>
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                                                        <Swords className="h-6 w-6 text-white" />
+                                                    </div>
+                                                    <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <CardTitle className="text-lg">{templeName}</CardTitle>
+                                                            {!isCleared && (
+                                                                <Badge className="bg-red-500 text-xs">{t('[CommonFirstRewardLabel]')}</Badge>
+                                                            )}
+                                                            {isCleared && (
+                                                                <Badge variant="outline" className="border-green-500 text-green-500 text-xs">
+                                                                    已通关
+                                                                </Badge>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    {renderStars(quest.level)}
+                                                </div>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4">
+                                            {/* 敌人预览 */}
+                                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                                <Users className="h-4 w-4" />
+                                                <span>敌人: {enemies.length} 名</span>
+                                                <span>•</span>
+                                                <span>
+                                                    总战力: {enemies.reduce((sum, e) => sum + e.battlePower, 0).toLocaleString()}
+                                                </span>
+                                            </div>
 
-                                        {/* 操作按钮 */}
-                                        <div className="flex gap-2 pt-2">
+                                            {/* 奖励预览 */}
+                                            <div>
+                                                <div className="text-sm font-medium mb-2">确定奖励</div>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {renderRewards(quest.fixedBattleRewards)}
+                                                </div>
+                                            </div>
+
+                                            {/* 首次通关奖励 */}
+                                            {!isCleared && quest.firstBattleRewards.length > 0 && (
+                                                <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950 rounded-lg border border-yellow-200">
+                                                    <div className="text-sm font-medium mb-2 text-yellow-800 dark:text-yellow-200">
+                                                        首次通关奖励
+                                                    </div>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {renderRewards(quest.firstBattleRewards)}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* 操作按钮 */}
+                                            <div className="flex gap-2 pt-2">
                                             <Button
                                                 variant="outline"
                                                 className="flex-1"
                                                 onClick={() => openDetail(quest)}
                                             >
                                                 <Trophy className="mr-2 h-4 w-4" />
-                                                查看详情
+                                                {t('[CommonDetailLabel]')}
                                             </Button>
-                                            <Button
-                                                className="flex-1"
-                                                onClick={() => openLobby(quest)}
-                                                disabled={remainingCount <= 0}
-                                            >
-                                                <Users className="mr-2 h-4 w-4" />
-                                                {remainingCount <= 0 ? '今日次数已用完' : '挑战'}
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            );
-                        })
+                                                <Button
+                                                    className="flex-1"
+                                                    onClick={() => openLobby(quest)}
+                                                    disabled={remainingCount <= 0}
+                                                >
+                                                    <Users className="mr-2 h-4 w-4" />
+                                                    {remainingCount <= 0 ? '今日次数已用完' : t('[CommonChallengeLabel]')}
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
                     )}
                 </TabsContent>
 
@@ -524,9 +544,7 @@ export function PhantomTemplePage() {
                         <DialogTitle>
                             {selectedQuest && t(getTempleName(selectedQuest.localRaidBannerId))}
                         </DialogTitle>
-                        <DialogDescription>
-                            推荐战力: {selectedQuest?.recommendedBattlePower.toLocaleString()}
-                        </DialogDescription>
+                        <DialogDescription />
                     </DialogHeader>
 
                     {selectedQuest && (
@@ -535,7 +553,7 @@ export function PhantomTemplePage() {
                             <div>
                                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                                     <Swords className="h-5 w-5" />
-                                    敌方阵容
+                                    {t('[TowerBattleEnemyPartyLabel]')}
                                 </h3>
                                 <div className="space-y-2">
                                     {renderEnemies(getQuestEnemies(selectedQuest))}
@@ -546,7 +564,7 @@ export function PhantomTemplePage() {
                             <div>
                                 <h3 className="font-semibold mb-3 flex items-center gap-2">
                                     <Trophy className="h-5 w-5" />
-                                    战利品
+                                    {t('[BattleResultRewardTitle]')}
                                 </h3>
                                 <div className="space-y-4">
                                     {/* 首次奖励 */}

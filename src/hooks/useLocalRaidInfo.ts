@@ -4,10 +4,11 @@ import { useMasterTable } from '@/hooks/useMasterData';
 import { LocalRaidBannerMB } from '@/api/generated/localRaidBannerMB';
 import { LocalRaidBonusScheduleMB } from '@/api/generated/localRaidBonusScheduleMB';
 import { LocalRaidQuestInfo } from '@/api/generated/localRaidQuestInfo';
+import { LocalRaidQuestGroupMB } from '@/api/generated/localRaidQuestGroupMB';
 import { LocalRaidEnemyInfo } from '@/api/generated/localRaidEnemyInfo';
 import { LocalRaidBattleLogInfo } from '@/api/generated/localRaidBattleLogInfo';
 import { useTimeManager } from '@/hooks/useTimeManager';
-import { useUserStore } from '@/store/userStore';
+import { useAccountStore } from '@/store/accountStore';
 
 /**
  * 幻影神殿信息 Hook
@@ -21,14 +22,15 @@ export function useLocalRaidInfo() {
     const [eventQuestIds, setEventQuestIds] = useState<number[]>([]);
     const [clearCountDict, setClearCountDict] = useState<Record<number, number>>({});
     const [challengeCount, setChallengeCount] = useState(0);
-
-    // 从全局 store 获取 playerId
-    const playerId = useUserStore((state) => state.userInfo?.playerId || 0);
+    const getCurrentUserSyncData = useAccountStore((state) => state.getCurrentUserSyncData);
+    const currentUserSyncData = getCurrentUserSyncData();
+    const playerId = currentUserSyncData?.userStatusDtoInfo?.playerId ?? 0;
     const timeManager = useTimeManager();
 
     // 获取 Master 数据
     const { data: bannerTable, loading: bannerLoading } = useMasterTable<LocalRaidBannerMB>('LocalRaidBannerTable');
     const { data: bonusScheduleTable, loading: bonusLoading } = useMasterTable<LocalRaidBonusScheduleMB>('LocalRaidBonusScheduleTable');
+    const { data: questGroupTable, loading: questGroupLoading } = useMasterTable<LocalRaidQuestGroupMB>('LocalRaidQuestGroupTable');
 
     // 获取 API 数据
     const fetchData = useCallback(async () => {
@@ -63,10 +65,13 @@ export function useLocalRaidInfo() {
 
         const schedule = bonusScheduleTable[0];
         const now = new Date(timeManager.getServerNowMs());
-        const currentMinutes = now.getHours() * 100 + now.getMinutes();
+        const currentTime = now.getHours() * 100 + now.getMinutes();
+        const toHHMM = (timeValue: number) => Math.floor(timeValue / 100);
 
         for (const time of schedule.localRaidStartEndTimes) {
-            if (currentMinutes >= time.startTime && currentMinutes <= time.endTime) {
+            const startTime = toHHMM(time.startTime);
+            const endTime = toHHMM(time.endTime);
+            if (currentTime >= startTime && currentTime <= endTime) {
                 return {
                     inBonus: true,
                     nextBonusTime: null,
@@ -78,14 +83,15 @@ export function useLocalRaidInfo() {
         // 找下一个加成时段
         let nextTime: number | null = null;
         for (const time of schedule.localRaidStartEndTimes) {
-            if (time.startTime > currentMinutes) {
-                nextTime = time.startTime;
+            const startTime = toHHMM(time.startTime);
+            if (startTime > currentTime) {
+                nextTime = startTime;
                 break;
             }
         }
         // 如果今天没有了，取明天的第一个
         if (nextTime === null && schedule.localRaidStartEndTimes.length > 0) {
-            nextTime = schedule.localRaidStartEndTimes[0].startTime;
+            nextTime = toHHMM(schedule.localRaidStartEndTimes[0].startTime);
         }
 
         return {
@@ -94,6 +100,34 @@ export function useLocalRaidInfo() {
             bonusRate: schedule.rewardBonusRate / 100
         };
     }, [bonusScheduleTable]);
+
+    const bonusScheduleTimes = useMemo(() => {
+        return bonusScheduleTable?.[0]?.localRaidStartEndTimes ?? [];
+    }, [bonusScheduleTable]);
+
+    const localRaidLevel = useMemo(() => {
+        const worldCreateTimestamp = currentUserSyncData?.createWorldLocalTimeStamp;
+        if (!questGroupTable || questGroupTable.length === 0 || !worldCreateTimestamp) {
+            return null;
+        }
+
+        const nowMs = timeManager.getServerNowMs();
+        const worldCreateMs = worldCreateTimestamp < 1_000_000_000_000
+            ? worldCreateTimestamp * 1000
+            : worldCreateTimestamp;
+        const diffDays = Math.max(0, Math.floor((nowMs - worldCreateMs) / (1000 * 60 * 60 * 24)));
+
+        let maxLevel: number | null = null;
+        for (const group of questGroupTable) {
+            if (group.overDayFromCreateWorldTime <= diffDays) {
+                if (maxLevel === null || group.localRaidLevel > maxLevel) {
+                    maxLevel = group.localRaidLevel;
+                }
+            }
+        }
+
+        return maxLevel;
+    }, [currentUserSyncData?.createWorldLocalTimeStamp, questGroupTable, timeManager]);
 
     // 获取殿堂名称
     const getTempleName = useCallback((bannerId: number): string => {
@@ -119,7 +153,7 @@ export function useLocalRaidInfo() {
     }, [clearCountDict]);
 
     return {
-        loading: loading || bannerLoading || bonusLoading,
+        loading: loading || bannerLoading || bonusLoading || questGroupLoading,
         questInfos,
         enemyInfos,
         openQuestIds,
@@ -128,6 +162,8 @@ export function useLocalRaidInfo() {
         remainingCount,
         challengeCount,
         bonusTimeInfo,
+        bonusScheduleTimes,
+        localRaidLevel,
         bannerTable,
         playerId,
         getTempleName,
