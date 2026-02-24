@@ -3,7 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Separator } from '@/components/ui/separator';
 import { Slider } from '@/components/ui/slider';
 import {
@@ -29,7 +38,6 @@ import {
     Heart,
     Trophy,
     Clock,
-    BookOpen,
     Tag,
     Loader2,
     AlarmClock
@@ -83,6 +91,17 @@ export function ShopPage() {
     const [selectedConsumeItem, setSelectedConsumeItem] = useState<string>(''); // "itemType-itemId" 格式
     const [autoBuyDiscount, setAutoBuyDiscount] = useState<number>(0);
     const [autoBuyConsumeCount, setAutoBuyConsumeCount] = useState<number>(0);
+    const [nowMs, setNowMs] = useState(() => Date.now());
+
+    // 购买二次确认对话框状态
+    const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+    const [confirmDialogTitle, setConfirmDialogTitle] = useState(t('[PurchaseConfirmationTitle]'));
+    const [confirmDialogDescription, setConfirmDialogDescription] = useState(t('[PurchaseConfirmationMessage]'));
+    const [confirmDialogActionLabel, setConfirmDialogActionLabel] = useState(t('[PurchaseConfirmationYesButton]'));
+    const [confirmDialogItemLabel, setConfirmDialogItemLabel] = useState('');
+    const [confirmDialogConsumeItems, setConfirmDialogConsumeItems] = useState<Array<{ name: string; required: number; owned: number }>>([]);
+    const [confirmDialogOwnedCount, setConfirmDialogOwnedCount] = useState<number | null>(null);
+    const [confirmAction, setConfirmAction] = useState<(() => Promise<void>) | null>(null);
 
 
 
@@ -167,6 +186,14 @@ export function ShopPage() {
             loadData();
         }
     }, [loadData, currentAccount]);
+
+    useEffect(() => {
+        const timer = window.setInterval(() => {
+            setNowMs(Date.now());
+        }, 1000);
+
+        return () => window.clearInterval(timer);
+    }, []);
 
     // 保存自动购买配置到服务器
     const saveShopConfig = async (newConfig: ShopConfig) => {
@@ -299,6 +326,33 @@ export function ShopPage() {
         setAutoBuyDialogOpen(false);
     };
 
+    const openPurchaseConfirm = (
+        title: string,
+        description: string,
+        actionLabel: string,
+        itemLabel: string,
+        consumeItems: Array<{ name: string; required: number; owned: number }>,
+        ownedCount: number | null,
+        action: () => Promise<void>
+    ) => {
+        setConfirmDialogTitle(title);
+        setConfirmDialogDescription(description);
+        setConfirmDialogActionLabel(actionLabel);
+        setConfirmDialogItemLabel(itemLabel);
+        setConfirmDialogConsumeItems(consumeItems);
+        setConfirmDialogOwnedCount(ownedCount);
+        setConfirmAction(() => action);
+        setConfirmDialogOpen(true);
+    };
+
+    const handleConfirmPurchase = async () => {
+        if (!confirmAction) return;
+        const action = confirmAction;
+        setConfirmDialogOpen(false);
+        setConfirmAction(null);
+        await action();
+    };
+
 
 
     const handleBuyTradeItem = async (tabId: number, item: TradeShopItem) => {
@@ -428,6 +482,102 @@ export function ShopPage() {
         return text;
     };
 
+    const getTradeItemConsumeItems = (item: TradeShopItem) => {
+        const items: Array<{ name: string; required: number; owned: number }> = [];
+
+        if (item.consumeItem1) {
+            const owned = getUserItemCount(
+                userItems,
+                item.consumeItem1.itemType,
+                item.consumeItem1.itemId,
+                item.consumeItem1.itemType === ItemType.CurrencyFree || item.consumeItem1.itemType === ItemType.CurrencyPaid
+            );
+            items.push({
+                name: getItemName(item.consumeItem1.itemType, item.consumeItem1.itemId),
+                required: item.consumeItem1.itemCount,
+                owned
+            });
+        }
+
+        if (item.consumeItem2) {
+            const owned = getUserItemCount(
+                userItems,
+                item.consumeItem2.itemType,
+                item.consumeItem2.itemId,
+                item.consumeItem2.itemType === ItemType.CurrencyFree || item.consumeItem2.itemType === ItemType.CurrencyPaid
+            );
+            items.push({
+                name: getItemName(item.consumeItem2.itemType, item.consumeItem2.itemId),
+                required: item.consumeItem2.itemCount,
+                owned
+            });
+        }
+
+        return items;
+    };
+
+    const getSphereConsumeItems = (lv: number, count: number) => {
+        const tradeShopSphereMb = tradeShopSphereMap[lv];
+        if (!tradeShopSphereMb) return [];
+
+        const items: Array<{ name: string; required: number; owned: number }> = [];
+
+        if (tradeShopSphereMb.consumeItem1) {
+            const required = tradeShopSphereMb.consumeItem1.itemCount * count;
+            const owned = getUserItemCount(
+                userItems,
+                tradeShopSphereMb.consumeItem1.itemType,
+                tradeShopSphereMb.consumeItem1.itemId,
+                tradeShopSphereMb.consumeItem1.itemType === ItemType.CurrencyFree || tradeShopSphereMb.consumeItem1.itemType === ItemType.CurrencyPaid
+            );
+            items.push({
+                name: getItemName(tradeShopSphereMb.consumeItem1.itemType, tradeShopSphereMb.consumeItem1.itemId),
+                required,
+                owned
+            });
+        }
+
+        if (tradeShopSphereMb.consumeItem2) {
+            const required = tradeShopSphereMb.consumeItem2.itemCount * count;
+            const owned = getUserItemCount(
+                userItems,
+                tradeShopSphereMb.consumeItem2.itemType,
+                tradeShopSphereMb.consumeItem2.itemId,
+                tradeShopSphereMb.consumeItem2.itemType === ItemType.CurrencyFree || tradeShopSphereMb.consumeItem2.itemType === ItemType.CurrencyPaid
+            );
+            items.push({
+                name: getItemName(tradeShopSphereMb.consumeItem2.itemType, tradeShopSphereMb.consumeItem2.itemId),
+                required,
+                owned
+            });
+        }
+
+        return items;
+    };
+
+    const formatRemainTime = (expirationTimeStamp: number) => {
+        const remainSeconds = Math.max(0, Math.floor((expirationTimeStamp - nowMs) / 1000));
+        const days = Math.floor(remainSeconds / 86400);
+        const hours = Math.floor((remainSeconds % 86400) / 3600);
+        const minutes = Math.floor((remainSeconds % 3600) / 60);
+        const seconds = remainSeconds % 60;
+
+        if (days > 0) {
+            return t('[CommonRemainTimeFull]', [days, hours, minutes, seconds]);
+        }
+
+        return t('[CommonTimeFormatOnlyTime]', [hours, minutes, seconds]);
+    };
+
+    const getOwnedItemCount = (itemType: ItemType, itemId: number) => {
+        return getUserItemCount(
+            userItems,
+            itemType,
+            itemId,
+            itemType === ItemType.CurrencyFree || itemType === ItemType.CurrencyPaid
+        );
+    };
+
     // 检查普通商品是否可以购买
     const canBuyTradeItem = (item: TradeShopItem) => {
         // 检查库存限制
@@ -531,25 +681,13 @@ export function ShopPage() {
             {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">商城</h1>
-                    <p className="text-muted-foreground mt-1">
-                        购买资源，提升实力
-                    </p>
+                    <h1 className="text-3xl font-bold">{t('[CommonHeaderExchangeLabel]')}</h1>
                 </div>
                 <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
                     <Clock className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                     刷新数据
                 </Button>
             </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>商城说明：</strong>
-                    使用不同货币购买各类资源和道具。部分商品有库存限制，每日或每周刷新。
-                </AlertDescription>
-            </Alert>
 
             <Tabs defaultValue={([...tradeShopTabs, ...weeklyShopTabs])[0]?.tradeShopTabId?.toString()} className="space-y-6">
                 <div className="overflow-x-auto pb-2">
@@ -584,8 +722,8 @@ export function ShopPage() {
                                         </CardTitle>
                                         <CardDescription>
                                             {tab.expirationTimeStamp > 0
-                                                ? `限时兑换，截止时间: ${new Date(tab.expirationTimeStamp).toLocaleString()}`
-                                                : '常驻资源兑换'
+                                                ? `${t('[ExchangeExpirationTimeLabel]')} ${formatRemainTime(tab.expirationTimeStamp)}`
+                                                : null
                                             }
                                         </CardDescription>
                                     </div>
@@ -644,9 +782,6 @@ export function ShopPage() {
                                                 })}
                                             </div>
                                         )}
-                                        {tab.expirationTimeStamp > 0 && (
-                                            <Badge className="bg-orange-500">限时活动</Badge>
-                                        )}
                                     </div>
                                 </div>
                             </CardHeader>
@@ -658,6 +793,7 @@ export function ShopPage() {
                                             const state = getSphereBuyState(sphere.id);
                                             const maxCount = getMaxSphereBuyCount(sphere, state.lv);
                                             const buyEnabled = canBuySphere(state.lv) && maxCount > 0;
+                                            const targetSphereInView = sphereList.find(s => s.categoryId === sphere.categoryId && s.lv === state.lv);
 
                                             return (
                                                 <Card key={sphere.id}>
@@ -713,9 +849,17 @@ export function ShopPage() {
                                                         <Button
                                                             className="w-full"
                                                             disabled={!buyEnabled}
-                                                            onClick={() => handleBuySphere(tab.tradeShopTabId, sphere)}
+                                                            onClick={() => openPurchaseConfirm(
+                                                                t('[PurchaseConfirmationTitle]'),
+                                                                t('[PurchaseConfirmationMessage]'),
+                                                                t('[PurchaseConfirmationYesButton]'),
+                                                                `${t(sphere.nameKey)} Lv.${state.lv} × ${state.count}`,
+                                                                getSphereConsumeItems(state.lv, state.count),
+                                                                getOwnedItemCount(ItemType.Sphere, targetSphereInView?.id ?? sphere.id),
+                                                                () => handleBuySphere(tab.tradeShopTabId, sphere)
+                                                            )}
                                                         >
-                                                            {buyEnabled ? '购买' : '资源不足'}
+                                                            {t('[PurchaseConfirmationYesButton]')}
                                                         </Button>
                                                     </CardContent>
                                                 </Card>
@@ -752,7 +896,7 @@ export function ShopPage() {
                                                                 </span>
                                                             </div>
                                                         ) : (
-                                                            <span className="font-bold text-green-600">免费</span>
+                                                            <span className="font-bold text-green-600">{t('[ShopProductFreeLabel]')}</span>
                                                         )}
                                                         {item.consumeItem2 && (
                                                             <div className="flex items-center gap-2">
@@ -784,9 +928,17 @@ export function ShopPage() {
                                                                         <Button
                                                                             size="sm"
                                                                             disabled={!canBuy}
-                                                                            onClick={() => handleBuyTradeItem(tab.tradeShopTabId, item)}
+                                                                            onClick={() => openPurchaseConfirm(
+                                                                                t('[PurchaseConfirmationTitle]'),
+                                                                                t('[PurchaseConfirmationMessage]'),
+                                                                                t('[PurchaseConfirmationYesButton]'),
+                                                                                `${getItemName(item.giveItem.itemType, item.giveItem.itemId)} × ${item.giveItem.itemCount}`,
+                                                                                getTradeItemConsumeItems(item),
+                                                                                getOwnedItemCount(item.giveItem.itemType, item.giveItem.itemId),
+                                                                                () => handleBuyTradeItem(tab.tradeShopTabId, item)
+                                                                            )}
                                                                         >
-                                                                            {isSoldOut ? '已售罄' : (canBuy ? '兑换' : '资源不足')}
+                                                                            {isSoldOut ? '已售罄' : t('[PurchaseConfirmationYesButton]')}
                                                                         </Button>
                                                                     </>
                                                                 );
@@ -803,6 +955,53 @@ export function ShopPage() {
                     </TabsContent>
                 );})}
             </Tabs>
+
+            <AlertDialog open={confirmDialogOpen} onOpenChange={(open) => {
+                setConfirmDialogOpen(open);
+                if (!open) {
+                    setConfirmAction(null);
+                }
+            }}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>{confirmDialogTitle}</AlertDialogTitle>
+                        <AlertDialogDescription>{confirmDialogDescription}</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <div className="space-y-3 text-sm">
+                        <div className="rounded-md border bg-muted/30 px-3 py-2 text-center font-medium">
+                            {confirmDialogItemLabel || '未知物品'}
+                        </div>
+                        {confirmDialogOwnedCount !== null && (
+                            <div className="flex items-center gap-2 text-xs text-emerald-600">
+                                <span>{t('[CommonOwnCurrencyLabel]')}</span>
+                                <span className="font-semibold">{confirmDialogOwnedCount.toLocaleString()}</span>
+                            </div>
+                        )}
+                        {confirmDialogConsumeItems.length > 0 ? (
+                            <div className="space-y-2">
+                                {confirmDialogConsumeItems.map((consumeItem) => (
+                                    <div key={consumeItem.name} className="flex items-center justify-between gap-2">
+                                        <span className="text-muted-foreground truncate">{consumeItem.name}</span>
+                                        <div className="flex items-center gap-3 text-xs">
+                                            <span className="text-muted-foreground">{t('[CommonRequireLabel]')}</span>
+                                            <span className="font-semibold">{consumeItem.required.toLocaleString()}</span>
+                                            <Separator orientation="vertical" className="h-3" />
+                                            <span className="text-muted-foreground">{t('[CommonPossessionLabel]')}</span>
+                                            <span className="font-semibold">{consumeItem.owned.toLocaleString()}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div className="text-center text-muted-foreground">{t('[ShopProductFreeLabel]')}</div>
+                        )}
+                    </div>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>{t('[CommonCancelLabel]')}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleConfirmPurchase}>{confirmDialogActionLabel}</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* 自动购买对话框 */}
             <Dialog open={autoBuyDialogOpen} onOpenChange={setAutoBuyDialogOpen}>

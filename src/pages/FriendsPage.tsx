@@ -4,14 +4,12 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
     Users,
     UserPlus,
     Heart,
     Gift,
     Search,
-    BookOpen,
     Check,
     X,
     UserX,
@@ -26,6 +24,7 @@ import { FriendInfoType } from '@/api/generated/friendInfoType';
 import { LanguageType } from '@/api/generated/languageType';
 import { PlayerInfo } from '@/api/generated/playerInfo';
 import { useTimeManager } from '@/hooks/useTimeManager';
+import { useTranslation } from '@/hooks/useTranslation';
 import { AssetManager } from '@/lib/asset-manager';
 import { parseOrtegaError } from '@/lib/errorHandler';
 
@@ -51,6 +50,7 @@ interface FriendStats {
 
 export function FriendsPage() {
     const timeManager = useTimeManager();
+    const { t } = useTranslation();
     const [activeTab, setActiveTab] = useState('friends');
     const [searchId, setSearchId] = useState('');
     const [searching, setSearching] = useState(false);
@@ -220,7 +220,7 @@ export function FriendsPage() {
     // 搜索好友
     const handleSearch = async () => {
         if (!searchId.trim()) {
-            toast({ title: '请输入玩家ID', variant: 'destructive' });
+            toast({ title: t('[ClientErrorMessage300009]'), variant: 'destructive' });
             return;
         }
 
@@ -540,21 +540,8 @@ export function FriendsPage() {
         <div className="space-y-6">
             {/* 页面标题 */}
             <div>
-                <h1 className="text-3xl font-bold">好友</h1>
-                <p className="text-muted-foreground mt-1">
-                    管理好友，赠送友情点数，分享游戏乐趣
-                </p>
+                <h1 className="text-3xl font-bold">{t('[CommonHeaderFriendLabel]')}</h1>
             </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>好友系统说明：</strong>
-                    最多{stats.maxFriends}位好友。每天可向每位好友赠送1次友情点数，最多可领取{stats.maxReceive}位好友赠送的友情点数。
-                    最多可屏蔽{stats.maxBlocks}名玩家。
-                </AlertDescription>
-            </Alert>
 
             {/* 统计卡片 */}
             <div className="grid gap-6 md:grid-cols-3">
@@ -636,19 +623,19 @@ export function FriendsPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="friends">
-                        好友 ({stats.friendCount})
+                        {t('[FriendTabFriend]')} ({stats.friendCount})
                     </TabsTrigger>
                     <TabsTrigger value="requests">
-                        待同意 ({pendingRequests.length})
+                        {t('[FriendTabApprovalPending]')} ({pendingRequests.length})
                     </TabsTrigger>
                     <TabsTrigger value="applying">
-                        申请中 ({sentRequests.length})
+                        {t('[FriendTabApplying]')} ({sentRequests.length})
                     </TabsTrigger>
                     <TabsTrigger value="search">
-                        添加好友
+                        {t('[FriendTabSearch]')}
                     </TabsTrigger>
                     <TabsTrigger value="blocked">
-                        屏蔽 ({stats.blockCount})
+                        {t('[FriendTabBlock]')} ({stats.blockCount})
                     </TabsTrigger>
                 </TabsList>
 
@@ -760,7 +747,7 @@ export function FriendsPage() {
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                                 <Users className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
-                                <h3 className="text-lg font-semibold mb-2">暂无好友</h3>
+                                <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageFriend]')}</h3>
                                 <p className="text-muted-foreground text-sm mb-4">
                                     添加好友可以互相赠送友情点数
                                 </p>
@@ -798,7 +785,7 @@ export function FriendsPage() {
                                         ) : (
                                             <Check className="mr-2 h-4 w-4" />
                                         )}
-                                        全部同意
+                                        {t('[BulkApproval]')}
                                     </Button>
                                     <Button
                                         variant="outline"
@@ -811,7 +798,7 @@ export function FriendsPage() {
                                         ) : (
                                             <X className="mr-2 h-4 w-4" />
                                         )}
-                                        全部拒绝
+                                        {t('[MassRejection]')}
                                     </Button>
                                 </div>
                             </div>
@@ -821,7 +808,7 @@ export function FriendsPage() {
                                     <FriendCard
                                         key={request.playerId}
                                         player={request}
-                                        topRight="申请中"
+                                        topRight={t('[FriendTabApplying]')}
                                         actions={
                                             <>
                                                 <Button
@@ -859,7 +846,7 @@ export function FriendsPage() {
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                                 <Users className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
-                                <h3 className="text-lg font-semibold mb-2">暂无好友申请</h3>
+                                <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageApprovalPending]')}</h3>
                                 <p className="text-muted-foreground text-sm">
                                     当有玩家向你发送好友申请时会显示在这里
                                 </p>
@@ -881,10 +868,10 @@ export function FriendsPage() {
                                 <div className="text-sm text-muted-foreground">
                                     {sentRequests.length} 个申请中
                                 </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={handleCancelAllApply}
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={handleCancelAllApply}
                                     disabled={actionLoading === 'cancel-all'}
                                 >
                                     {actionLoading === 'cancel-all' ? (
@@ -892,7 +879,7 @@ export function FriendsPage() {
                                     ) : (
                                         <X className="mr-2 h-4 w-4" />
                                     )}
-                                    全部取消
+                                    {t('[MassApplyRelease]')}
                                 </Button>
                             </div>
 
@@ -902,7 +889,7 @@ export function FriendsPage() {
                                         key={request.playerId}
                                         player={request}
                                         topRight="等待回应"
-                                        actions={<Badge variant="secondary">申请中</Badge>}
+                                        actions={<Badge variant="secondary">{t('[FriendTabApplying]')}</Badge>}
                                     />
                                 ))}
                             </div>
@@ -911,10 +898,7 @@ export function FriendsPage() {
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                                 <MessageCircle className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
-                                <h3 className="text-lg font-semibold mb-2">暂无申请</h3>
-                                <p className="text-muted-foreground text-sm">
-                                    你还没有向其他玩家发送好友申请
-                                </p>
+                                <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageApplying]')}</h3>
                             </CardContent>
                         </Card>
                     )}
@@ -923,20 +907,21 @@ export function FriendsPage() {
                 {/* 添加好友 */}
                 <TabsContent value="search" className="space-y-6">
                     <Card>
-                        <CardHeader>
-                            <CardTitle>通过ID搜索好友</CardTitle>
-                            <CardDescription>输入玩家ID来添加好友</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="flex gap-2">
+                        <CardHeader className="flex flex-row items-center justify-between">
+                            <div>
+                                <CardTitle>{t('[FriendRecommendPlayerCaption]')}</CardTitle>
+                                <CardDescription>战力相近的其他玩家</CardDescription>
+                            </div>
+                            <div className="flex items-center gap-2">
                                 <Input
-                                    placeholder="请输入玩家ID"
+                                    placeholder={t('[FriendSearchInputPlayerIdTitle]')}
                                     value={searchId}
                                     onChange={(e) => setSearchId(e.target.value)}
-                                    className="flex-1"
+                                    className="w-48"
                                     onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                                 />
                                 <Button
+                                    size="sm"
                                     onClick={handleSearch}
                                     disabled={searching}
                                 >
@@ -945,10 +930,25 @@ export function FriendsPage() {
                                     ) : (
                                         <Search className="mr-2 h-4 w-4" />
                                     )}
-                                    搜索
+                                    {t('[CommonSearchLabel]')}
                                 </Button>
+                                {recommendations.length > 0 && (
+                                    <Button
+                                        size="sm"
+                                        onClick={handleBulkApply}
+                                        disabled={actionLoading === 'bulk-apply'}
+                                    >
+                                        {actionLoading === 'bulk-apply' ? (
+                                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        ) : (
+                                            <UserPlus className="mr-2 h-4 w-4" />
+                                        )}
+                                        {t('[BulkApplyFriend]')}
+                                    </Button>
+                                )}
                             </div>
-
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             {searchedPlayer && (
                                 <FriendCard
                                     player={searchedPlayer}
@@ -971,42 +971,6 @@ export function FriendsPage() {
                                     }
                                 />
                             )}
-
-                            <div className="p-4 bg-muted rounded-lg">
-                                <div className="text-sm text-muted-foreground">
-                                    💡 提示：
-                                    <ul className="mt-2 space-y-1 list-disc list-inside">
-                                        <li>最多可添加{stats.maxFriends}位好友</li>
-                                        <li>好友可以互相赠送友情点数</li>
-                                        <li>好友可用于组队和借用支援角色</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div>
-                                <CardTitle>推荐好友</CardTitle>
-                                <CardDescription>战力相近的其他玩家</CardDescription>
-                            </div>
-                            {recommendations.length > 0 && (
-                                <Button
-                                    size="sm"
-                                    onClick={handleBulkApply}
-                                    disabled={actionLoading === 'bulk-apply'}
-                                >
-                                    {actionLoading === 'bulk-apply' ? (
-                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    ) : (
-                                        <UserPlus className="mr-2 h-4 w-4" />
-                                    )}
-                                    全部申请
-                                </Button>
-                            )}
-                        </CardHeader>
-                        <CardContent>
                             {loadingTabs.applying ? (
                                 <div className="flex items-center justify-center py-20">
                                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -1018,7 +982,7 @@ export function FriendsPage() {
                                         <FriendCard
                                             key={player.playerId}
                                             player={player}
-                                            topRight="推荐"
+                                            topRight={t('[SelectWorldRecommend]')}
                                             actions={
                                                 <Button
                                                     size="icon"
@@ -1038,7 +1002,7 @@ export function FriendsPage() {
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    暂无推荐好友
+                                    {t('[FriendListEmptyMessageSearch]')}
                                 </div>
                             )}
                         </CardContent>
@@ -1086,11 +1050,11 @@ export function FriendsPage() {
                     ) : (
                         <Card className="border-dashed">
                             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                                <Shield className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
-                                <h3 className="text-lg font-semibold mb-2">暂无屏蔽玩家</h3>
-                                <p className="text-muted-foreground text-sm">
-                                    屏蔽的玩家将不再向你发送聊天消息
-                                </p>
+                            <Shield className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
+                            <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageBlock]')}</h3>
+                            <p className="text-muted-foreground text-sm">
+                                屏蔽的玩家将不再向你发送聊天消息
+                            </p>
                             </CardContent>
                         </Card>
                     )}

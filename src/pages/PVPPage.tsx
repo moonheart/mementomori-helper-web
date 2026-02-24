@@ -10,13 +10,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { toast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useAccountStore } from '@/store/accountStore';
 import { PvpRankingPlayerInfo } from '@/api/generated/pvpRankingPlayerInfo';
-import { UserBattlePvpDtoInfo } from '@/api/generated/userBattlePvpDtoInfo';
 import { PvpRankingRewardMB } from '@/api/generated/pvpRankingRewardMB';
 import { PvpRankingRewardType } from '@/api/generated/pvpRankingRewardType';
 import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 import { LegendLeagueRankingPlayerInfo } from '@/api/generated/legendLeagueRankingPlayerInfo';
-import { UserBattleLegendLeagueDtoInfo } from '@/api/generated/userBattleLegendLeagueDtoInfo';
 
 export function PVPPage() {
     const { t } = useTranslation();
@@ -29,7 +28,6 @@ export function PVPPage() {
         matchingRivalList: PvpRankingPlayerInfo[];
         topRankerList: PvpRankingPlayerInfo[];
     } | null>(null);
-    const [userPvpDto, setUserPvpDto] = useState<UserBattlePvpDtoInfo | null>(null);
 
     // Apex Arena (Legend League)
     const [legendInfo, setLegendInfo] = useState<{
@@ -38,16 +36,18 @@ export function PVPPage() {
         matchingRivalList: LegendLeagueRankingPlayerInfo[];
         topRankerList: LegendLeagueRankingPlayerInfo[];
     } | null>(null);
-    const [userLegendDto, setUserLegendDto] = useState<UserBattleLegendLeagueDtoInfo | null>(null);
+
+    const currentUserSyncData = useAccountStore((state) => state.getCurrentUserSyncData());
+    const userPvpDto = currentUserSyncData?.userBattlePvpDtoInfo ?? null;
+    const userLegendDto = currentUserSyncData?.userBattleLegendLeagueDtoInfo ?? null;
 
     const { data: rewardsMaster } = useMasterTable<PvpRankingRewardMB>('PvpRankingRewardTable');
 
     const fetchPvpData = async (silent = false) => {
         try {
             if (!silent) setLoading(true);
-            const [pvpRes, userRes, legendRes] = await Promise.all([
+            const [pvpRes, legendRes] = await Promise.all([
                 ortegaApi.battle.getPvpInfo({ isRankingTab: false }),
-                ortegaApi.user.getUserData({}),
                 ortegaApi.battle.getLegendLeagueInfo({ isRankingTab: false })
             ]);
 
@@ -57,10 +57,6 @@ export function PVPPage() {
                 topRankerList: pvpRes.topRankerList || []
             });
 
-            if (userRes.userSyncData) {
-                setUserPvpDto(userRes.userSyncData.userBattlePvpDtoInfo);
-                setUserLegendDto(userRes.userSyncData.userBattleLegendLeagueDtoInfo);
-            }
 
             setLegendInfo({
                 currentPoint: legendRes.currentPoint,
@@ -160,34 +156,28 @@ export function PVPPage() {
         );
     }
 
-    const freeChallengesRemaining = Math.max(0, 5 - (userPvpDto?.pvpTodayCount || 0));
+    const pvpChallengesUsed = userPvpDto?.pvpTodayCount || 0;
+    const freeChallengesRemaining = Math.max(0, 5 - pvpChallengesUsed);
+    const freeChallengesRemainingPercent = Math.max(0, Math.min(100, (freeChallengesRemaining / 5) * 100));
     const legendChallengesRemaining = Math.max(0, 10 - (userLegendDto?.legendLeagueTodayCount || 0));
+    const legendChallengesRemainingPercent = Math.max(0, Math.min(100, (legendChallengesRemaining / 10) * 100));
 
     return (
         <div className="space-y-6">
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-bold">竞技场</h1>
-                <p className="text-muted-foreground mt-1">与其他玩家对战，争夺排名和荣耀</p>
+                <h1 className="text-3xl font-bold">{t('[LockEquipmentDeckTypeLeague]')}</h1>
             </div>
 
             {/* Main Tabs */}
             <Tabs defaultValue="ancient" onValueChange={setActiveMainTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="ancient">古竞技场</TabsTrigger>
-                    <TabsTrigger value="apex">巅峰竞技场</TabsTrigger>
+                    <TabsTrigger value="ancient">{t('[CommonHeaderLocalPvpLabel]')}</TabsTrigger>
+                    <TabsTrigger value="apex">{t('[CommonHeaderGlobalPvpLabel]')}</TabsTrigger>
                 </TabsList>
 
                 {/* Ancient Arena */}
                 <TabsContent value="ancient" className="space-y-6">
-                    <Alert>
-                        <BookOpen className="h-4 w-4" />
-                        <AlertDescription>
-                            <strong>古竞技场说明：</strong>
-                            每日 5 次免费挑战，胜利可互换排名。每日 20:30 根据排名发放奖励。
-                        </AlertDescription>
-                    </Alert>
-
                     <div className="grid gap-6 md:grid-cols-2">
                         <Card className="relative overflow-hidden">
                             <div className="absolute top-0 right-0 opacity-10">
@@ -223,12 +213,12 @@ export function PVPPage() {
                             <CardContent className="space-y-4">
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm text-muted-foreground">免费次数</span>
+                                        <span className="text-sm text-muted-foreground">剩余次数</span>
                                         <Badge variant="secondary" className="text-base">
                                             {freeChallengesRemaining} / 5
                                         </Badge>
                                     </div>
-                                    <Progress value={(freeChallengesRemaining / 5) * 100} className="h-2" />
+                                    <Progress value={freeChallengesRemainingPercent} className="h-2" />
                                 </div>
                                 <div className="pt-2">
                                     <Button className="w-full" size="lg" onClick={() => fetchPvpData(true)}>
@@ -354,7 +344,7 @@ export function PVPPage() {
                                     <span className="text-sm text-muted-foreground">剩余挑战</span>
                                     <Badge variant="secondary">{legendChallengesRemaining} / 10</Badge>
                                 </div>
-                                <Progress value={(legendChallengesRemaining / 10) * 100} className="h-2" />
+                                <Progress value={legendChallengesRemainingPercent} className="h-2" />
                             </CardContent>
                         </Card>
                     </div>

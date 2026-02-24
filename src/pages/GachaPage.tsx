@@ -14,7 +14,6 @@ import {
 import {
     Sparkles,
     Clock,
-    BookOpen,
     Loader2,
     AlertCircle
 } from 'lucide-react';
@@ -28,6 +27,7 @@ import { GachaCaseInfo } from '@/api/generated/gachaCaseInfo';
 import { GachaCaseUiMB } from '@/api/generated/gachaCaseUiMB';
 import { GachaCaseMB } from '@/api/generated/gachaCaseMB';
 import { GachaCategoryType } from '@/api/generated/gachaCategoryType';
+import { CharacterRarityFlags } from '@/api/generated/characterRarityFlags';
 import { ItemType } from '@/api/generated/itemType';
 import { GachaDrawResponse } from '@/api/generated/GachadrawResponse';
 import { GachaGetLotteryItemListResponse } from '@/api/generated/GachagetLotteryItemListResponse';
@@ -45,6 +45,7 @@ export function GachaPage() {
     const [gachaCaseMap, setGachaCaseMap] = useState<Record<number, GachaCaseMB>>({});
     const [userBalance, setUserBalance] = useState<Record<string, number>>({});
     const [alertMessage, setAlertMessage] = useState('');
+    const [nowMs, setNowMs] = useState(Date.now());
 
     // 确认对话框状态
     const [confirmDrawOpen, setConfirmDrawOpen] = useState(false);
@@ -122,9 +123,39 @@ export function GachaPage() {
         }
     }, [loadData, currentAccount]);
 
+    useEffect(() => {
+        const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+        return () => window.clearInterval(timer);
+    }, []);
+
     const getUserItemCount = (itemType: ItemType, itemId: number): number => {
         const key = `${itemType}_${itemId}`;
         return userBalance[key] || 0;
+    };
+
+    const formatRemainTime = (endTime: number) => {
+        if (endTime <= 0 || endTime >= 4102441200000) return '';
+        const remainMs = Math.max(0, endTime - nowMs);
+        const totalSeconds = Math.floor(remainMs / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const pad = (value: number) => String(value).padStart(2, '0');
+
+        if (days > 0) {
+            return t('[CommonRemainTimeFull]', [String(days), pad(hours), pad(minutes), pad(seconds)]);
+        }
+
+        return t('[CommonTimeFormatOnlyTime]', [pad(hours), pad(minutes), pad(seconds)]);
+    };
+
+    const formatRarityLabel = (flags: number) => {
+        const rarityKey = CharacterRarityFlags[flags];
+        if (!rarityKey || rarityKey === 'None') return String(flags);
+        const translationKey = `[CharacterRarityFlags${rarityKey}]`;
+        const translated = t(translationKey);
+        return translated === translationKey ? rarityKey : translated;
     };
 
     const handleDrawClick = (buttonId: number) => {
@@ -166,6 +197,20 @@ export function GachaPage() {
         }
     };
 
+    const selectedButtonInfo = selectedButtonId
+        ? gachaCaseInfos
+            .flatMap(gachaCase => gachaCase.gachaButtonInfoList || [])
+            .find(button => button.gachaButtonId === selectedButtonId) || null
+        : null;
+    const selectedConsumeItem = selectedButtonInfo?.consumeUserItem;
+    const selectedItemName = selectedConsumeItem
+        ? getItemName(selectedConsumeItem.itemType, selectedConsumeItem.itemId)
+        : '';
+    const selectedConsumeCount = selectedConsumeItem?.itemCount || 0;
+    const selectedOwnedCount = selectedConsumeItem
+        ? getUserItemCount(selectedConsumeItem.itemType, selectedConsumeItem.itemId)
+        : 0;
+
     const handleShowDetail = async (gachaCase: GachaCaseInfo) => {
         setSelectedGachaCase(gachaCase);
         setDetailOpen(true);
@@ -204,10 +249,7 @@ export function GachaPage() {
             {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">抽卡系统</h1>
-                    <p className="text-muted-foreground mt-1">
-                        获取角色和装备
-                    </p>
+                    <h1 className="text-3xl font-bold">{t('[CommonHeaderGachaLabel]')}</h1>
                 </div>
                 <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
                     <Clock className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
@@ -223,15 +265,6 @@ export function GachaPage() {
                 </Alert>
             )}
 
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>抽卡说明：</strong>
-                    使用抽卡券或钻石进行抽卡，有机会获得稀有角色和装备。点击"详情"查看抽卡概率。
-                </AlertDescription>
-            </Alert>
-
             {/* 抽卡池列表 */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {gachaCaseInfos
@@ -242,15 +275,15 @@ export function GachaPage() {
                         return (
                             <Card key={gachaCase.gachaCaseId} className="overflow-hidden">
                                 <CardHeader className="relative">
-                                    {gachaCase.endTime > 0 && gachaCase.endTime < 4102441200000 && (
-                                        <Badge variant="destructive" className="absolute top-2 right-2">
-                                            限时
-                                        </Badge>
-                                    )}
                                     <div className="flex items-start justify-between">
                                         <div className="flex-1">
-                                            <CardTitle className="text-lg">
-                                                {uiMb ? t(uiMb.nameKey) : `抽卡池 #${gachaCase.gachaCaseId}`}
+                                            <CardTitle className="text-lg flex flex-wrap items-center gap-2">
+                                                <span>{uiMb ? t(uiMb.nameKey) : `抽卡池 #${gachaCase.gachaCaseId}`}</span>
+                                                {gachaCase.endTime > 0 && gachaCase.endTime < 4102441200000 && (
+                                                    <span className="text-xs text-muted-foreground">
+                                                        {t('[ExchangeExpirationTimeLabel]')}: {formatRemainTime(gachaCase.endTime)}
+                                                    </span>
+                                                )}
                                             </CardTitle>
                                             <CardDescription className="mt-1">
                                                 {uiMb ? (
@@ -269,7 +302,7 @@ export function GachaPage() {
                                             size="sm"
                                             onClick={() => handleShowDetail(gachaCase)}
                                         >
-                                            详情
+                                            {t('[GachaLotteryDetail]')}
                                         </Button>
                                     </div>
                                 </CardHeader>
@@ -277,7 +310,7 @@ export function GachaPage() {
                                 <CardContent className="space-y-4">
                                     {/* 显示持有的货币/道具 */}
                                     <div className="space-y-2">
-                                        <div className="text-sm text-muted-foreground">持有</div>
+                                        <div className="text-sm text-muted-foreground">{t('[CommonPossessionLabel]')}</div>
                                         <div className="flex flex-wrap gap-2">
                                             {gachaCase.gachaButtonInfoList
                                                 ?.map(btn => btn.consumeUserItem)
@@ -328,17 +361,31 @@ export function GachaPage() {
             <Dialog open={confirmDrawOpen} onOpenChange={setConfirmDrawOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>确认抽卡</DialogTitle>
-                        <DialogDescription>
-                            确定要进行抽卡吗？
-                        </DialogDescription>
+                        <DialogTitle>{t('[GachaPurchaseConfirmationTitle]')}</DialogTitle>
+                        <DialogDescription>{t('[GachaPurchaseConfirmationMessage]')}</DialogDescription>
                     </DialogHeader>
+                    {selectedConsumeItem && (
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+                                <span className="text-muted-foreground">{t('[CommonConsumptionLabel]')}</span>
+                                <span className="font-semibold">
+                                    {selectedItemName} × {selectedConsumeCount.toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
+                                <span className="text-muted-foreground">{t('[CommonPossessionLabel]')}</span>
+                                <span className="font-semibold">
+                                    {selectedOwnedCount.toLocaleString()}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setConfirmDrawOpen(false)}>
-                            取消
+                            {t('[CommonCancelLabel]')}
                         </Button>
                         <Button onClick={handleConfirmDraw}>
-                            确认
+                            {t('[CommonDecisionLabel]')}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
@@ -397,10 +444,10 @@ export function GachaPage() {
                                 </div>
                             )}
 
-                            {/* Bonus 奖励 */}
+                            {/* 次数奖励 */}
                             {drawResult.bonusRewardItemList && drawResult.bonusRewardItemList.length > 0 && (
                                 <div>
-                                    <h3 className="font-semibold mb-2">Bonus 奖励</h3>
+                                    <h3 className="font-semibold mb-2">{t('[GachaBonusRewardLabel]')}</h3>
                                     <div className="grid grid-cols-2 gap-2">
                                         {drawResult.bonusRewardItemList.map((item, idx) => (
                                             <Card key={idx}>
@@ -452,7 +499,7 @@ export function GachaPage() {
             <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>抽卡详情</DialogTitle>
+                        <DialogTitle>{t('[GachaLotteryDetail]')}</DialogTitle>
                     </DialogHeader>
                     {loadingDetail ? (
                         <div className="flex items-center justify-center py-8">
@@ -536,28 +583,21 @@ export function GachaPage() {
                             {/* 概率信息 */}
                             {lotteryDetail && (
                                 <div className="space-y-4">
-                                    {/* Bonus 奖励概率 */}
-                                    {lotteryDetail.gachaBonusRateList && lotteryDetail.gachaBonusRateList.length > 0 && (
-                                        <div>
-                                            <h4 className="font-semibold mb-2">Bonus 奖励</h4>
-                                            <div className="border rounded-lg overflow-hidden">
-                                                <table className="w-full text-sm">
-                                                    <thead className="bg-muted">
-                                                        <tr>
-                                                            <th className="p-2 text-left">抽取次数</th>
-                                                            <th className="p-2 text-left">奖励</th>
-                                                            <th className="p-2 text-left">概率</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {lotteryDetail.gachaBonusRateList.map((bonus, idx) => (
-                                                            <tr key={idx} className="border-t">
-                                                                <td className="p-2">{bonus.gachaCount} 次</td>
-                                                                <td className="p-2">
-                                                                    {bonus.gachaItemRateList?.map((item, i) => (
-                                                                        <div key={i}>
-                                                                            {getItemName(item.item.itemType, item.item.itemId)} × {item.item.itemCount}
-                                                                        </div>
+                            {/* 次数奖励概率 */}
+                            {lotteryDetail.gachaBonusRateList && lotteryDetail.gachaBonusRateList.length > 0 && (
+                                <div>
+                                    <h4 className="font-semibold mb-2">{t('[GachaBonusRewardLabel]')}</h4>
+                                    <div className="border rounded-lg overflow-hidden">
+                                        <table className="w-full text-sm">
+                                            <tbody>
+                                                {lotteryDetail.gachaBonusRateList.map((bonus, idx) => (
+                                                    <tr key={idx} className="border-t">
+                                                        <td className="p-2">{t('[GachaLotteryInvoke]', [String(bonus.gachaCount)])}</td>
+                                                        <td className="p-2">
+                                                            {bonus.gachaItemRateList?.map((item, i) => (
+                                                                <div key={i}>
+                                                                    {getItemName(item.item.itemType, item.item.itemId)} × {item.item.itemCount}
+                                                                </div>
                                                                     ))}
                                                                 </td>
                                                                 <td className="p-2">
@@ -578,19 +618,13 @@ export function GachaPage() {
                                     {/* 稀有度概率 */}
                                     {lotteryDetail.gachaRarityRateList && lotteryDetail.gachaRarityRateList.length > 0 && (
                                         <div>
-                                            <h4 className="font-semibold mb-2">稀有度概率</h4>
-                                            <div className="border rounded-lg overflow-hidden">
-                                                <table className="w-full text-sm">
-                                                    <thead className="bg-muted">
-                                                        <tr>
-                                                            <th className="p-2 text-left">稀有度</th>
-                                                            <th className="p-2 text-left">概率</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {lotteryDetail.gachaRarityRateList.map((rarity, idx) => (
-                                                            <tr key={idx} className="border-t">
-                                                                <td className="p-2">{t(String(rarity.characterRarityFlags))}</td>
+                                    <h4 className="font-semibold mb-2">{t('[GachaLotteryRatioLabel]')}</h4>
+                                    <div className="border rounded-lg overflow-hidden">
+                                        <table className="w-full text-sm">
+                                            <tbody>
+                                                {lotteryDetail.gachaRarityRateList.map((rarity, idx) => (
+                                                    <tr key={idx} className="border-t">
+                                                        <td className="p-2">{formatRarityLabel(rarity.characterRarityFlags)}</td>
                                                                 <td className="p-2">{(rarity.lotteryRate * 100).toFixed(2)}%</td>
                                                             </tr>
                                                         ))}
@@ -603,23 +637,16 @@ export function GachaPage() {
                                     {/* 单个物品概率 */}
                                     {lotteryDetail.gachaItemRateList && lotteryDetail.gachaItemRateList.length > 0 && (
                                         <div>
-                                            <h4 className="font-semibold mb-2">单个物品概率</h4>
-                                            <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
-                                                <table className="w-full text-sm">
-                                                    <thead className="bg-muted sticky top-0">
-                                                        <tr>
-                                                            <th className="p-2 text-left">物品</th>
-                                                            <th className="p-2 text-left">稀有度</th>
-                                                            <th className="p-2 text-left">概率</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {lotteryDetail.gachaItemRateList.map((item, idx) => (
-                                                            <tr key={idx} className="border-t">
+                                    <h4 className="font-semibold mb-2">{t('[GachaLotteryRatioLabelIndividual]')}</h4>
+                                    <div className="border rounded-lg overflow-hidden max-h-96 overflow-y-auto">
+                                        <table className="w-full text-sm">
+                                            <tbody>
+                                                {lotteryDetail.gachaItemRateList.map((item, idx) => (
+                                                    <tr key={idx} className="border-t">
                                                                 <td className="p-2">
                                                                     {getItemName(item.item.itemType, item.item.itemId)} × {item.item.itemCount}
                                                                 </td>
-                                                                <td className="p-2">{t(String(item.characterRarityFlags))}</td>
+                                                                <td className="p-2">{formatRarityLabel(item.characterRarityFlags)}</td>
                                                                 <td className="p-2">{(item.lotteryRate * 100).toFixed(4)}%</td>
                                                             </tr>
                                                         ))}
@@ -634,6 +661,9 @@ export function GachaPage() {
                             {/* Footer - 注意事项 */}
                             {selectedGachaCase && gachaCaseUiMap[selectedGachaCase.gachaCaseUiId]?.detailDialogNotesKey && (
                                 <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900 rounded-lg">
+                                    <div className="mb-2 font-semibold text-amber-900 dark:text-amber-100">
+                                        {t('[GachaLotteryNotes]')}
+                                    </div>
                                     <div
                                         className="text-sm text-amber-900 dark:text-amber-100 whitespace-pre-wrap"
                                         dangerouslySetInnerHTML={{
