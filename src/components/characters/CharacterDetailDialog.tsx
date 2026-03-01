@@ -37,7 +37,8 @@ import {
 } from '@/api/generated';
 import { ortegaApi } from '@/api/ortega-client';
 import { getRuneSlotUsage, getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
-import { AssetManager, EquipmentIconManager, SphereIconManager } from '@/lib/asset-manager';
+import { EquipmentIconManager, SphereIconManager } from '@/lib/asset-manager';
+import { CharacterIcon } from '@/components/character/CharacterIcon';
 import { BookOpen, ChevronRight, Loader2, Shield, Sparkles, Swords, TrendingUp, Zap } from 'lucide-react';
 import type { UICharacter } from './types';
 import { calculateCharacterDetailInfo, getUserCharacterInfoByGuid } from '@/lib/character-parameter-utils';
@@ -532,14 +533,17 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                         <DialogHeader>
                             <div className="flex items-start gap-6">
                                 <div className="h-24 w-24 rounded-lg flex items-center justify-center shrink-0 relative overflow-hidden">
-                                    <div className="absolute top-1 left-1 z-10"><Badge className={rarityData.color}>{rarityData.name}</Badge></div>
-                                    <div className="absolute bottom-1 right-1 z-10"><span className="text-xl">{elementData.icon}</span></div>
-                                    <img
-                                        src={AssetManager.character.getCardUrl(character.characterId)}
-                                        alt={t(character.nameKey)}
-                                        className="h-full w-full object-cover"
-                                        onError={(e) => {
-                                            (e.target as HTMLImageElement).style.display = 'none';
+                                    <CharacterIcon
+                                        size={96}
+                                        userCharacterInfo={{
+                                            guid: character.guid,
+                                            playerId: character.playerId,
+                                            characterId: character.characterId,
+                                            level: character.level,
+                                            subLevel: 0,
+                                            exp: character.exp,
+                                            rarityFlags: character.rarityFlags,
+                                            isLocked: character.isLocked,
                                         }}
                                     />
                                 </div>

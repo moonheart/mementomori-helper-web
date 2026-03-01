@@ -149,16 +149,22 @@
 
 .teamRow {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     flex-wrap: wrap;
 }
 
 .teamCharacter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
     padding: 0;
     border: none;
     background: transparent;
     cursor: pointer;
+    line-height: 0;
 }
 
 .teamCharacter:focus-visible {
