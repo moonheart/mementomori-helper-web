@@ -472,3 +472,59 @@ res
 ```
 
 获取到函数的地址 (`ea`) 后，可以使用 `mcp_ida-pro-mcp_decompile` 工具对该地址进行反编译。然后根据反编译的伪代码来实现 `api/MementoMori.Ortega` 中的 C# 逻辑。
+
+### 解析 `StringLiteral_*` 的实战说明（重要）
+
+在 IL2CPP 二进制中，`StringLiteral_12345` 这类符号通常不是“可直接 `get_string` 读取的字符串对象地址”，而是一个索引/句柄槽位。使用 MCP 时经常出现以下现象：
+
+- `mcp_ida-pro-mcp_get_string` 返回 `No string at address`
+- `mcp_ida-pro-mcp_py_eval` 直接按地址读 UTF-16 得到乱码或无效长度
+- 反汇编行看起来像 `dq 0A000xxxxh`
+
+这属于正常现象。
+
+#### 推荐解析流程
+
+1. **先定位真实使用点（xref）**
+   - 对 `StringLiteral_xxx` 执行 `mcp_ida-pro-mcp_xrefs_to`，优先关注目标函数（例如 `OrtegaConst.Common$$.cctor`）里的引用。
+
+2. **在 `py_eval` 中读取反汇编行注释（repeatable comment）**
+   - 很多 IDA 数据库会在该数据项行尾自动带注释（例如 `; K`, `; 万`, `; 億`），可通过：
+     - `ida_bytes.get_cmt(ea, 1)`（repeatable comment）
+     - `ida_lines.generate_disasm_line(ea, 0)`（整行文本）
+   - 对于 `OrtegaConst.Common$$.cctor` 的 `NumberUnit*`，这些注释通常足够恢复明文。
+
+3. **按函数内赋值顺序回填，不要只看字面量编号大小**
+   - 字面量编号与业务顺序无必然关系。
+   - 以 `.cctor` 中实际写入顺序为准，逐个数组元素还原。
+
+4. **多语言单位的交叉校验**
+   - 恢复后建议做一致性检查：
+     - `EnUS`: `"", "K", "M", "B", "T", ...`
+     - `JaJP/ZhTW/ZhCN/KoKR` 应为各语言大数单位序列
+     - `EsMX/DeDE/FrFR` 常见 `k/M/G/T...` 或 `M/Md/Bn...` 风格
+
+#### 兜底策略
+
+如果某个 `StringLiteral_*` 没有注释，按以下优先级处理：
+
+1. 在同函数其他语言数组中推断相同位置语义；
+2. 查找该字面量的其他 xref 函数上下文；
+3. 必要时保持 `TODO` 注释，不要编造值。
+
+#### 可复用的 `py_eval` 片段（读取注释）
+
+```python
+import ida_name, ida_bytes, ida_lines, idaapi
+
+ids = [8710, 20952, 25901]  # 示例
+for n in ids:
+    ea = ida_name.get_name_ea(idaapi.BADADDR, f"StringLiteral_{n}")
+    if ea == idaapi.BADADDR:
+        continue
+    cmt = ida_bytes.get_cmt(ea, 1)  # repeatable comment
+    line = ida_lines.generate_disasm_line(ea, 0)
+    print(hex(ea), cmt, line)
+```
+
+该方法已用于恢复 [`api/MementoMori.Ortega/Share/OrtegaConst.cs`](api/MementoMori.Ortega/Share/OrtegaConst.cs) 中 `Common.NumberUnit*` 的初始化。
