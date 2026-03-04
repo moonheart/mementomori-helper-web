@@ -20,7 +20,6 @@ interface AutomationSectionProps {
 // 简单开关配置（没有 Cron）
 const simpleSwitches = [
     { key: 'disableAll', label: '禁用所有任务' },
-    { key: 'autoReinforcementEquipmentOneTime', label: '自动强化装备(一次)' },
     { key: 'autoDungeonBattle', label: '自动时空洞窟' },
     { key: 'autoUseItems', label: '自动使用物品' },
     { key: 'autoFreeGacha', label: '自动免费抽卡' },

@@ -474,40 +474,6 @@ export function DashboardPage() {
                 })}
             </div>
 
-            {/* Quick Summary */}
-            <Card>
-                <CardHeader>
-                    <CardTitle>今日总结</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid gap-4 md:grid-cols-4">
-                        <div className="text-center">
-                            <p className="text-2xl font-bold">
-                                {dailyChecklist.reduce((acc, cat) =>
-                                    acc + cat.items.filter(i => i.completed).length, 0
-                                )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">已完成任务</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-2xl font-bold">
-                                {dailyChecklist.reduce((acc, cat) =>
-                                    acc + cat.items.filter(i => !i.completed).length, 0
-                                )}
-                            </p>
-                            <p className="text-sm text-muted-foreground">待完成任务</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-green-500">95%</p>
-                            <p className="text-sm text-muted-foreground">体力使用率</p>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-500">12.5M</p>
-                            <p className="text-sm text-muted-foreground">今日金币收益</p>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
 
             {/* Monthly Login Bonus Dialog */}
             <MonthlyLoginBonusDialog
