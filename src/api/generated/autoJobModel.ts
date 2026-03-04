@@ -5,7 +5,6 @@
 
 export class AutoJobModel {
     disableAll: boolean;
-    autoReinforcementEquipmentOneTime: boolean;
     autoPvp: boolean;
     autoLegendLeague: boolean;
     autoDungeonBattle: boolean;
