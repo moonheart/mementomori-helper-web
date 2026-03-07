@@ -46,7 +46,7 @@ export function useErrorMessage() {
      */
     const parseOrtegaError = useCallback((error: unknown): { message: string; code: number } => {
         // 默认错误消息
-        let message = '操作失败，请稍后重试';
+        let message = t('ERROR_GENERIC_RETRY');
         let code = 0;
 
         if (error && typeof error === 'object') {
@@ -61,7 +61,7 @@ export function useErrorMessage() {
                 } else {
                     // 回退到枚举名称
                     const codeName = getErrorCodeName(code);
-                    message = codeName || `未知错误 (代码: ${code})`;
+                    message = codeName || t('ERROR_UNKNOWN_WITH_CODE', [code]);
                 }
             } else if (err.error) {
                 message = err.error;
@@ -71,7 +71,7 @@ export function useErrorMessage() {
         }
 
         return { message, code };
-    }, [getErrorMessage]);
+    }, [getErrorMessage, t]);
 
     return {
         getErrorMessage,

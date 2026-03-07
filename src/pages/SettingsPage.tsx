@@ -5,6 +5,7 @@ import { User, Settings, Swords, Users, ShoppingBag, Loader2 } from 'lucide-reac
 import { useAccountStore } from '@/store/accountStore';
 import { settingsApi } from '@/api/settings-service';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // 导入生成的配置类型
 import { AutoJobModel } from '@/api/generated/autoJobModel';
@@ -29,6 +30,7 @@ import { MiscSection } from '@/components/settings/MiscSection';
 export function SettingsPage() {
     const { currentAccountId, accounts } = useAccountStore();
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [activeAccountName, setActiveAccountName] = useState('');
 
@@ -92,18 +94,18 @@ export function SettingsPage() {
             if (guildTowerData) setGuildTower(guildTowerData);
 
             const account = accounts.find(a => a.userId === userId);
-            setActiveAccountName(account?.name || `账户 ${userId}`);
+            setActiveAccountName(account?.name || t('SETTINGS_ACCOUNT_FALLBACK', [userId]));
         } catch (error) {
             console.error('Failed to load settings:', error);
             toast({
                 variant: 'destructive',
-                title: '获取配置失败',
-                description: '无法从服务器加载账户配置。'
+                title: t('SETTINGS_LOAD_FAILED_TITLE'),
+                description: t('SETTINGS_LOAD_FAILED_DESC')
             });
         } finally {
             setLoading(false);
         }
-    }, [accounts, toast]);
+    }, [accounts, t, toast]);
 
     useEffect(() => {
         if (currentAccountId) {
@@ -117,15 +119,15 @@ export function SettingsPage() {
         try {
             await settingsApi.saveSetting(currentAccountId, key, value);
             toast({
-                title: '保存成功',
-                description: `配置项 [${key}] 已更新。`,
+                title: t('SETTINGS_SAVE_SUCCESS_TITLE'),
+                description: t('SETTINGS_SAVE_SUCCESS_DESC', [key]),
             });
         } catch (error) {
             console.error(`Failed to save setting ${key}:`, error);
             toast({
                 variant: 'destructive',
-                title: '保存失败',
-                description: `无法更新配置项 [${key}]。`
+                title: t('SETTINGS_SAVE_FAILED_TITLE'),
+                description: t('SETTINGS_SAVE_FAILED_DESC', [key])
             });
         }
     };
@@ -135,8 +137,8 @@ export function SettingsPage() {
             <div className="flex h-[450px] items-center justify-center">
                 <Card className="w-[420px]">
                     <CardHeader className="text-center">
-                        <CardTitle>未选择账户</CardTitle>
-                        <CardDescription>请先在账户页面选择一个要配置的账户</CardDescription>
+                        <CardTitle>{t('SETTINGS_NO_ACCOUNT_TITLE')}</CardTitle>
+                        <CardDescription>{t('SETTINGS_NO_ACCOUNT_DESC')}</CardDescription>
                     </CardHeader>
                 </Card>
             </div>
@@ -147,8 +149,8 @@ export function SettingsPage() {
         <div className="space-y-6 pb-12">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">账户配置</h1>
-                    <p className="text-muted-foreground">正在配置账户: <span className="text-primary font-medium">{activeAccountName}</span></p>
+                    <h1 className="text-3xl font-bold">{t('SETTINGS_PAGE_TITLE')}</h1>
+                    <p className="text-muted-foreground">{t('SETTINGS_CONFIGURING_ACCOUNT')}: <span className="text-primary font-medium">{activeAccountName}</span></p>
                 </div>
                 {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
             </div>
@@ -157,23 +159,23 @@ export function SettingsPage() {
                 <TabsList className="grid w-full max-w-3xl grid-cols-5">
                     <TabsTrigger value="automation">
                         <Settings className="mr-2 h-4 w-4" />
-                        自动化
+                        {t('SETTINGS_TAB_AUTOMATION')}
                     </TabsTrigger>
                     <TabsTrigger value="battle">
                         <Swords className="mr-2 h-4 w-4" />
-                        战斗策略
+                        {t('SETTINGS_TAB_BATTLE')}
                     </TabsTrigger>
                     <TabsTrigger value="resources">
                         <ShoppingBag className="mr-2 h-4 w-4" />
-                        资源获取
+                        {t('SETTINGS_TAB_RESOURCES')}
                     </TabsTrigger>
                     <TabsTrigger value="social">
                         <Users className="mr-2 h-4 w-4" />
-                        社交管理
+                        {t('SETTINGS_TAB_SOCIAL')}
                     </TabsTrigger>
                     <TabsTrigger value="account">
                         <User className="mr-2 h-4 w-4" />
-                        基础设置
+                        {t('SETTINGS_TAB_ACCOUNT')}
                     </TabsTrigger>
                 </TabsList>
 

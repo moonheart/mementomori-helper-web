@@ -90,19 +90,24 @@ export function FriendsPage() {
 
     // 格式化上次登录时间
     const formatLastLogin = (timestamp: number): string => {
-        if (!timestamp) return '未知';
+        if (!timestamp) return t('FRIENDS_UNKNOWN');
         const now = timeManager.getServerNowMs();
         const diff = now - timestamp;
         const minutes = Math.floor(diff / 60000);
         const hours = Math.floor(diff / 3600000);
         const days = Math.floor(diff / 86400000);
 
-        if (diff < 60000) return '刚刚';
-        if (minutes < 60) return `${minutes}分钟前`;
-        if (hours < 24) return `${hours}小时前`;
-        if (days < 30) return `${days}天前`;
-        return '很久以前';
+        if (diff < 60000) return t('FRIENDS_JUST_NOW');
+        if (minutes < 60) return t('FRIENDS_MINUTES_AGO', [minutes]);
+        if (hours < 24) return t('FRIENDS_HOURS_AGO', [hours]);
+        if (days < 30) return t('FRIENDS_DAYS_AGO', [days]);
+        return t('FRIENDS_LONG_AGO');
     };
+
+    const getLoadingText = () => t('[Loading]');
+    const getGuildNameText = (guildName?: string | null) => guildName ? `「${guildName}」` : t('[RankingNotGuild]');
+    const getPlayerNameText = (player: PlayerInfo) => player.playerName || player.npcNameKey || t('FRIENDS_UNKNOWN_PLAYER');
+    const getRetryLaterText = () => t('FRIENDS_RETRY_LATER');
 
     // 加载好友列表数据
     const loadFriendsData = useCallback(async () => {
@@ -134,7 +139,7 @@ export function FriendsPage() {
             }));
         } catch (error) {
             console.error('Failed to load friends:', error);
-            toast({ title: '获取好友列表失败', variant: 'destructive' });
+            toast({ title: t('FRIENDS_LOAD_FRIENDS_FAILED'), variant: 'destructive' });
         } finally {
             setLoadingTabs(prev => ({ ...prev, friends: false }));
         }
@@ -151,7 +156,7 @@ export function FriendsPage() {
             setPendingRequests(pendingRes.playerInfoList || []);
         } catch (error) {
             console.error('Failed to load pending requests:', error);
-            toast({ title: '获取申请列表失败', variant: 'destructive' });
+            toast({ title: t('FRIENDS_LOAD_REQUESTS_FAILED'), variant: 'destructive' });
         } finally {
             setLoadingTabs(prev => ({ ...prev, requests: false }));
         }
@@ -175,7 +180,7 @@ export function FriendsPage() {
             setRecommendations(recommendRes.playerInfoList || []);
         } catch (error) {
             console.error('Failed to load sent requests:', error);
-            toast({ title: '获取申请列表失败', variant: 'destructive' });
+            toast({ title: t('FRIENDS_LOAD_REQUESTS_FAILED'), variant: 'destructive' });
         } finally {
             setLoadingTabs(prev => ({ ...prev, applying: false }));
         }
@@ -196,7 +201,7 @@ export function FriendsPage() {
             }));
         } catch (error) {
             console.error('Failed to load blocked players:', error);
-            toast({ title: '获取屏蔽列表失败', variant: 'destructive' });
+            toast({ title: t('FRIENDS_LOAD_BLOCKED_FAILED'), variant: 'destructive' });
         } finally {
             setLoadingTabs(prev => ({ ...prev, blocked: false }));
         }
@@ -229,7 +234,7 @@ export function FriendsPage() {
 
         const playerId = parseInt(searchId.trim());
         if (isNaN(playerId) || playerId <= 0) {
-            toast({ title: '请输入有效的玩家ID', variant: 'destructive' });
+            toast({ title: t('FRIENDS_ENTER_VALID_PLAYER_ID'), variant: 'destructive' });
             return;
         }
 
@@ -239,12 +244,12 @@ export function FriendsPage() {
             if (res.playerInfo) {
                 setSearchedPlayer(res.playerInfo);
             } else {
-                toast({ title: '未找到该玩家' });
+                toast({ title: t('FRIENDS_PLAYER_NOT_FOUND') });
                 setSearchedPlayer(null);
             }
         } catch (error) {
             console.error('Search failed:', error);
-            toast({ title: '搜索失败', description: '请检查玩家ID是否正确', variant: 'destructive' });
+            toast({ title: t('FRIENDS_SEARCH_FAILED'), description: t('FRIENDS_CHECK_PLAYER_ID'), variant: 'destructive' });
             setSearchedPlayer(null);
         } finally {
             setSearching(false);
@@ -256,7 +261,7 @@ export function FriendsPage() {
         setActionLoading(targetPlayerId);
         try {
             await ortegaApi.friend.applyFriend({ targetPlayerId, isApply: true });
-            toast({ title: '好友申请已发送' });
+            toast({ title: t('FRIENDS_APPLY_SENT') });
             // 如果是搜索结果，清空搜索
             if (searchedPlayer?.playerId === targetPlayerId) {
                 setSearchedPlayer(null);
@@ -266,7 +271,7 @@ export function FriendsPage() {
             refreshCurrentTab();
         } catch (error) {
             console.error('Apply friend failed:', error);
-            toast({ title: '申请失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_APPLY_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -281,11 +286,11 @@ export function FriendsPage() {
             await ortegaApi.friend.bulkApplyFriends({
                 targetPlayerIdList: recommendations.map(r => r.playerId)
             });
-            toast({ title: '已向所有推荐玩家发送申请' });
+            toast({ title: t('FRIENDS_BULK_APPLY_SENT') });
             loadSentRequests();
         } catch (error) {
             console.error('Bulk apply failed:', error);
-            toast({ title: '批量申请失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_BULK_APPLY_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -296,12 +301,12 @@ export function FriendsPage() {
         setActionLoading(`${isApproval ? 'approve' : 'reject'}-${targetPlayerId}`);
         try {
             await ortegaApi.friend.replyFriend({ targetPlayerId, isApproval });
-            toast({ title: isApproval ? '已同意好友申请' : '已拒绝好友申请' });
+            toast({ title: isApproval ? t('FRIENDS_APPROVED_REQUEST') : t('FRIENDS_REJECTED_REQUEST') });
             loadPendingRequests();
         } catch (error) {
             console.error('Reply friend failed:', error);
             const { message } = parseOrtegaError(error);
-            toast({ title: '操作失败', description: message, variant: 'destructive' });
+            toast({ title: t('FRIENDS_ACTION_FAILED'), description: message, variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -314,11 +319,11 @@ export function FriendsPage() {
         setActionLoading(isApproval ? 'approve-all' : 'reject-all');
         try {
             await ortegaApi.friend.replyAllFriend({ isApproval });
-            toast({ title: isApproval ? '已全部同意' : '已全部拒绝' });
+            toast({ title: isApproval ? t('FRIENDS_APPROVED_ALL') : t('FRIENDS_REJECTED_ALL') });
             loadPendingRequests();
         } catch (error) {
             console.error('Reply all failed:', error);
-            toast({ title: '操作失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_ACTION_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -329,11 +334,11 @@ export function FriendsPage() {
         setActionLoading(`remove-${targetPlayerId}`);
         try {
             await ortegaApi.friend.removeFriend({ targetPlayerId });
-            toast({ title: '已删除好友' });
+            toast({ title: t('FRIENDS_REMOVED_FRIEND') });
             loadFriendsData();
         } catch (error) {
             console.error('Remove friend failed:', error);
-            toast({ title: '删除失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_REMOVE_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -346,11 +351,11 @@ export function FriendsPage() {
         setActionLoading('cancel-all');
         try {
             await ortegaApi.friend.cancelAllApplyFriend({});
-            toast({ title: '已取消所有申请' });
+            toast({ title: t('FRIENDS_CANCELLED_ALL_APPLIES') });
             loadSentRequests();
         } catch (error) {
             console.error('Cancel all failed:', error);
-            toast({ title: '操作失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_ACTION_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -361,11 +366,11 @@ export function FriendsPage() {
         setActionLoading(`send-${targetPlayerId}`);
         try {
             await ortegaApi.friend.sendFriendPoint({ targetPlayerId });
-            toast({ title: '友情点数已赠送' });
+            toast({ title: t('FRIENDS_SENT_FRIEND_POINTS') });
             loadFriendsData();
         } catch (error) {
             console.error('Send friend point failed:', error);
-            toast({ title: '赠送失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_SEND_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -376,11 +381,11 @@ export function FriendsPage() {
         setActionLoading(isReceive ? 'bulk-receive' : 'bulk-send');
         try {
             await ortegaApi.friend.bulkTransferFriendPoint({ isReceive });
-            toast({ title: isReceive ? '已领取所有友情点数' : '已向所有好友赠送' });
+            toast({ title: isReceive ? t('FRIENDS_RECEIVED_ALL_POINTS') : t('FRIENDS_SENT_ALL_POINTS') });
             loadFriendsData();
         } catch (error) {
             console.error('Bulk transfer failed:', error);
-            toast({ title: '操作失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_ACTION_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -391,11 +396,11 @@ export function FriendsPage() {
         setActionLoading(`receive-${sendPlayerId}`);
         try {
             await ortegaApi.friend.receiveFriendPoint({ sendPlayerId });
-            toast({ title: '友情点数已领取' });
+            toast({ title: t('FRIENDS_RECEIVED_FRIEND_POINTS') });
             loadFriendsData();
         } catch (error) {
             console.error('Receive friend point failed:', error);
-            toast({ title: '领取失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_RECEIVE_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -406,11 +411,11 @@ export function FriendsPage() {
         setActionLoading(`${isBlock ? 'block' : 'unblock'}-${targetPlayerId}`);
         try {
             await ortegaApi.friend.updateBlockList({ targetPlayerId, isBlock });
-            toast({ title: isBlock ? '已屏蔽该玩家' : '已解除屏蔽' });
+            toast({ title: isBlock ? t('FRIENDS_BLOCKED_PLAYER') : t('FRIENDS_UNBLOCKED_PLAYER') });
             loadBlockedPlayers();
         } catch (error) {
             console.error('Update block list failed:', error);
-            toast({ title: '操作失败', description: '请稍后重试', variant: 'destructive' });
+            toast({ title: t('FRIENDS_ACTION_FAILED'), description: getRetryLaterText(), variant: 'destructive' });
         } finally {
             setActionLoading(null);
         }
@@ -479,7 +484,7 @@ export function FriendsPage() {
             {/* 顶部栏 */}
             <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b">
                 <span className="text-xs text-muted-foreground truncate max-w-[60%]">
-                    {topLeft || (player.guildName ? `「${player.guildName}」` : '未加入公会')}
+                    {topLeft || (getGuildNameText(player.guildName))}
                 </span>
                 <span className="text-xs text-muted-foreground">{topRight}</span>
             </div>
@@ -494,16 +499,16 @@ export function FriendsPage() {
                     {/* 中间信息 */}
                     <div className="flex-1 min-w-0">
                         <div className="font-semibold text-base mb-2 truncate">
-                            {player.playerName || player.npcNameKey || '未知玩家'}
+                            {getPlayerNameText(player)}
                         </div>
                         <div className="flex items-center gap-2 mb-1.5">
-                            <span className="text-xs text-muted-foreground w-10 shrink-0">等级</span>
+                            <span className="text-xs text-muted-foreground w-10 shrink-0">{t('[CommonPlayerRankLabel]')}</span>
                             <div className="flex-1 bg-muted rounded-full h-5 flex items-center px-2">
                                 <span className="text-xs font-medium">{player.playerLevel}</span>
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground w-10 shrink-0">战斗力</span>
+                            <span className="text-xs text-muted-foreground w-10 shrink-0">{t('[CommonBattlePowerLabel]')}</span>
                             <div className="flex-1 bg-muted rounded-full h-5 flex items-center px-2">
                                 <span className="text-xs font-medium">{player.battlePower.toLocaleString()}</span>
                             </div>
@@ -570,7 +575,7 @@ export function FriendsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                             <Users className="h-5 w-5 text-blue-500" />
-                            好友数量
+                            {t('[FriendNum]')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -579,7 +584,7 @@ export function FriendsPage() {
                                 {stats.friendCount} / {stats.maxFriends}
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                                当前好友数量
+                                {t('FRIENDS_CURRENT_FRIEND_COUNT')}
                             </div>
                         </div>
                     </CardContent>
@@ -589,7 +594,7 @@ export function FriendsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                             <Gift className="h-5 w-5 text-pink-500" />
-                            今日赠送
+                            {t('FRIENDS_SENT_TODAY')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -598,7 +603,7 @@ export function FriendsPage() {
                                 {stats.sentCount} / {stats.maxSend}
                             </div>
                             <div className="text-sm text-muted-foreground mt-1">
-                                已赠送友情点数
+                                {t('FRIENDS_SENT_POINTS_COUNT')}
                             </div>
                         </div>
                     </CardContent>
@@ -608,7 +613,7 @@ export function FriendsPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                             <Heart className="h-5 w-5 text-red-500" />
-                            待领取
+                            {t('FRIENDS_PENDING_RECEIVE')}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -618,7 +623,7 @@ export function FriendsPage() {
                                     {stats.canReceiveCount}
                                 </div>
                                 <div className="text-sm text-muted-foreground mt-1">
-                                    可领取友情点数 ({stats.receivedCount}/{stats.maxReceive})
+                                    {t('FRIENDS_RECEIVABLE_POINTS_COUNT', [stats.receivedCount, stats.maxReceive])}
                                 </div>
                             </div>
                             {stats.canReceiveCount > 0 && (
@@ -633,7 +638,7 @@ export function FriendsPage() {
                                     ) : (
                                         <Heart className="mr-2 h-4 w-4" />
                                     )}
-                                    一键领取
+                                    {t('FRIENDS_RECEIVE_ALL')}
                                 </Button>
                             )}
                         </div>
@@ -664,7 +669,7 @@ export function FriendsPage() {
                 <TabsContent value="friends" className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-muted-foreground">
-                            共 {friends.length} 位好友
+                            {t('FRIENDS_TOTAL_FRIENDS', [friends.length])}
                         </div>
                         <div className="flex gap-2">
                             <Button
@@ -678,7 +683,7 @@ export function FriendsPage() {
                                 ) : (
                                     <RefreshCw className="mr-2 h-4 w-4" />
                                 )}
-                                刷新
+                                {t('[CommonReloadButtonLabel]')}
                             </Button>
                             {friends.some(f => !f.giftSent) && (
                                 <Button
@@ -692,7 +697,7 @@ export function FriendsPage() {
                                     ) : (
                                         <Gift className="mr-2 h-4 w-4" />
                                     )}
-                                    一键赠送
+                                    {t('FRIENDS_SEND_ALL')}
                                 </Button>
                             )}
                         </div>
@@ -701,7 +706,7 @@ export function FriendsPage() {
                     {isTabLoading ? (
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <span className="ml-3 text-muted-foreground">加载中...</span>
+                            <span className="ml-3 text-muted-foreground">{getLoadingText()}</span>
                         </div>
                     ) : friends.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -770,11 +775,11 @@ export function FriendsPage() {
                                 <Users className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
                                 <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageFriend]')}</h3>
                                 <p className="text-muted-foreground text-sm mb-4">
-                                    添加好友可以互相赠送友情点数
+                                    {t('FRIENDS_EMPTY_FRIENDS_DESC')}
                                 </p>
                                 <Button onClick={() => setActiveTab('search')}>
                                     <UserPlus className="mr-2 h-4 w-4" />
-                                    去添加好友
+                                    {t('FRIENDS_GO_ADD_FRIEND')}
                                 </Button>
                             </CardContent>
                         </Card>
@@ -786,13 +791,13 @@ export function FriendsPage() {
                     {loadingTabs.requests ? (
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <span className="ml-3 text-muted-foreground">加载中...</span>
+                            <span className="ml-3 text-muted-foreground">{getLoadingText()}</span>
                         </div>
                     ) : pendingRequests.length > 0 ? (
                         <>
                             <div className="flex items-center justify-between">
                                 <div className="text-sm text-muted-foreground">
-                                    {pendingRequests.length} 个待处理申请
+                                    {t('FRIENDS_PENDING_REQUESTS_COUNT', [pendingRequests.length])}
                                 </div>
                                 <div className="flex gap-2">
                                     <Button
@@ -869,7 +874,7 @@ export function FriendsPage() {
                                 <Users className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
                                 <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageApprovalPending]')}</h3>
                                 <p className="text-muted-foreground text-sm">
-                                    当有玩家向你发送好友申请时会显示在这里
+                                    {t('FRIENDS_EMPTY_PENDING_DESC')}
                                 </p>
                             </CardContent>
                         </Card>
@@ -881,13 +886,13 @@ export function FriendsPage() {
                     {loadingTabs.applying ? (
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <span className="ml-3 text-muted-foreground">加载中...</span>
+                            <span className="ml-3 text-muted-foreground">{getLoadingText()}</span>
                         </div>
                     ) : sentRequests.length > 0 ? (
                         <>
                             <div className="flex items-center justify-between">
                                 <div className="text-sm text-muted-foreground">
-                                    {sentRequests.length} 个申请中
+                                    {t('FRIENDS_APPLYING_COUNT', [sentRequests.length])}
                                 </div>
                             <Button
                                 variant="outline"
@@ -909,7 +914,7 @@ export function FriendsPage() {
                                     <FriendCard
                                         key={request.playerId}
                                         player={request}
-                                        topRight="等待回应"
+                                        topRight={t('FRIENDS_WAITING_RESPONSE')}
                                         actions={<Badge variant="secondary">{t('[FriendTabApplying]')}</Badge>}
                                     />
                                 ))}
@@ -931,7 +936,7 @@ export function FriendsPage() {
                         <CardHeader className="flex flex-row items-center justify-between">
                             <div>
                                 <CardTitle>{t('[FriendRecommendPlayerCaption]')}</CardTitle>
-                                <CardDescription>战力相近的其他玩家</CardDescription>
+                                <CardDescription>{t('FRIENDS_RECOMMEND_DESC')}</CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
                                 <Input
@@ -973,8 +978,8 @@ export function FriendsPage() {
                             {searchedPlayer && (
                                 <FriendCard
                                     player={searchedPlayer}
-                                    topLeft={<span className="text-primary">{searchedPlayer.guildName ? `「${searchedPlayer.guildName}」` : '未加入公会'}</span>}
-                                    topRight={<span className="text-primary">搜索结果</span>}
+                                    topLeft={<span className="text-primary">{getGuildNameText(searchedPlayer.guildName)}</span>}
+                                    topRight={<span className="text-primary">{t('FRIENDS_SEARCH_RESULT')}</span>}
                                     cardClassName="border-primary"
                                     actions={
                                         <Button
@@ -995,7 +1000,7 @@ export function FriendsPage() {
                             {loadingTabs.applying ? (
                                 <div className="flex items-center justify-center py-20">
                                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                                    <span className="ml-3 text-muted-foreground">加载中...</span>
+                                    <span className="ml-3 text-muted-foreground">{getLoadingText()}</span>
                                 </div>
                             ) : recommendations.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1034,14 +1039,14 @@ export function FriendsPage() {
                 <TabsContent value="blocked" className="space-y-4">
                     <div className="flex items-center justify-between">
                         <div className="text-sm text-muted-foreground">
-                            已屏蔽 {stats.blockCount} / {stats.maxBlocks} 名玩家
+                            {t('FRIENDS_BLOCKED_COUNT', [stats.blockCount, stats.maxBlocks])}
                         </div>
                     </div>
 
                     {loadingTabs.blocked ? (
                         <div className="flex items-center justify-center py-20">
                             <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                            <span className="ml-3 text-muted-foreground">加载中...</span>
+                            <span className="ml-3 text-muted-foreground">{getLoadingText()}</span>
                         </div>
                     ) : blockedPlayers.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -1049,7 +1054,7 @@ export function FriendsPage() {
                                 <FriendCard
                                     key={player.playerId}
                                     player={player}
-                                    topLeft={<span className="text-destructive">已屏蔽</span>}
+                                    topLeft={<span className="text-destructive">{t('FRIENDS_BLOCKED_STATUS')}</span>}
                                     actions={
                                         <Button
                                             size="icon"
@@ -1074,7 +1079,7 @@ export function FriendsPage() {
                             <Shield className="h-16 w-16 mb-4 text-muted-foreground opacity-20" />
                             <h3 className="text-lg font-semibold mb-2">{t('[FriendListEmptyMessageBlock]')}</h3>
                             <p className="text-muted-foreground text-sm">
-                                屏蔽的玩家将不再向你发送聊天消息
+                                {t('FRIENDS_BLOCKED_EMPTY_DESC')}
                             </p>
                             </CardContent>
                         </Card>

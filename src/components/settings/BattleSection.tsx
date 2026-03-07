@@ -13,6 +13,7 @@ import { PvpOption } from '@/api/generated/pvpOption';
 import { DungeonBattleConfig } from '@/api/generated/dungeonBattleConfig';
 import { TargetSelectStrategy } from '@/api/generated/targetSelectStrategy';
 import { CharacterFilterStrategy } from '@/api/generated/characterFilterStrategy';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleSectionProps {
     battleLeague: PvpOption;
@@ -30,6 +31,20 @@ export function BattleSection({
     onUpdateDungeon,
 }: BattleSectionProps) {
    const { getItemName } = useItemName();
+   const { t } = useTranslation();
+
+   const getStrategyText = (strategy: TargetSelectStrategy) => {
+       switch (strategy) {
+           case TargetSelectStrategy.Random:
+               return t('SETTINGS_BATTLE_STRATEGY_RANDOM');
+           case TargetSelectStrategy.LowestBattlePower:
+               return t('SETTINGS_BATTLE_STRATEGY_LOWEST_BP');
+           case TargetSelectStrategy.HighestBattlePower:
+               return t('SETTINGS_BATTLE_STRATEGY_HIGHEST_BP');
+           default:
+               return t('SETTINGS_BATTLE_STRATEGY_RANDOM');
+       }
+   };
 
    const renderPvpSettings = (title: string, config: PvpOption, type: 'battleLeague' | 'legendLeague') => {
         const handleStrategyChange = (val: string) => {
@@ -59,11 +74,11 @@ export function BattleSection({
                         <Swords className="h-5 w-5 text-primary" />
                         <CardTitle>{title}</CardTitle>
                     </div>
-                    <CardDescription>配置 PVP 自动战斗策略和排除目标</CardDescription>
+                    <CardDescription>{t('SETTINGS_BATTLE_PVP_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
-                        <Label>对手选择策略</Label>
+                        <Label>{t('SETTINGS_BATTLE_OPPONENT_STRATEGY')}</Label>
                         <Select
                             value={config.selectStrategy?.toString() ?? TargetSelectStrategy.Random.toString()}
                             onValueChange={handleStrategyChange}
@@ -72,28 +87,28 @@ export function BattleSection({
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value={TargetSelectStrategy.Random.toString()}>随机</SelectItem>
-                                <SelectItem value={TargetSelectStrategy.LowestBattlePower.toString()}>最低战力</SelectItem>
-                                <SelectItem value={TargetSelectStrategy.HighestBattlePower.toString()}>最高战力</SelectItem>
+                                <SelectItem value={TargetSelectStrategy.Random.toString()}>{t('SETTINGS_BATTLE_STRATEGY_RANDOM')}</SelectItem>
+                                <SelectItem value={TargetSelectStrategy.LowestBattlePower.toString()}>{t('SETTINGS_BATTLE_STRATEGY_LOWEST_BP')}</SelectItem>
+                                <SelectItem value={TargetSelectStrategy.HighestBattlePower.toString()}>{t('SETTINGS_BATTLE_STRATEGY_HIGHEST_BP')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div className="space-y-2">
-                        <Label>排除玩家 ID (逗号分隔)</Label>
+                        <Label>{t('SETTINGS_BATTLE_EXCLUDE_PLAYER_IDS')}</Label>
                         <Input
                             value={(config.excludePlayerIds || []).join(', ')}
                             onChange={(e) => handleExcludeIdsChange(e.target.value)}
-                            placeholder="例如: 12345, 67890"
+                            placeholder={t('SETTINGS_BATTLE_EXCLUDE_PLACEHOLDER')}
                         />
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label>角色过滤器 (排除包含特定角色的队伍)</Label>
+                            <Label>{t('SETTINGS_BATTLE_CHARACTER_FILTER')}</Label>
                             <Button variant="outline" size="sm" onClick={addFilter}>
                                 <Plus className="mr-2 h-4 w-4" />
-                                添加角色
+                                {t('SETTINGS_BATTLE_ADD_CHARACTER')}
                             </Button>
                         </div>
                         <div className="flex flex-wrap gap-2 pt-1">
@@ -107,7 +122,7 @@ export function BattleSection({
                                 </Badge>
                             ))}
                             {(config.characterFilters || []).length === 0 && (
-                                <p className="text-sm text-muted-foreground italic">未配置角色过滤</p>
+                                <p className="text-sm text-muted-foreground italic">{t('SETTINGS_BATTLE_NO_CHARACTER_FILTER')}</p>
                             )}
                         </div>
                     </div>
@@ -119,23 +134,23 @@ export function BattleSection({
     return (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-                {renderPvpSettings('竞技场 (Arena)', battleLeague, 'battleLeague')}
-                {renderPvpSettings('传说联赛 (Legend)', legendLeague, 'legendLeague')}
+                {renderPvpSettings(t('SETTINGS_BATTLE_ARENA_TITLE'), battleLeague, 'battleLeague')}
+                {renderPvpSettings(t('SETTINGS_BATTLE_LEGEND_TITLE'), legendLeague, 'legendLeague')}
             </div>
 
             <Card>
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Mountain className="h-5 w-5 text-primary" />
-                        <CardTitle>时空洞窟 (Dungeon)</CardTitle>
+                        <CardTitle>{t('SETTINGS_BATTLE_DUNGEON_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>配置自动挑战时空洞窟时的行为偏好</CardDescription>
+                    <CardDescription>{t('SETTINGS_BATTLE_DUNGEON_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
                         <Label className="flex flex-col space-y-1">
-                            <span>优先宝箱</span>
-                            <span className="font-normal text-xs text-muted-foreground text-wrap">在选择格子时优先选择带有宝箱的路径</span>
+                            <span>{t('SETTINGS_BATTLE_PREFER_CHEST')}</span>
+                            <span className="font-normal text-xs text-muted-foreground text-wrap">{t('SETTINGS_BATTLE_PREFER_CHEST_DESC')}</span>
                         </Label>
                         <Switch
                             checked={dungeonBattle.preferTreasureChest}
@@ -145,8 +160,8 @@ export function BattleSection({
 
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
                         <Label className="flex flex-col space-y-1">
-                            <span>自动脱装</span>
-                            <span className="font-normal text-xs text-muted-foreground text-wrap">在特殊事件中自动卸载装备以降低评分（如果逻辑需要）</span>
+                            <span>{t('SETTINGS_BATTLE_AUTO_UNEQUIP')}</span>
+                            <span className="font-normal text-xs text-muted-foreground text-wrap">{t('SETTINGS_BATTLE_AUTO_UNEQUIP_DESC')}</span>
                         </Label>
                         <Switch
                             checked={dungeonBattle.autoRemoveEquipment}
@@ -155,7 +170,7 @@ export function BattleSection({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>最大使用回复物品次数 (0-99)</Label>
+                        <Label>{t('SETTINGS_BATTLE_MAX_RECOVERY')}</Label>
                         <Input
                             type="number"
                             min={0}
@@ -166,11 +181,11 @@ export function BattleSection({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>地牢商店目标物品 (带折扣阈值)</Label>
+                        <Label>{t('SETTINGS_BATTLE_SHOP_TARGETS')}</Label>
                         <div className="grid gap-2">
                             {(dungeonBattle.shopTargetItems || []).map((item, idx) => (
                                 <div key={idx} className="flex items-center justify-between rounded border p-2 text-sm">
-                                    <span>{getItemName(item.itemType, item.itemId)} | 最低折扣: {item.minDiscountPercent}%</span>
+                                    <span>{getItemName(item.itemType, item.itemId)} | {t('SETTINGS_BATTLE_MIN_DISCOUNT', [item.minDiscountPercent])}</span>
                                     <Button
                                         variant="ghost"
                                         size="sm"
@@ -194,7 +209,7 @@ export function BattleSection({
                                 }}
                             >
                                 <Plus className="mr-2 h-4 w-4" />
-                                添加商店目标
+                                {t('SETTINGS_BATTLE_ADD_SHOP_TARGET')}
                             </Button>
                         </div>
                     </div>

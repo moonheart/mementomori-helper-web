@@ -19,28 +19,28 @@ interface AutomationSectionProps {
 
 // 简单开关配置（没有 Cron）
 const simpleSwitches = [
-    { key: 'disableAll', label: '禁用所有任务' },
-    { key: 'autoDungeonBattle', label: '自动时空洞窟' },
-    { key: 'autoUseItems', label: '自动使用物品' },
-    { key: 'autoFreeGacha', label: '自动免费抽卡' },
-    { key: 'autoRankUpCharacter', label: '自动进化角色' },
+    { key: 'disableAll', labelKey: 'AUTO_SIMPLE_DISABLE_ALL' },
+    { key: 'autoDungeonBattle', labelKey: 'AUTO_SIMPLE_DUNGEON' },
+    { key: 'autoUseItems', labelKey: 'AUTO_SIMPLE_USE_ITEMS' },
+    { key: 'autoFreeGacha', labelKey: 'AUTO_SIMPLE_FREE_GACHA' },
+    { key: 'autoRankUpCharacter', labelKey: 'AUTO_SIMPLE_RANK_UP_CHARACTER' },
 ] as const;
 
 // 带 Cron 的配置项
 const cronItems = [
-    { switchKey: 'autoPvp', cronKey: 'pvpJobCron', label: '自动竞技场' },
-    { switchKey: 'autoLegendLeague', cronKey: 'legendLeagueJobCron', label: '自动传说联赛' },
-    { switchKey: 'autoLocalRaid', cronKey: 'autoLocalRaidJobCron', label: '自动本地团队战' },
-    { switchKey: 'autoBuyShopItem', cronKey: 'autoBuyShopItemJobCron', label: '自动购买商店道具' },
-    { switchKey: 'autoChangeGachaRelic', cronKey: 'autoChangeGachaRelicJobCron', label: '切换圣遗物愿望' },
-    { switchKey: 'autoDrawGachaRelic', cronKey: 'autoDrawGachaRelicJobCron', label: '抽取圣遗物(10连)' },
-    { switchKey: 'autoOpenGuildRaid', cronKey: 'guildRaidBossReleaseCron', label: '自动开启公会Raid' },
+    { switchKey: 'autoPvp', cronKey: 'pvpJobCron', labelKey: 'AUTO_CRON_PVP' },
+    { switchKey: 'autoLegendLeague', cronKey: 'legendLeagueJobCron', labelKey: 'AUTO_CRON_LEGEND_LEAGUE' },
+    { switchKey: 'autoLocalRaid', cronKey: 'autoLocalRaidJobCron', labelKey: 'AUTO_CRON_LOCAL_RAID' },
+    { switchKey: 'autoBuyShopItem', cronKey: 'autoBuyShopItemJobCron', labelKey: 'AUTO_CRON_BUY_SHOP_ITEM' },
+    { switchKey: 'autoChangeGachaRelic', cronKey: 'autoChangeGachaRelicJobCron', labelKey: 'AUTO_CRON_CHANGE_GACHA_RELIC' },
+    { switchKey: 'autoDrawGachaRelic', cronKey: 'autoDrawGachaRelicJobCron', labelKey: 'AUTO_CRON_DRAW_GACHA_RELIC' },
+    { switchKey: 'autoOpenGuildRaid', cronKey: 'guildRaidBossReleaseCron', labelKey: 'AUTO_CRON_OPEN_GUILD_RAID' },
 ] as const;
 
 // 独立的 Cron 配置（没有对应的开关）
 const standaloneCrons = [
-    { key: 'dailyJobCron', label: '每日任务计划' },
-    { key: 'hourlyJobCron', label: '奖励领取计划' },
+    { key: 'dailyJobCron', labelKey: 'AUTO_STANDALONE_DAILY' },
+    { key: 'hourlyJobCron', labelKey: 'AUTO_STANDALONE_HOURLY' },
 ] as const;
 
 export function AutomationSection({ config, onChange, onResetCron }: AutomationSectionProps) {
@@ -99,24 +99,24 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <div>
-                        <CardTitle>自动化配置</CardTitle>
-                        <CardDescription>配置各项自动化功能的启用状态和执行计划</CardDescription>
+                        <CardTitle>{t('AUTO_CONFIG_TITLE')}</CardTitle>
+                        <CardDescription>{t('AUTO_CONFIG_DESC')}</CardDescription>
                     </div>
                     <Button variant="ghost" size="sm" asChild>
                         <a href="https://www.freeformatter.com/cron-expression-generator-quartz.html" target="_blank" rel="noreferrer">
                             <HelpCircle className="mr-2 h-4 w-4" />
-                            Cron 帮助
+                            {t('AUTO_CRON_HELP')}
                         </a>
                     </Button>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-muted-foreground">基础开关</h4>
+                        <h4 className="text-sm font-semibold text-muted-foreground">{t('AUTO_BASIC_SWITCHES')}</h4>
                         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                            {simpleSwitches.map(({ key, label }) => (
+                            {simpleSwitches.map(({ key, labelKey }) => (
                                 <div key={key} className="flex items-center justify-between space-x-2 rounded-lg border p-2">
                                     <Label htmlFor={key} className="flex flex-col space-y-1">
-                                        <span>{label}</span>
+                                        <span>{t(labelKey)}</span>
                                     </Label>
                                     <Switch
                                         id={key}
@@ -131,12 +131,12 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
                     <Separator />
 
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-muted-foreground">定时任务</h4>
+                        <h4 className="text-sm font-semibold text-muted-foreground">{t('AUTO_CRON_TASKS')}</h4>
                         <div className="grid gap-4 sm:grid-cols-1 lg:grid-cols-2">
-                            {cronItems.map(({ switchKey, cronKey, label }) => (
+                            {cronItems.map(({ switchKey, cronKey, labelKey }) => (
                                 <div key={switchKey} className="space-y-2 rounded-lg border p-3">
                                     <div className="flex items-center justify-between">
-                                        <Label htmlFor={switchKey} className="font-medium">{label}</Label>
+                                        <Label htmlFor={switchKey} className="font-medium">{t(labelKey)}</Label>
                                         <Switch
                                             id={switchKey}
                                             checked={config[switchKey] as boolean}
@@ -149,13 +149,13 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
                                             value={config[cronKey] as string}
                                             onChange={(e) => handleCronChange(cronKey, e.target.value)}
                                             className="font-mono h-8 text-sm flex-1"
-                                            placeholder="Cron 表达式"
+                                            placeholder={t('AUTO_CRON_EXPRESSION_PLACEHOLDER')}
                                         />
                                         <Button
                                             variant="outline"
                                             size="icon"
                                             onClick={() => onResetCron(cronKey)}
-                                            title="恢复默认"
+                                            title={t('AUTO_RESET_DEFAULT')}
                                         >
                                             <RefreshCw className="h-4 w-4" />
                                         </Button>
@@ -168,11 +168,11 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
                     <Separator />
 
                     <div className="space-y-4">
-                        <h4 className="text-sm font-semibold text-muted-foreground">其他计划</h4>
+                        <h4 className="text-sm font-semibold text-muted-foreground">{t('AUTO_OTHER_SCHEDULES')}</h4>
                         <div className="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
-                            {standaloneCrons.map(({ key, label }) => (
+                            {standaloneCrons.map(({ key, labelKey }) => (
                                 <div key={key} className="space-y-2">
-                                    <Label htmlFor={key} className="text-xs">{label}</Label>
+                                    <Label htmlFor={key} className="text-xs">{t(labelKey)}</Label>
                                     <div className="flex space-x-2">
                                         <Input
                                             id={key}
@@ -184,7 +184,7 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
                                             variant="outline"
                                             size="icon"
                                             onClick={() => onResetCron(key)}
-                                            title="恢复默认"
+                                            title={t('AUTO_RESET_DEFAULT')}
                                         >
                                             <RefreshCw className="h-4 w-4" />
                                         </Button>
@@ -199,8 +199,8 @@ export function AutomationSection({ config, onChange, onResetCron }: AutomationS
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <div>
-                        <CardTitle>自动化任务动作</CardTitle>
-                        <CardDescription>配置每日和每小时任务中要执行的动作</CardDescription>
+                        <CardTitle>{t('AUTO_TASK_ACTIONS_TITLE')}</CardTitle>
+                        <CardDescription>{t('AUTO_TASK_ACTIONS_DESC')}</CardDescription>
                     </div>
                 </CardHeader>
                 <CardContent>

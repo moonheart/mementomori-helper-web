@@ -3,11 +3,13 @@ import { AccountManagement } from '@/components/account/AccountManagement';
 import { ortegaApi } from '@/api/ortega-client';
 import { UserStatusDtoInfo } from '@/api/generated/userStatusDtoInfo';
 import { UserGetUserDataResponse } from '@/api/generated/';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function AccountsPage() {
     const [loading, setLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [userInfo, setUserInfo] = useState<UserStatusDtoInfo | null>(null);
+    const { t } = useTranslation();
 
     useEffect(() => {
         const fetchUserData = async () => {
@@ -35,11 +37,10 @@ export function AccountsPage() {
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-white mb-2">账号管理</h1>
-                        <p className="text-slate-300">管理您的游戏账号，支持多账号切换</p>
+                        <h1 className="text-4xl font-bold text-white mb-2">{t('ACCOUNT_MANAGEMENT_TITLE')}</h1>
+                        <p className="text-slate-300">{t('ACCOUNT_MANAGEMENT_DESC')}</p>
                     </div>
 
-                    {/* Login Status Card */}
                     <div className={`px-6 py-3 rounded-xl border backdrop-blur-md transition-all ${loading ? 'bg-slate-800/50 border-slate-700' :
                         isLoggedIn ? 'bg-emerald-900/30 border-emerald-500/50' :
                             'bg-red-900/30 border-red-500/50'
@@ -47,13 +48,13 @@ export function AccountsPage() {
                         {loading ? (
                             <div className="flex items-center gap-2 text-slate-300">
                                 <div className="w-4 h-4 border-2 border-slate-300 border-t-transparent rounded-full animate-spin" />
-                                <span>检查登录状态...</span>
+                                <span>{t('ACCOUNT_CHECKING_LOGIN')}</span>
                             </div>
                         ) : isLoggedIn && userInfo ? (
                             <div className="flex items-center gap-6">
                                 <div>
                                     <div className="text-xs text-emerald-300 font-medium uppercase tracking-wider mb-1">
-                                        当前登录
+                                        {t('ACCOUNT_CURRENT_LOGIN')}
                                     </div>
                                     <div className="text-lg font-bold text-white flex items-center gap-3">
                                         {userInfo.name}
@@ -64,7 +65,7 @@ export function AccountsPage() {
                                 </div>
                                 <div className="flex gap-4 border-l border-white/10 pl-4">
                                     <div>
-                                        <div className="text-xs text-slate-400">等级</div>
+                                        <div className="text-xs text-slate-400">{t('ACCOUNT_LEVEL')}</div>
                                         <div className="font-mono text-white">Lv.{userInfo.rank}</div>
                                     </div>
                                     <div>
@@ -76,7 +77,7 @@ export function AccountsPage() {
                         ) : (
                             <div className="flex items-center gap-2 text-red-200">
                                 <span className="w-2 h-2 rounded-full bg-red-500" />
-                                <span className="font-medium">未登录游戏</span>
+                                <span className="font-medium">{t('ACCOUNT_NOT_LOGGED_IN')}</span>
                             </div>
                         )}
                     </div>

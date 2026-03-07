@@ -19,8 +19,8 @@ import { settingsApi } from '@/api/settings-service';
 import { jobsApi } from '@/api/jobs-service';
 import { useToast } from '@/hooks/use-toast';
 import dayjs from 'dayjs';
+import { useTranslation } from '@/hooks/useTranslation';
 
-// 导入生成的配置类型
 import { AutoJobModel } from '@/api/generated/autoJobModel';
 import { PvpOption } from '@/api/generated/pvpOption';
 import { DungeonBattleConfig } from '@/api/generated/dungeonBattleConfig';
@@ -44,6 +44,7 @@ import { MiscSection } from '@/components/settings/MiscSection';
 export function AutomationPage() {
     const { currentAccountId, accounts } = useAccountStore();
     const { toast } = useToast();
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [activeAccountName, setActiveAccountName] = useState('');
     const [status, setStatus] = useState<JobStatusDto[]>([]);
@@ -111,13 +112,13 @@ export function AutomationPage() {
             setStatus(statusData);
 
             const account = accounts.find(a => a.userId === userId);
-            setActiveAccountName(account?.name || `账户 ${userId}`);
+            setActiveAccountName(account?.name || t('SETTINGS_ACCOUNT_FALLBACK', [userId]));
         } catch (error) {
             console.error('Failed to load settings:', error);
             toast({
                 variant: 'destructive',
-                title: '获取配置失败',
-                description: '无法从服务器加载账户配置。'
+                title: t('SETTINGS_LOAD_FAILED_TITLE'),
+                description: t('SETTINGS_LOAD_FAILED_DESC')
             });
         } finally {
             setLoading(false);
@@ -170,15 +171,15 @@ export function AutomationPage() {
             }
 
             toast({
-                title: '保存成功',
-                description: `配置项 [${key}] 已更新。`,
+                title: t('SETTINGS_SAVE_SUCCESS_TITLE'),
+                description: t('SETTINGS_SAVE_SUCCESS_DESC', [key]),
             });
         } catch (error) {
             console.error(`Failed to save setting ${key}:`, error);
             toast({
                 variant: 'destructive',
-                title: '保存失败',
-                description: `无法更新配置项 [${key}]。`
+                title: t('SETTINGS_SAVE_FAILED_TITLE'),
+                description: t('SETTINGS_SAVE_FAILED_DESC', [key])
             });
         }
     };
@@ -188,15 +189,15 @@ export function AutomationPage() {
         try {
             await jobsApi.triggerJob(currentAccountId, jobType);
             toast({
-                title: '任务已触发',
-                description: `任务 [${jobType}] 已被手动触发执行。`
+                title: t('AUTOMATION_TASK_TRIGGERED'),
+                description: t('AUTOMATION_TASK_TRIGGERED_DESC', [jobType])
             });
         } catch (error) {
             console.error('Failed to trigger job:', error);
             toast({
                 variant: 'destructive',
-                title: '触发失败',
-                description: '无法触发该任务。'
+                title: t('AUTOMATION_TRIGGER_FAILED'),
+                description: t('AUTOMATION_TRIGGER_FAILED_DESC')
             });
         }
     };
@@ -206,8 +207,8 @@ export function AutomationPage() {
             <div className="flex h-[450px] items-center justify-center">
                 <Card className="w-[420px]">
                     <CardHeader className="text-center">
-                        <CardTitle>未选择账户</CardTitle>
-                        <CardDescription>请先在账户页面选择一个要配置的账户</CardDescription>
+                        <CardTitle>{t('SETTINGS_NO_ACCOUNT_TITLE')}</CardTitle>
+                        <CardDescription>{t('SETTINGS_NO_ACCOUNT_DESC')}</CardDescription>
                     </CardHeader>
                 </Card>
             </div>
@@ -216,23 +217,21 @@ export function AutomationPage() {
 
     return (
         <div className="space-y-6 pb-12">
-            {/* 页面标题 */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">托管管理</h1>
+                    <h1 className="text-3xl font-bold">{t('AUTOMATION_HOSTING_SETTINGS')}</h1>
                     <p className="text-muted-foreground">
-                        正在配置账户: <span className="text-primary font-medium">{activeAccountName}</span>
+                        {t('SETTINGS_CONFIGURING_ACCOUNT')}: <span className="text-primary font-medium">{activeAccountName}</span>
                     </p>
                 </div>
                 {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
             </div>
 
-            {/* 活跃任务 */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                     <div>
-                        <CardTitle className="text-lg">活跃任务</CardTitle>
-                        <CardDescription>当前后台调度的定时任务</CardDescription>
+                        <CardTitle className="text-lg">{t('AUTOMATION_ACTIVE_TASKS')}</CardTitle>
+                        <CardDescription>{t('AUTOMATION_ACTIVE_TASKS_DESC')}</CardDescription>
                     </div>
                     <Button variant="ghost" size="icon" onClick={refreshJobStatus} disabled={loading}>
                         <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -240,7 +239,7 @@ export function AutomationPage() {
                 </CardHeader>
                 <CardContent>
                     {status.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">暂无活跃任务，请检查配置或是否已禁用所有任务。</p>
+                        <p className="text-sm text-muted-foreground text-center py-4">{t('AUTOMATION_NO_ACTIVE_TASKS')}</p>
                     ) : (
                         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {status.map((job) => (
@@ -253,11 +252,11 @@ export function AutomationPage() {
                                     </div>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
                                         <Clock className="h-3 w-3 shrink-0" />
-                                        <span className="truncate">{job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : '未计划'}</span>
+                                        <span className="truncate">{job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : t('AUTOMATION_NOT_SCHEDULED')}</span>
                                     </div>
                                     <Button size="sm" variant="outline" className="mt-3 w-full" onClick={() => handleTriggerJob(job.jobType)}>
                                         <Play className="h-3 w-3 mr-1" />
-                                        执行
+                                        {t('AUTOMATION_EXECUTE')}
                                     </Button>
                                 </div>
                             ))}
@@ -266,33 +265,31 @@ export function AutomationPage() {
                 </CardContent>
             </Card>
 
-            {/* 配置管理 - Tab 区域 */}
             <Tabs defaultValue="automation" className="w-full">
                 <TabsList className="grid w-full max-w-3xl grid-cols-5">
                     <TabsTrigger value="automation">
                         <Settings className="mr-2 h-4 w-4" />
-                        任务计划
+                        {t('SETTINGS_TAB_AUTOMATION')}
                     </TabsTrigger>
                     <TabsTrigger value="battle">
                         <Swords className="mr-2 h-4 w-4" />
-                        战斗策略
+                        {t('SETTINGS_TAB_BATTLE')}
                     </TabsTrigger>
                     <TabsTrigger value="resources">
                         <ShoppingBag className="mr-2 h-4 w-4" />
-                        资源获取
+                        {t('SETTINGS_TAB_RESOURCES')}
                     </TabsTrigger>
                     <TabsTrigger value="social">
                         <Users className="mr-2 h-4 w-4" />
-                        社交管理
+                        {t('SETTINGS_TAB_SOCIAL')}
                     </TabsTrigger>
                     <TabsTrigger value="account">
                         <User className="mr-2 h-4 w-4" />
-                        基础设置
+                        {t('SETTINGS_TAB_ACCOUNT')}
                     </TabsTrigger>
                 </TabsList>
 
                 <div className="mt-6">
-                    {/* Tab 1: 任务计划 - AutomationSection */}
                     <TabsContent value="automation">
                         <AutomationSection
                             config={autoJob}
@@ -306,7 +303,6 @@ export function AutomationPage() {
                         />
                     </TabsContent>
 
-                    {/* Tab 2: 战斗策略 */}
                     <TabsContent value="battle">
                         <BattleSection
                             battleLeague={battleLeague}
@@ -328,7 +324,6 @@ export function AutomationPage() {
                         />
                     </TabsContent>
 
-                    {/* Tab 3: 资源获取 */}
                     <TabsContent value="resources">
                         <ResourceSection
                             shop={shop}
@@ -340,7 +335,6 @@ export function AutomationPage() {
                         />
                     </TabsContent>
 
-                    {/* Tab 4: 社交管理 */}
                     <TabsContent value="social">
                         <SocialSection
                             friendManage={friendManage}
@@ -358,7 +352,6 @@ export function AutomationPage() {
                         />
                     </TabsContent>
 
-                    {/* Tab 5: 基础设置 */}
                     <TabsContent value="account">
                         <MiscSection
                             guildTower={guildTower}

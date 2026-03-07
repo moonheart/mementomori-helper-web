@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Shield, TowerControl as Tower } from 'lucide-react';
 import { GuildTowerOption } from '@/api/generated/guildTowerOption';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface MiscSectionProps {
     guildTower: GuildTowerOption;
@@ -15,20 +16,22 @@ export function MiscSection({
     guildTower,
     onUpdateGuildTower,
 }: MiscSectionProps) {
+    const { t } = useTranslation();
+
     return (
         <div className="space-y-6">
             <Card>
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Tower className="h-5 w-5 text-primary" />
-                        <CardTitle>公会塔 (Guild Tower)</CardTitle>
+                        <CardTitle>{t('SETTINGS_MISC_GUILD_TOWER_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>配置公会塔自动挑战与奖励领取</CardDescription>
+                    <CardDescription>{t('SETTINGS_MISC_GUILD_TOWER_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="gt-entry">自动报名</Label>
+                            <Label htmlFor="gt-entry">{t('SETTINGS_MISC_GUILD_TOWER_AUTO_ENTRY')}</Label>
                             <Switch
                                 id="gt-entry"
                                 checked={guildTower.autoEntry}
@@ -36,7 +39,7 @@ export function MiscSection({
                             />
                         </div>
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="gt-challenge">自动挑战</Label>
+                            <Label htmlFor="gt-challenge">{t('SETTINGS_MISC_GUILD_TOWER_AUTO_CHALLENGE')}</Label>
                             <Switch
                                 id="gt-challenge"
                                 checked={guildTower.autoChallenge}
@@ -44,7 +47,7 @@ export function MiscSection({
                             />
                         </div>
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="gt-reinforce">自动强化</Label>
+                            <Label htmlFor="gt-reinforce">{t('SETTINGS_MISC_GUILD_TOWER_AUTO_REINFORCE')}</Label>
                             <Switch
                                 id="gt-reinforce"
                                 checked={guildTower.autoReinforcement}
@@ -52,7 +55,7 @@ export function MiscSection({
                             />
                         </div>
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="gt-reward">自动领奖</Label>
+                            <Label htmlFor="gt-reward">{t('SETTINGS_MISC_GUILD_TOWER_AUTO_REWARD')}</Label>
                             <Switch
                                 id="gt-reward"
                                 checked={guildTower.autoReceiveReward}
@@ -62,7 +65,7 @@ export function MiscSection({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>自动挑战重试次数</Label>
+                        <Label>{t('SETTINGS_MISC_GUILD_TOWER_RETRY_COUNT')}</Label>
                         <Input
                             type="number"
                             className="w-32"
@@ -77,12 +80,12 @@ export function MiscSection({
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Shield className="h-5 w-5 text-primary" />
-                        <CardTitle>其他设置</CardTitle>
+                        <CardTitle>{t('SETTINGS_MISC_OTHER_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>更多功能正在迁移中...</CardDescription>
+                    <CardDescription>{t('SETTINGS_MISC_OTHER_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-muted-foreground italic">暂无更多配置项。</p>
+                    <p className="text-sm text-muted-foreground italic">{t('SETTINGS_MISC_OTHER_EMPTY')}</p>
                 </CardContent>
             </Card>
         </div>

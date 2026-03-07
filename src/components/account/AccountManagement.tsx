@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Loader2, MoreVertical, Plus, Trash2, LogIn, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useLocalizationStore } from '@/store/localization-store';
 
 export function AccountManagement() {
     const { accounts, currentAccountId, setAccounts, removeAccount, setCurrentAccount, setLoading } = useAccountStore();
@@ -38,8 +40,9 @@ export function AccountManagement() {
     const [deleteUserId, setDeleteUserId] = useState<number | null>(null);
     const [loginLoading, setLoginLoading] = useState<number | null>(null);
     const { toast } = useToast();
+    const { t } = useTranslation();
+    const currentLanguage = useLocalizationStore((state) => state.currentLanguage);
 
-    // 加载账号列表
     useEffect(() => {
         loadAccounts();
     }, []);
@@ -52,8 +55,8 @@ export function AccountManagement() {
         } catch (error) {
             console.error('Failed to load accounts:', error);
             toast({
-                title: '错误',
-                description: '加载账号列表失败',
+                title: t('ACCOUNT_ERROR'),
+                description: t('ACCOUNT_LOAD_FAILED'),
                 variant: 'destructive',
             });
         } finally {
@@ -68,14 +71,14 @@ export function AccountManagement() {
             await accountApi.deleteAccount(deleteUserId);
             removeAccount(deleteUserId);
             toast({
-                title: '成功',
-                description: '账号已删除',
+                title: t('ACCOUNT_SUCCESS'),
+                description: t('ACCOUNT_DELETE_SUCCESS'),
             });
         } catch (error) {
             console.error('Failed to delete account:', error);
             toast({
-                title: '错误',
-                description: '删除账号失败',
+                title: t('ACCOUNT_ERROR'),
+                description: t('ACCOUNT_DELETE_FAILED'),
                 variant: 'destructive',
             });
         } finally {
@@ -90,17 +93,14 @@ export function AccountManagement() {
 
             if (result.success) {
                 setCurrentAccount(userId);
-
-                // 重新加载账号列表以获取更新的登录状态
                 await loadAccounts();
-
                 toast({
-                    title: '登录成功',
+                    title: t('ACCOUNT_LOGIN_SUCCESS'),
                     description: result.message,
                 });
             } else {
                 toast({
-                    title: '登录失败',
+                    title: t('ACCOUNT_LOGIN_FAILED'),
                     description: result.message,
                     variant: 'destructive',
                 });
@@ -108,8 +108,8 @@ export function AccountManagement() {
         } catch (error) {
             console.error('Failed to login:', error);
             toast({
-                title: '错误',
-                description: '登录失败',
+                title: t('ACCOUNT_ERROR'),
+                description: t('ACCOUNT_LOGIN_FAILED'),
                 variant: 'destructive',
             });
         } finally {
@@ -120,11 +120,23 @@ export function AccountManagement() {
     const handleEnterAccount = (userId: number) => {
         setCurrentAccount(userId);
         toast({
-            title: '已切换账号',
-            description: '正在进入游戏...',
+            title: t('ACCOUNT_SWITCHED'),
+            description: t('ACCOUNT_ENTERING_GAME'),
         });
-        // 跳转到主界面
         navigate('/dashboard');
+    };
+
+    const dateTimeLocales: Record<string, string> = {
+        zhCN: 'zh-CN',
+        zhTW: 'zh-TW',
+        enUS: 'en-US',
+        jaJP: 'ja-JP',
+        koKR: 'ko-KR'
+    };
+
+    const formatLastLogin = (timestamp: number | Date) => {
+        const date = timestamp instanceof Date ? timestamp : new Date(timestamp);
+        return date.toLocaleString(dateTimeLocales[currentLanguage] ?? 'en-US');
     };
 
     return (
@@ -133,24 +145,24 @@ export function AccountManagement() {
                 <CardHeader>
                     <div className="flex items-center justify-between">
                         <div>
-                            <CardTitle>账号管理</CardTitle>
+                            <CardTitle>{t('ACCOUNT_MANAGEMENT_TITLE')}</CardTitle>
                             <CardDescription>
-                                管理您的游戏账号，支持多账号切换
+                                {t('ACCOUNT_MANAGEMENT_DESC')}
                             </CardDescription>
                         </div>
                         <Button onClick={() => setShowAddDialog(true)}>
                             <Plus className="mr-2 h-4 w-4" />
-                            添加账号
+                            {t('ACCOUNT_ADD_ACCOUNT')}
                         </Button>
                     </div>
                 </CardHeader>
                 <CardContent>
                     {accounts.length === 0 ? (
                         <div className="text-center py-12">
-                            <p className="text-muted-foreground mb-4">还没有添加账号</p>
+                            <p className="text-muted-foreground mb-4">{t('ACCOUNT_NO_ACCOUNTS')}</p>
                             <Button onClick={() => setShowAddDialog(true)} variant="outline">
                                 <Plus className="mr-2 h-4 w-4" />
-                                添加第一个账号
+                                {t('ACCOUNT_ADD_FIRST')}
                             </Button>
                         </div>
                     ) : (
@@ -165,21 +177,21 @@ export function AccountManagement() {
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium">{account.name}</span>
                                                 {account.isLoggedIn && (
-                                                    <Badge variant="default" className="bg-green-600">在线</Badge>
+                                                    <Badge variant="default" className="bg-green-600">{t('ACCOUNT_ONLINE')}</Badge>
                                                 )}
                                             </div>
                                             <div className="text-sm text-muted-foreground">
                                                 ID: {account.userId}
-                                                {account.currentWorldId && ` • 世界 ${account.currentWorldId}`}
+                                                {account.currentWorldId && ` • ${t('ACCOUNT_WORLD')} ${account.currentWorldId}`}
                                             </div>
                                             {account.lastLoginTime && (
                                                 <div className="text-xs text-muted-foreground">
-                                                    最后登录: {new Date(account.lastLoginTime).toLocaleString('zh-CN')}
+                                                    {t('ACCOUNT_LAST_LOGIN')}: {formatLastLogin(account.lastLoginTime)}
                                                 </div>
                                             )}
                                         </div>
                                         {currentAccountId === account.userId && (
-                                            <Badge variant="outline">当前账号</Badge>
+                                            <Badge variant="outline">{t('ACCOUNT_CURRENT')}</Badge>
                                         )}
                                     </div>
 
@@ -189,7 +201,7 @@ export function AccountManagement() {
                                             onClick={() => handleEnterAccount(account.userId)}
                                         >
                                             <ArrowRight className="mr-2 h-4 w-4" />
-                                            进入该账号
+                                            {t('ACCOUNT_ENTER_ACCOUNT')}
                                         </Button>
 
                                         <Button
@@ -203,7 +215,7 @@ export function AccountManagement() {
                                             ) : (
                                                 <>
                                                     <LogIn className="mr-2 h-4 w-4" />
-                                                    登录
+                                                    {t('ACCOUNT_LOGIN')}
                                                 </>
                                             )}
                                         </Button>
@@ -220,7 +232,7 @@ export function AccountManagement() {
                                                     onClick={() => setDeleteUserId(account.userId)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
-                                                    删除账号
+                                                    {t('ACCOUNT_DELETE')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -240,14 +252,14 @@ export function AccountManagement() {
             <AlertDialog open={!!deleteUserId} onOpenChange={() => setDeleteUserId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>确认删除</AlertDialogTitle>
+                        <AlertDialogTitle>{t('ACCOUNT_CONFIRM_DELETE')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            确定要删除这个账号吗？此操作无法撤销。
+                            {t('ACCOUNT_CONFIRM_DELETE_DESC')}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>取消</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>删除</AlertDialogAction>
+                        <AlertDialogCancel>{t('ACCOUNT_CANCEL')}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>{t('ACCOUNT_DELETE')}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

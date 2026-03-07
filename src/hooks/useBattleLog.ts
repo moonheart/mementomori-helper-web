@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { battleLogApi, BattleLogSummary } from '@/api/battle-log-api';
 import { BattleSimulationResult } from '@/api/generated/battleSimulationResult';
 import { toast } from '@/hooks/use-toast';
+import { useLocalizationStore } from '@/store/localization-store';
 
 interface UseBattleLogOptions {
     pageSize?: number;
@@ -9,6 +10,7 @@ interface UseBattleLogOptions {
 
 export function useBattleLog(options: UseBattleLogOptions = {}) {
     const { pageSize = 20 } = options;
+    const t = useLocalizationStore((state) => state.t);
 
     const [logs, setLogs] = useState<BattleLogSummary[]>([]);
     const [loading, setLoading] = useState(false);
@@ -42,14 +44,14 @@ export function useBattleLog(options: UseBattleLogOptions = {}) {
         } catch (error) {
             console.error('Failed to load battle logs:', error);
             toast({
-                title: '加载失败',
-                description: '无法获取战斗日志列表',
+                title: t('BATTLE_LOG_LOAD_FAILED_TITLE'),
+                description: t('BATTLE_LOG_LIST_FAILED_DESC'),
                 variant: 'destructive'
             });
         } finally {
             setLoading(false);
         }
-    }, [pageSize]);
+    }, [pageSize, t]);
 
     /**
      * 查看战斗日志详情
@@ -64,8 +66,8 @@ export function useBattleLog(options: UseBattleLogOptions = {}) {
         } catch (error) {
             console.error('Failed to load battle log detail:', error);
             toast({
-                title: '加载失败',
-                description: '无法获取战斗详情',
+                title: t('BATTLE_LOG_LOAD_FAILED_TITLE'),
+                description: t('BATTLE_LOG_DETAIL_FAILED_DESC'),
                 variant: 'destructive'
             });
         } finally {
@@ -80,16 +82,16 @@ export function useBattleLog(options: UseBattleLogOptions = {}) {
         try {
             await battleLogApi.delete(battleToken);
             toast({
-                title: '删除成功',
-                description: '战斗记录已删除'
+                title: t('BATTLE_LOG_DELETE_SUCCESS_TITLE'),
+                description: t('BATTLE_LOG_DELETE_SUCCESS_DESC')
             });
             // 刷新列表
             await loadLogs({ page: pagination.page });
         } catch (error) {
             console.error('Failed to delete battle log:', error);
             toast({
-                title: '删除失败',
-                description: '无法删除战斗记录',
+                title: t('BATTLE_LOG_DELETE_FAILED_TITLE'),
+                description: t('BATTLE_LOG_DELETE_FAILED_DESC'),
                 variant: 'destructive'
             });
         }

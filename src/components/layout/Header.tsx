@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Bell, ChevronDown, Users, User, Star, Calendar, MessageSquare, Clock, Globe } from 'lucide-react';
+import { ChevronDown, Users, User, Star, Calendar, MessageSquare, Clock, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
@@ -31,12 +31,12 @@ export function Header() {
     const [status, setStatus] = useState<UserStatusDtoInfo | null>(null);
     const [serverTimeStr, setServerTimeStr] = useState('--:--:--');
 
-    const languages = [
-        { code: 'zhCN', label: '简体中文' },
-        { code: 'zhTW', label: '繁體中文' },
-        { code: 'enUS', label: 'English' },
-        { code: 'jaJP', label: '日本語' },
-        { code: 'koKR', label: '한국어' }
+    const languages: { code: string; labelKey: string }[] = [
+        { code: 'zhCN', labelKey: 'LANGUAGE_ZH_CN' },
+        { code: 'zhTW', labelKey: 'LANGUAGE_ZH_TW' },
+        { code: 'enUS', labelKey: 'LANGUAGE_EN_US' },
+        { code: 'jaJP', labelKey: 'LANGUAGE_JA_JP' },
+        { code: 'koKR', labelKey: 'LANGUAGE_KO_KR' }
     ];
 
     // 获取用户数据，并初始化时间偏移
@@ -80,9 +80,17 @@ export function Header() {
         return () => clearInterval(timer);
     }, [timeManager]);
 
+    const dateTimeLocales: Record<string, string> = {
+        zhCN: 'zh-CN',
+        zhTW: 'zh-TW',
+        enUS: 'en-US',
+        jaJP: 'ja-JP',
+        koKR: 'ko-KR'
+    };
+
     const formatTimestamp = (timestamp?: number) => {
         if (!timestamp) return '-';
-        return new Date(timestamp).toLocaleString('zh-CN', {
+        return new Date(timestamp).toLocaleString(dateTimeLocales[currentLanguage] ?? 'en-US', {
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
@@ -118,7 +126,7 @@ export function Header() {
                             <span className="mx-2 hidden lg:inline">|</span>
                             <span className="hidden items-center gap-1 lg:inline-flex">
                                 <Calendar className="h-3 w-3" />
-                                创建于: {formatTimestamp(status?.createAt)}
+                                {t('HEADER_CREATED_AT')}: {formatTimestamp(status?.createAt)}
                             </span>
                             {status?.comment && (
                                 <>
@@ -136,7 +144,7 @@ export function Header() {
                 {/* Currency & Actions */}
                 <div className="flex items-center gap-4">
                     {/* Server Time */}
-                    <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title="服务器时间">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title={t('HEADER_SERVER_TIME_TITLE')}>
                         <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="tabular-nums">{t('[MyPagePlayerInformationServerTimeLabel]')} {serverTimeStr}</span>
                     </div>
@@ -144,7 +152,7 @@ export function Header() {
                     {/* Language Switcher */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" title="切换语言">
+                            <Button variant="ghost" size="icon" title={t('HEADER_SWITCH_LANGUAGE')}>
                                 <Globe className="h-5 w-5 text-muted-foreground" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -155,7 +163,7 @@ export function Header() {
                                     onClick={() => setLanguage(lang.code)}
                                     className={currentLanguage === lang.code ? 'bg-accent' : ''}
                                 >
-                                    {lang.label}
+                                    {t(lang.labelKey)}
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
@@ -172,18 +180,18 @@ export function Header() {
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-56">
-                            <DropdownMenuLabel>我的账号</DropdownMenuLabel>
+                            <DropdownMenuLabel>{t('HEADER_MY_ACCOUNT')}</DropdownMenuLabel>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => navigate('/accounts')}>
                                 <Users className="mr-2 h-4 w-4" />
-                                账号管理
+                                {t('HEADER_ACCOUNT_MANAGEMENT')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate('/settings')}>
-                                设置
+                                {t('HEADER_SETTINGS')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive">
-                                退出登录
+                                {t('HEADER_LOG_OUT')}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

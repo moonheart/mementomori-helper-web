@@ -49,8 +49,9 @@ export function getErrorMessage(errorCode: number): string | null {
  * @returns 解析后的错误信息
  */
 export function parseOrtegaError(error: unknown): { message: string; code: number; raw: unknown } {
+    const { t } = useLocalizationStore.getState();
     const result = {
-        message: '操作失败，请稍后重试',
+        message: t('ERROR_GENERIC_RETRY'),
         code: 0,
         raw: error
     };
@@ -78,8 +79,9 @@ export function parseOrtegaError(error: unknown): { message: string; code: numbe
  * 解析 Ortega API 错误数据
  */
 function parseOrtegaErrorData(data: Partial<OrtegaApiError>): { message: string; code: number; raw: unknown } {
+    const { t } = useLocalizationStore.getState();
     const result = {
-        message: '操作失败，请稍后重试',
+        message: t('ERROR_GENERIC_RETRY'),
         code: data.errorCode || 0,
         raw: data
     };
@@ -92,7 +94,7 @@ function parseOrtegaErrorData(data: Partial<OrtegaApiError>): { message: string;
         } else {
             // 回退到枚举名称
             const codeName = getErrorCodeName(data.errorCode);
-            result.message = codeName || `未知错误 (代码: ${data.errorCode})`;
+            result.message = codeName || t('ERROR_UNKNOWN_WITH_CODE', [data.errorCode]);
         }
     } else if (data.error) {
         result.message = data.error;

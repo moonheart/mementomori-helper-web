@@ -1,6 +1,6 @@
-import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, TrendingUp, Sparkles, Mountain, Ghost, Bot, ScrollText } from 'lucide-react';
+import { Home, Users, Package, Boxes, ListTodo, ShoppingCart, Swords, Shield, MapPin, Settings, Sparkles, Mountain, Ghost, Bot, ScrollText } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useLocalizationStore } from '@/store/localization-store';
 
 const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = [
@@ -10,7 +10,7 @@ const navItems: { titleKey: string; href: string; icon: React.ElementType }[] = 
         icon: Home
     },
     {
-        titleKey: '托管管理',
+        titleKey: 'SIDEBAR_AUTOMATION',
         href: '/automation',
         icon: Bot
     },

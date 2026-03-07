@@ -59,14 +59,14 @@ function getElementData(element: ElementType) {
         [ElementType.Light]: { nameKey: '[ElementTypeLight]', color: 'text-yellow-400', icon: '☀️' },
         [ElementType.Dark]: { nameKey: '[ElementTypeDark]', color: 'text-purple-500', icon: '🌙' },
     };
-    return data[element] || { nameKey: '无', color: 'text-gray-500', icon: '❓' };
+    return data[element] || { nameKey: '[CommonNoneLabel]', color: 'text-gray-500', icon: '❓' };
 }
 
 function getJobData(job: JobFlags) {
-    if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
-    if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
-    if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
-    return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, desc: '' };
+    if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, descKey: '[JobDescriptionWarrior]' };
+    if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, descKey: '[JobDescriptionSniper]' };
+    if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, descKey: '[JobDescriptionSorcerer]' };
+    return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, descKey: '' };
 }
 
 function getRarityData(rarity: CharacterRarityFlags) {
@@ -287,7 +287,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                 if (!currentUserSyncData || !detailMasterTables) {
                     if (cancelled) return;
                     setDetailInfo(null);
-                    setDetailError('未同步到用户数据，无法计算角色详情');
+                    setDetailError(t('CHARACTER_DETAIL_SYNC_REQUIRED_ERROR'));
                     return;
                 }
                 const userCharacterInfo = getUserCharacterInfoByGuid(
@@ -297,7 +297,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                 );
                 if (!userCharacterInfo) {
                     setDetailInfo(null);
-                    setDetailError('未找到角色数据');
+                    setDetailError(t('CHARACTER_DETAIL_NOT_FOUND_ERROR'));
                     return;
                 }
                 const calculation = calculateCharacterDetailInfo({
@@ -320,7 +320,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                 console.error('Failed to calculate character detail:', error);
                 if (!cancelled) {
                     setDetailInfo(null);
-                    setDetailError('获取角色详细数据失败');
+                    setDetailError(t('CHARACTER_DETAIL_LOAD_FAILED_ERROR'));
                 }
             } finally {
                 if (!cancelled) setDetailLoading(false);
@@ -459,11 +459,15 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                 master,
                 rarity,
                 slot,
-                name: master ? t(master.nameKey) : `装备 ${eq.equipmentId}`,
+                name: master ? t(master.nameKey) : t('CHARACTER_DETAIL_EQUIPMENT_FALLBACK', [eq.equipmentId]),
                 sphereCategoryIds,
             };
         }).sort((a, b) => a.slot - b.slot);
     }, [detailInfo, equipmentMasterMap, sphereMasterMap, t]);
+
+    const getSkillFallbackName = (skillId: number) => t('CHARACTER_DETAIL_SKILL_FALLBACK', [skillId]);
+    const getSkillUnlockText = (unlocked: boolean) => t(unlocked ? 'CHARACTER_DETAIL_UNLOCKED' : 'CHARACTER_DETAIL_NOT_UNLOCKED');
+    const getCharacterLockText = (isLocked: boolean) => t(isLocked ? 'CHARACTER_DETAIL_IS_LOCKED' : 'CHARACTER_DETAIL_IS_NOT_LOCKED');
 
     const getActiveSkillBaseInfo = (skill: ActiveSkillMB | undefined) => {
         if (!skill?.activeSkillInfos?.length) return null;
@@ -481,24 +485,24 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
         if (!skill) return '--';
         const init = skill.skillInitCoolTime ?? 0;
         const max = skill.skillMaxCoolTime ?? 0;
-        if (init <= 0 && max <= 0) return '无';
-        if (init === max) return `${init} 回合`;
-        return `${init} / ${max} 回合`;
+        if (init <= 0 && max <= 0) return t('[CommonNoneLabel]');
+        if (init === max) return t('CHARACTER_DETAIL_TURN_COUNT', [init]);
+        return t('CHARACTER_DETAIL_TURN_RANGE', [init, max]);
     };
 
     const getPassiveSkillCooldownText = (skill: PassiveSkillMB | undefined): string => {
         if (!skill?.passiveSkillInfos?.length) return '--';
         const current = getPassiveSkillBaseInfo(skill);
         const subInfos = current?.passiveSubSetSkillInfos ?? [];
-        if (subInfos.length === 0) return '无';
+        if (subInfos.length === 0) return t('[CommonNoneLabel]');
         const coolTimes = subInfos
             .map(x => ({ init: x.skillCoolTime ?? 0, max: x.skillMaxCoolTime ?? 0 }))
             .filter(x => x.init > 0 || x.max > 0);
-        if (coolTimes.length === 0) return '无';
+        if (coolTimes.length === 0) return t('[CommonNoneLabel]');
         const minInit = Math.min(...coolTimes.map(x => x.init));
         const maxMax = Math.max(...coolTimes.map(x => x.max));
-        if (minInit === maxMax) return `${minInit} 回合`;
-        return `${minInit} / ${maxMax} 回合`;
+        if (minInit === maxMax) return t('CHARACTER_DETAIL_TURN_COUNT', [minInit]);
+        return t('CHARACTER_DETAIL_TURN_RANGE', [minInit, maxMax]);
     };
 
     const getActiveSkillUpgrades = (skill: ActiveSkillMB | undefined) => {
@@ -555,9 +559,9 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                                 <div className="flex items-center gap-1.5"><JobIcon className={`h-4 w-4 ${jobData.color}`} /><span className={jobData.color}>{jobData.nameKey.startsWith('[') ? t(jobData.nameKey) : jobData.nameKey}</span></div>
                                                 <span>•</span><span className={elementData.color}>{elementData.icon} {elementData.nameKey.startsWith('[') ? t(elementData.nameKey) : elementData.nameKey}</span><span>•</span>
                                                 <Badge variant="outline">Lv.{character.level}/{rarityData.max}</Badge>
-                                                {detailInfo?.battlePower ? <><span>•</span><span className="font-medium">战力 {detailInfo.battlePower.toLocaleString()}</span></> : null}
+                                                {detailInfo?.battlePower ? <><span>•</span><span className="font-medium">{t('[CommonBattlePowerLabel]')} {detailInfo.battlePower.toLocaleString()}</span></> : null}
                                             </div>
-                                            <p className="text-xs text-muted-foreground">{jobData.desc}</p>
+                                            <p className="text-xs text-muted-foreground">{jobData.descKey ? t(jobData.descKey) : ''}</p>
                                         </div>
                                     </DialogDescription>
                                 </div>
@@ -565,22 +569,22 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                         </DialogHeader>
                         <Tabs defaultValue="ability" className="mt-6">
                             <TabsList className="grid w-full grid-cols-4">
-                                <TabsTrigger value="ability">能力</TabsTrigger>
-                                <TabsTrigger value="equipment">装备</TabsTrigger>
-                                <TabsTrigger value="skills">技能</TabsTrigger>
-                                <TabsTrigger value="evolution">进化</TabsTrigger>
+                                <TabsTrigger value="ability">{t('CHARACTER_DETAIL_TAB_ABILITY')}</TabsTrigger>
+                                <TabsTrigger value="equipment">{t('[CommonEquipmentLabel]')}</TabsTrigger>
+                                <TabsTrigger value="skills">{t('CHARACTER_DETAIL_TAB_SKILLS')}</TabsTrigger>
+                                <TabsTrigger value="evolution">{t('[CommonEquipmentEvolutionLabel]')}</TabsTrigger>
                             </TabsList>
 
                             <TabsContent value="ability" className="space-y-4">
                                 <Card>
                                     <CardHeader className="py-4">
-                                        <CardTitle className="text-base">能力信息</CardTitle>
+                                        <CardTitle className="text-base">{t('CHARACTER_DETAIL_ABILITY_INFO_TITLE')}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         {detailLoading ? (
                                             <div className="py-8 text-center text-muted-foreground">
                                                 <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                                                正在加载能力数据...
+                                                {t('CHARACTER_DETAIL_ABILITY_LOADING')}
                                             </div>
                                         ) : detailError ? (
                                             <p className="text-sm text-destructive">{detailError}</p>
@@ -606,21 +610,21 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                                         </div>
                                                         <div className="flex justify-end">
                                                             <Button variant="outline" size="sm" onClick={() => setAbilityDialogOpen(true)}>
-                                                                查看能力详细信息
+                                                                {t('CHARACTER_DETAIL_ABILITY_DIALOG_OPEN')}
                                                             </Button>
                                                         </div>
                                                     </>
                                                 ) : null}
                                                 <div className="pt-4 border-t space-y-2 text-sm">
                                                     <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">当前经验值</span>
+                                                        <span className="text-muted-foreground">{t('CHARACTER_DETAIL_CURRENT_EXP')}</span>
                                                         <span className="font-medium">{character.exp.toLocaleString()}</span>
                                                     </div>
                                                     <div className="flex justify-between">
-                                                        <span className="text-muted-foreground">锁定状态</span>
+                                                        <span className="text-muted-foreground">{t('CHARACTER_DETAIL_LOCK_STATUS')}</span>
                                                         <span className="flex items-center gap-1">
                                                             <Shield className="h-3.5 w-3.5" />
-                                                            {character.isLocked ? '已锁定' : '未锁定'}
+                                                            {getCharacterLockText(character.isLocked)}
                                                         </span>
                                                     </div>
                                                 </div>
@@ -633,16 +637,16 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                             <TabsContent value="equipment" className="space-y-4">
                                 <Card>
                                     <CardHeader className="py-4">
-                                        <CardTitle className="text-base">装备信息</CardTitle>
+                                        <CardTitle className="text-base">{t('CHARACTER_DETAIL_EQUIPMENT_INFO_TITLE')}</CardTitle>
                                     </CardHeader>
                                     <CardContent>
                                         {detailLoading ? (
                                             <div className="py-8 text-center text-muted-foreground">
                                                 <Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" />
-                                                正在加载装备数据...
+                                                {t('CHARACTER_DETAIL_EQUIPMENT_LOADING')}
                                             </div>
                                         ) : equippedItems.length === 0 ? (
-                                            <p className="text-sm text-muted-foreground">当前没有可展示的装备数据</p>
+                                            <p className="text-sm text-muted-foreground">{t('CHARACTER_DETAIL_EQUIPMENT_EMPTY')}</p>
                                         ) : (
                                             <div className="space-y-3">
                                                 {equippedItems.map(item => {
@@ -687,7 +691,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                                                                             {hasSphere ? (
                                                                                                 <img
                                                                                                     src={SphereIconManager.getTinyUrl(categoryId)}
-                                                                                                    alt="符石"
+                                                                                                    alt={t('CHARACTER_DETAIL_RUNE_ALT')}
                                                                                                     className="w-4 h-4 object-contain"
                                                                                                     onError={(e) => {
                                                                                                         (e.target as HTMLImageElement).style.display = 'none';
@@ -704,9 +708,9 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                                                     </div>
                                                                 </div>
                                                                 <div className="text-right text-xs text-muted-foreground shrink-0">
-                                                                    <div>强化 +{item.reinforcementLv ?? 0}</div>
-                                                                    <div>圣装 Lv.{item.legendSacredTreasureLv ?? 0}</div>
-                                                                    <div>魔装 Lv.{item.matchlessSacredTreasureLv ?? 0}</div>
+                                                                    <div>{t('[CommonReinforceLabel]')} +{item.reinforcementLv ?? 0}</div>
+                                                                    <div>{t('[EquipmentLegendaryLevelFormat]', [item.legendSacredTreasureLv ?? 0])}</div>
+                                                                    <div>{t('[EquipmentMatchlessLevelFormat]', [item.matchlessSacredTreasureLv ?? 0])}</div>
                                                                 </div>
                                                             </div>
                                                             <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
@@ -729,18 +733,18 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                     <CardHeader className="py-4">
                                         <CardTitle className="text-base flex items-center gap-2">
                                             <Sparkles className="h-4 w-4 text-yellow-500" />
-                                            技能信息
+                                            {t('CHARACTER_DETAIL_SKILL_INFO_TITLE')}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-3">
                                         {character.master?.normalSkillId ? (
                                             <div className="rounded-lg border p-3">
                                                 <div className="flex items-center gap-2 mb-1">
-                                                    <Badge variant="outline">普通攻击</Badge>
+                                                    <Badge variant="outline">{t('CHARACTER_DETAIL_NORMAL_ATTACK')}</Badge>
                                                     <span className="text-sm font-medium">
                                                         {activeSkillMap[character.master.normalSkillId]
                                                             ? t(activeSkillMap[character.master.normalSkillId].nameKey)
-                                                            : `技能 ${character.master.normalSkillId}`}
+                                                            : getSkillFallbackName(character.master.normalSkillId)}
                                                     </span>
                                                 </div>
                                             </div>
@@ -752,22 +756,22 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                             return (
                                                 <div key={`active-${id}`} className="rounded-lg border p-3">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <Badge>主动技能 {index + 1}</Badge>
-                                                        <span className="text-sm font-medium">{skill ? t(skill.nameKey) : `技能 ${id}`}</span>
+                                                        <Badge>{t('CHARACTER_DETAIL_ACTIVE_SKILL_BADGE', [index + 1])}</Badge>
+                                                        <span className="text-sm font-medium">{skill ? t(skill.nameKey) : getSkillFallbackName(id)}</span>
                                                     </div>
                                                     <div className="text-xs text-muted-foreground mb-1">
-                                                        冷却回合: {getActiveSkillCooldownText(skill)}
+                                                        {t('CHARACTER_DETAIL_COOLDOWN_LABEL')}: {getActiveSkillCooldownText(skill)}
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground mb-2">{info ? t(info.descriptionKey) : '暂无说明'}</p>
+                                                    <p className="text-sm text-muted-foreground mb-2">{info ? t(info.descriptionKey) : t('CHARACTER_DETAIL_NO_DESCRIPTION')}</p>
                                                     <div className="rounded bg-muted/60 px-2 py-2 text-xs space-y-1">
-                                                        <div className="font-medium">技能升级效果</div>
+                                                        <div className="font-medium">{t('[DialogCharacterSkillLevelEffectLabel]')}</div>
                                                         {getActiveSkillUpgrades(skill).map((upgrade, upgradeIndex) => (
                                                             <div
                                                                 key={`active-up-${id}-${upgradeIndex}`}
                                                                 className={`flex gap-2 items-start ${upgrade.unlocked ? 'text-foreground' : 'text-muted-foreground opacity-70'}`}
                                                             >
                                                                 <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${upgrade.unlocked ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
-                                                                    {upgrade.unlocked ? '已解锁' : '未解锁'}
+                                                                    {getSkillUnlockText(upgrade.unlocked)}
                                                                 </span>
                                                                 <span className="shrink-0 text-muted-foreground">Lv.{upgrade.level}</span>
                                                                 <span>{upgrade.description}</span>
@@ -784,22 +788,22 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                             return (
                                                 <div key={`passive-${id}`} className="rounded-lg border p-3">
                                                     <div className="flex items-center gap-2 mb-1">
-                                                        <Badge variant="secondary">被动技能 {index + 1}</Badge>
-                                                        <span className="text-sm font-medium">{skill ? t(skill.nameKey) : `技能 ${id}`}</span>
+                                                        <Badge variant="secondary">{t('CHARACTER_DETAIL_PASSIVE_SKILL_BADGE', [index + 1])}</Badge>
+                                                        <span className="text-sm font-medium">{skill ? t(skill.nameKey) : getSkillFallbackName(id)}</span>
                                                     </div>
                                                     <div className="text-xs text-muted-foreground mb-1">
-                                                        冷却回合: {getPassiveSkillCooldownText(skill)}
+                                                        {t('CHARACTER_DETAIL_COOLDOWN_LABEL')}: {getPassiveSkillCooldownText(skill)}
                                                     </div>
-                                                    <p className="text-sm text-muted-foreground mb-2">{info ? t(info.descriptionKey) : '暂无说明'}</p>
+                                                    <p className="text-sm text-muted-foreground mb-2">{info ? t(info.descriptionKey) : t('CHARACTER_DETAIL_NO_DESCRIPTION')}</p>
                                                     <div className="rounded bg-muted/60 px-2 py-2 text-xs space-y-1">
-                                                        <div className="font-medium">技能升级效果</div>
+                                                        <div className="font-medium">{t('[DialogCharacterSkillLevelEffectLabel]')}</div>
                                                         {getPassiveSkillUpgrades(skill).map((upgrade, upgradeIndex) => (
                                                             <div
                                                                 key={`passive-up-${id}-${upgradeIndex}`}
                                                                 className={`flex gap-2 items-start ${upgrade.unlocked ? 'text-foreground' : 'text-muted-foreground opacity-70'}`}
                                                             >
                                                                 <span className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] ${upgrade.unlocked ? 'bg-green-100 text-green-700' : 'bg-muted text-muted-foreground'}`}>
-                                                                    {upgrade.unlocked ? '已解锁' : '未解锁'}
+                                                                    {getSkillUnlockText(upgrade.unlocked)}
                                                                 </span>
                                                                 <span className="shrink-0 text-muted-foreground">Lv.{upgrade.level}</span>
                                                                 <span>{upgrade.description}</span>
@@ -818,7 +822,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                     <CardHeader className="py-4">
                                         <CardTitle className="text-base flex items-center gap-2">
                                             <TrendingUp className="h-4 w-4 text-green-500" />
-                                            稀有度进度
+                                            {t('CHARACTER_DETAIL_RARITY_PROGRESS')}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
@@ -842,7 +846,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                             })}
                                         </div>
                                         <div className="mt-6 p-4 bg-muted rounded-lg border border-dashed">
-                                            <p className="text-xs text-center text-muted-foreground">更多进化详情和所需材料功能开发中...</p>
+                                            <p className="text-xs text-center text-muted-foreground">{t('CHARACTER_DETAIL_EVOLUTION_WIP')}</p>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -850,14 +854,14 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                         </Tabs>
 
                         <div className="flex gap-3 mt-6">
-                            <Button className="flex-1" disabled>强化 (开发中)</Button>
-                            <Button className="flex-1" variant="outline" onClick={() => onOpenChange(false)}>关闭</Button>
+                            <Button className="flex-1" disabled>{t('CHARACTER_DETAIL_REINFORCE_WIP')}</Button>
+                            <Button className="flex-1" variant="outline" onClick={() => onOpenChange(false)}>{t('[CommonCloseLabel]')}</Button>
                         </div>
 
                         <Dialog open={abilityDialogOpen} onOpenChange={setAbilityDialogOpen}>
                             <DialogContent className="max-w-3xl">
                                 <DialogHeader>
-                                    <DialogTitle>能力详细资讯</DialogTitle>
+                                    <DialogTitle>{t('CHARACTER_DETAIL_ABILITY_DIALOG_TITLE')}</DialogTitle>
                                 </DialogHeader>
                                 {detailInfo?.battleParameter ? (
                                     <div className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
@@ -867,7 +871,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className="text-sm font-semibold">潜在能力</div>
+                                            <div className="text-sm font-semibold">{t('[CommonPotentialParameterLabel]')}</div>
                                             {potentialDetailGroups.map(group => (
                                                 <div key={group.title} className="rounded border p-3 space-y-2">
                                                     <div className="grid grid-cols-2 gap-3 text-sm">
@@ -897,7 +901,7 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                         </div>
 
                                         <div className="space-y-2">
-                                            <div className="text-sm font-semibold">能力数值</div>
+                                            <div className="text-sm font-semibold">{t('[CommonBaseParameterLabel]')}</div>
                                             <div className="rounded border p-3 grid grid-cols-1 gap-1 text-sm">
                                                 {abilityBasicRows.map(row => (
                                                     <div key={`basic-${row.key}`} className="flex justify-between border-b last:border-b-0 py-1">
@@ -938,8 +942,8 @@ export function CharacterDetailDialog({ character, open, onOpenChange, lockEquip
                                             </div>
                                         </div>
                                     </div>
-                                ) : <p className="text-sm text-muted-foreground">暂无能力详细数据</p>}
-                                <Button variant="outline" onClick={() => setAbilityDialogOpen(false)}>关闭</Button>
+                                ) : <p className="text-sm text-muted-foreground">{t('CHARACTER_DETAIL_ABILITY_DIALOG_EMPTY')}</p>}
+                                <Button variant="outline" onClick={() => setAbilityDialogOpen(false)}>{t('[CommonCloseLabel]')}</Button>
                             </DialogContent>
                         </Dialog>
                     </>

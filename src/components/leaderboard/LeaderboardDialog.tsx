@@ -79,6 +79,10 @@ function getRankColor(rank: number) {
     return 'text-muted-foreground';
 }
 
+function formatLeaderboardRank(value?: number) {
+    return value || '-';
+}
+
 // ─── PlayerCard ─────────────────────────────────────────────
 
 interface PlayerCardProps {
@@ -92,6 +96,8 @@ interface PlayerCardProps {
 }
 
 function PlayerCard({ player, rank, currentUserId, onClick, highlightColor, valueLabel, value }: PlayerCardProps) {
+    const { t } = useTranslation();
+
     const getGradientColors = () => {
         switch (highlightColor) {
             case 'yellow': return 'from-amber-400 to-orange-500 border-amber-300 from-yellow-50 to-orange-50 dark:from-yellow-950 dark:to-orange-950';
@@ -170,7 +176,7 @@ function PlayerCard({ player, rank, currentUserId, onClick, highlightColor, valu
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1">
                         <span className="font-semibold text-base truncate">{player.playerName}</span>
-                        {player.playerId === currentUserId && <Badge className="text-xs">你</Badge>}
+                        {player.playerId === currentUserId && <Badge className="text-xs">{t('LEADERBOARD_ME_BADGE')}</Badge>}
                     </div>
                 </div>
             </div>
@@ -179,7 +185,7 @@ function PlayerCard({ player, rank, currentUserId, onClick, highlightColor, valu
                 <span>{value}</span>
             </div>
             <div className="text-xs text-muted-foreground truncate">
-                {player.comment || '暂无签名'}
+                {player.comment || t('LEADERBOARD_NO_SIGNATURE')}
             </div>
         </div>
     );
@@ -244,12 +250,12 @@ function GuildCard({ guild, rank, onClick, highlightColor, valueLabel, value }: 
                     ) : `#${rank}`}
                 </div>
                 {avatarUrl && (
-                    <img src={avatarUrl} alt="会长头像" className="w-10 h-10 rounded-full object-cover border" />
+                    <img src={avatarUrl} alt={t('LEADERBOARD_GUILD_LEADER_AVATAR_ALT')} className="w-10 h-10 rounded-full object-cover border" />
                 )}
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base truncate">{guild.guildInfo?.guildOverView?.guildName || '未知公会'}  {t('[CommonCurrentMaxFormatWithBrackets]', [guild.guildInfo.guildMemberCount, 50])}</span>
-                        {guild.isApplying && <Badge className="shrink-0">我的公会</Badge>}
+                        <span className="font-semibold text-base truncate">{guild.guildInfo?.guildOverView?.guildName || t('LEADERBOARD_UNKNOWN_GUILD')}  {t('[CommonCurrentMaxFormatWithBrackets]', [guild.guildInfo.guildMemberCount, 50])}</span>
+                        {guild.isApplying && <Badge className="shrink-0">{t('LEADERBOARD_MY_GUILD')}</Badge>}
                     </div>
                 </div>
             </div>
@@ -260,7 +266,7 @@ function GuildCard({ guild, rank, onClick, highlightColor, valueLabel, value }: 
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                 <span>Lv.{guild.guildInfo?.guildLevel}</span>
                 <span>•</span>
-                <span>{guild.guildInfo?.guildMemberCount}/50 成员</span>
+                <span>{guild.guildInfo?.guildMemberCount}/50 {t('[Member]')}</span>
             </div>
         </div>
     );
@@ -351,6 +357,11 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
 
     const currentUserId = userData?.userStatusDtoInfo?.playerId;
 
+    const getPlayerRankingDescription = (label: string, ranking?: number) => t('LEADERBOARD_PLAYER_RANKING_DESC', [label, formatLeaderboardRank(ranking)]);
+    const getGuildRankingDescription = (label: string, ranking?: number) => t('LEADERBOARD_GUILD_RANKING_DESC', [label, formatLeaderboardRank(ranking)]);
+    const getTodayRankingSuffix = (ranking?: number) => t('LEADERBOARD_TODAY_RANKING_SUFFIX', [formatLeaderboardRank(ranking)]);
+    const getTowerRankingDescription = (ranking?: number, todayRanking?: number) => t('LEADERBOARD_TOWER_RANKING_DESC', [formatLeaderboardRank(ranking), getTodayRankingSuffix(todayRanking)]);
+
     const handlePlayerClick = (player: PlayerInfo) => {
         setSelectedPlayer(player);
         setPlayerDialogOpen(true);
@@ -394,7 +405,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                             <TabsTrigger value="player-level">{t('[PlayerRankingTypePlayerRank]')}</TabsTrigger>
                                             <TabsTrigger value="player-quest">{t('[PlayerRankingTypeStage]')}</TabsTrigger>
                                             <TabsTrigger value="player-tower-infinite">{t('[PlayerRankingTypeTowerBattle]')}</TabsTrigger>
-                                            <TabsTrigger value="player-tower">元素塔</TabsTrigger>
+                                            <TabsTrigger value="player-tower">{t('[RankingGroupTypeElementTower]')}</TabsTrigger>
                                         </TabsList>
 
                                         <TabsContent value="player-power">
@@ -403,7 +414,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <Trophy className="h-6 w-6 text-yellow-500" />{t('[PlayerRankingTypeBattlePower]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据玩家总战力排名 • 你的排名: #{playerData?.battlePowerRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getPlayerRankingDescription(t('LEADERBOARD_PLAYER_TOTAL_BATTLE_POWER'), playerData?.battlePowerRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -421,7 +432,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <TrendingUp className="h-6 w-6 text-green-500" />{t('[PlayerRankingTypePlayerRank]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据玩家账号等级排名 • 你的排名: #{playerData?.levelRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getPlayerRankingDescription(t('LEADERBOARD_PLAYER_ACCOUNT_LEVEL'), playerData?.levelRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -439,7 +450,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <Zap className="h-6 w-6 text-blue-500" />{t('[PlayerRankingTypeStage]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据主线关卡推进进度排名 • 你的排名: #{playerData?.questRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getPlayerRankingDescription(t('LEADERBOARD_PLAYER_MAIN_STAGE_PROGRESS'), playerData?.questRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -457,7 +468,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <MapPin className="h-6 w-6 text-indigo-500" />{t('[PlayerRankingTypeTowerBattle]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据无穷之塔通关层数排名 • 你的排名: #{playerData?.towerBattleRanking || '-'} (今日: #{playerData?.towerBattleRankingToday || '-'})</CardDescription>
+                                                    <CardDescription>{getTowerRankingDescription(playerData?.towerBattleRanking, playerData?.towerBattleRankingToday)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -475,7 +486,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <MapPin className="h-6 w-6 text-purple-500" />{t('[RankingGroupTypeElementTower]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据元素塔通关层数和进度排名</CardDescription>
+                                                    <CardDescription>{t('LEADERBOARD_ELEMENT_TOWER_DESC')}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <Tabs defaultValue={String(TowerType.Blue)} className="space-y-4">
@@ -488,7 +499,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                         {[TowerType.Blue, TowerType.Red, TowerType.Green, TowerType.Yellow].map(towerType => (
                                                             <TabsContent key={towerType} value={String(towerType)}>
                                                                 <div className="mb-4 text-sm text-muted-foreground">
-                                                                    你的排名: #{towerData?.nowRankingMap[getTowerTypeKey(towerType)] || '-'} (今日: #{towerData?.todayRankingMap[getTowerTypeKey(towerType)] || '-'})
+                                                                    {getTowerRankingDescription(towerData?.nowRankingMap[getTowerTypeKey(towerType)], towerData?.todayRankingMap[getTowerTypeKey(towerType)])}
                                                                 </div>
                                                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                                                     {towerData?.rankingsMap[getTowerTypeKey(towerType)]?.map((player, index) => (
@@ -528,7 +539,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <TrendingUp className="h-6 w-6 text-green-500" />{t('[GuildRankingTypeLevel]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据公会等级排名 • 你的公会排名: #{guildData?.levelRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getGuildRankingDescription(t('LEADERBOARD_GUILD_LEVEL'), guildData?.levelRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -546,7 +557,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <Gem className="h-6 w-6 text-blue-500" />{t('[GuildRankingTypeStock]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据公会今日获得积分排名 • 你的公会排名: #{guildData?.stockRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getGuildRankingDescription(t('LEADERBOARD_GUILD_TODAY_POINTS'), guildData?.stockRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -564,7 +575,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <Shield className="h-6 w-6 text-orange-500" />{t('[GuildRankingTypeBattlePower]')}
                                                     </CardTitle>
-                                                    <CardDescription>根据公会成员总战力排名 • 你的公会排名: #{guildData?.battlePowerRanking || '-'}</CardDescription>
+                                                    <CardDescription>{getGuildRankingDescription(t('LEADERBOARD_GUILD_TOTAL_BATTLE_POWER'), guildData?.battlePowerRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -603,7 +614,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                             <div className="flex items-center gap-4">
                                 <div className={`text-4xl font-bold ${getRankColor(selectedGuild.rank)}`}>#{selectedGuild.rank}</div>
                                 <div>
-                                    <div className="text-2xl font-bold">{selectedGuild.guildInfo?.guildOverView?.guildName || '未知公会'}</div>
+                                    <div className="text-2xl font-bold">{selectedGuild.guildInfo?.guildOverView?.guildName || t('LEADERBOARD_UNKNOWN_GUILD')}</div>
                                     <div className="text-sm text-muted-foreground">Lv.{selectedGuild.guildInfo?.guildLevel}</div>
                                 </div>
                             </div>

@@ -69,58 +69,58 @@ export function DashboardPage() {
     const dailyChecklist = [
         {
             id: 'auto-battle',
-            category: '自动战斗',
+            category: t('DASHBOARD_CATEGORY_AUTO_BATTLE'),
             icon: Zap,
             items: [
-                { name: '高速战斗', current: userData?.shopCurrencyMissionProgressMap?.['HighSpeedBattle'] || 0, max: statusInfo?.vip ? (statusInfo.vip >= 1 ? 5 : 3) : 3, completed: false, link: '/missions' },
-                { name: '挑战首领', current: bossInfo?.bossTodayWinCount || 0, max: 3, completed: (bossInfo?.bossTodayWinCount || 0) >= 3, link: '/missions' },
+                { name: t('[AutoBattleButtonQuickForward]'), current: userData?.shopCurrencyMissionProgressMap?.['HighSpeedBattle'] || 0, max: statusInfo?.vip ? (statusInfo.vip >= 1 ? 5 : 3) : 3, completed: false, link: '/missions' },
+                { name: t('DASHBOARD_ITEM_BOSS_CHALLENGE'), current: bossInfo?.bossTodayWinCount || 0, max: 3, completed: (bossInfo?.bossTodayWinCount || 0) >= 3, link: '/missions' },
             ]
         },
         {
             id: 'arena',
-            category: '竞技场',
+            category: t('DASHBOARD_CATEGORY_ARENA'),
             icon: Swords,
             items: [
-                { name: '古竞技场', current: pvpInfo?.pvpTodayCount || 0, max: 5, completed: (pvpInfo?.pvpTodayCount || 0) >= 5, link: '/pvp' },
-                { name: '巅峰竞技', current: 0, max: 10, completed: false, link: '/pvp' },
+                { name: t('[CommonHeaderLocalPvpLabel]'), current: pvpInfo?.pvpTodayCount || 0, max: 5, completed: (pvpInfo?.pvpTodayCount || 0) >= 5, link: '/pvp' },
+                { name: t('[CommonHeaderGlobalPvpLabel]'), current: 0, max: 10, completed: false, link: '/pvp' },
             ]
         },
         {
             id: 'tower',
-            category: '爬塔',
+            category: t('DASHBOARD_CATEGORY_TOWER'),
             icon: MapPin,
             items: [
-                { name: '无穷之塔', current: towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0, max: 3, completed: (towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0) >= 3, link: '/dungeon' },
-                { name: '属性塔', current: towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0), max: 3, completed: (towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0)) >= 3, link: '/dungeon' },
+                { name: t('[TowerTypeInfinite]'), current: towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0, max: 3, completed: (towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0) >= 3, link: '/dungeon' },
+                { name: t('DASHBOARD_ITEM_ELEMENT_TOWER'), current: towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0), max: 3, completed: (towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0)) >= 3, link: '/dungeon' },
             ]
         },
         {
             id: 'guild',
-            category: '公会',
+            category: t('[CommonFooterGuildButtonLabel]'),
             icon: Users,
             items: [
-                { name: '公会签到', current: statusInfo?.isFirstVisitGuildAtDay ? 0 : 1, max: 1, completed: !statusInfo?.isFirstVisitGuildAtDay, link: '/guild' },
-                { name: '公会讨伐战', current: 0, max: 2, completed: false, link: '/guild' },
-                { name: '公会树', current: 0, max: 3, completed: false, link: '/guild' },
+                { name: t('DASHBOARD_ITEM_GUILD_CHECKIN'), current: statusInfo?.isFirstVisitGuildAtDay ? 0 : 1, max: 1, completed: !statusInfo?.isFirstVisitGuildAtDay, link: '/guild' },
+                { name: t('[CommonHeaderGuildRaidLabel]'), current: 0, max: 2, completed: false, link: '/guild' },
+                { name: t('DASHBOARD_ITEM_GUILD_TREE'), current: 0, max: 3, completed: false, link: '/guild' },
             ]
         },
         {
             id: 'daily-tasks',
-            category: '任务',
+            category: t('DASHBOARD_CATEGORY_MISSION'),
             icon: Trophy,
             items: [
-                { name: '每日任务', current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Daily)?.progressCount || 0, max: 500, completed: false, link: '/missions' },
-                { name: '每周任务', current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Weekly)?.progressCount || 0, max: 2000, completed: false, link: '/missions' },
+                { name: t('[MyPageMenuButtonMissionLabel]'), current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Daily)?.progressCount || 0, max: 500, completed: false, link: '/missions' },
+                { name: t('DASHBOARD_ITEM_WEEKLY_MISSION'), current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Weekly)?.progressCount || 0, max: 2000, completed: false, link: '/missions' },
             ]
         },
         {
             id: 'other',
-            category: '其他',
+            category: t('DASHBOARD_CATEGORY_OTHER'),
             icon: Gift,
             items: [
-                { name: '补签次数', current: 0, max: statusInfo?.vip || 0, completed: false, link: '/missions' },
+                { name: t('DASHBOARD_ITEM_RE_SIGN'), current: 0, max: statusInfo?.vip || 0, completed: false, link: '/missions' },
                 { name: t('[CommonHeaderBountyQuestLabel]'), current: 0, max: 5, completed: false, link: '/missions' },
-                { name: '好友对战', current: userData?.todayChallengeFriendBattleCount || 0, max: statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50, completed: (userData?.todayChallengeFriendBattleCount || 0) >= (statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50), link: '/missions' },
+                { name: t('DASHBOARD_ITEM_FRIEND_BATTLE'), current: userData?.todayChallengeFriendBattleCount || 0, max: statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50, completed: (userData?.todayChallengeFriendBattleCount || 0) >= (statusInfo?.vip ? (statusInfo.vip >= 12 ? 500 : statusInfo.vip >= 10 ? 200 : statusInfo.vip >= 8 ? 100 : 50) : 50), link: '/missions' },
             ]
         }
     ];
@@ -128,7 +128,7 @@ export function DashboardPage() {
     // 重要提醒逻辑
     const alerts = [];
     if (userData?.existVipDailyGift) {
-        alerts.push({ type: 'success', message: '有可领取的 VIP 每日福利' });
+        alerts.push({ type: 'success', message: t('DASHBOARD_ALERT_VIP_DAILY') });
     }
 
     const now = new Date();
@@ -141,15 +141,15 @@ export function DashboardPage() {
         (currentTimeMinutes >= 19 * 60 + 30 && currentTimeMinutes <= 20 * 60 + 30);
 
     if (isInPhantomTime) {
-        alerts.push({ type: 'info', message: '幻影神殿当前正处于活跃时段 (报酬增加)' });
+        alerts.push({ type: 'info', message: t('DASHBOARD_ALERT_PHANTOM_TEMPLE_ACTIVE') });
     } else {
-        alerts.push({ type: 'info', message: '幻影神殿活跃时段: 12:30-13:30, 19:30-20:30' });
+        alerts.push({ type: 'info', message: t('DASHBOARD_ALERT_PHANTOM_TEMPLE_TIME') });
     }
 
     // 公会战备战期间提醒: 7:45～20:30
     const isInGvgPrepareTime = currentTimeMinutes >= 7 * 60 + 45 && currentTimeMinutes <= 20 * 60 + 30;
     if (isInGvgPrepareTime) {
-        alerts.push({ type: 'warning', message: '公会战备战期间，记得部署防守部队 (7:45-20:30)' });
+        alerts.push({ type: 'warning', message: t('DASHBOARD_ALERT_GVG_PREPARE') });
     }
 
 
@@ -164,7 +164,7 @@ export function DashboardPage() {
         return (
             <div className="flex h-[400px] items-center justify-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-2">加载玩家数据中...</span>
+                <span className="ml-2">{t('[Loading]')}</span>
             </div>
         );
     }
@@ -265,10 +265,10 @@ export function DashboardPage() {
                             <div className={`text-xl font-bold truncate ${resource.color}`}>
                                 {resource.current.toLocaleString()}
                             </div>
-                            {resource.name === '钻石' && (
+                            {resource.name === t('[ItemName4]') && (
                                 <div className="mt-1 text-[10px] text-muted-foreground flex gap-2">
-                                    <span>免费: {resource.free?.toLocaleString()}</span>
-                                    <span>付费: {resource.paid?.toLocaleString()}</span>
+                                    <span>{t('DASHBOARD_FREE')}: {resource.free?.toLocaleString()}</span>
+                                    <span>{t('DASHBOARD_PAID')}: {resource.paid?.toLocaleString()}</span>
                                 </div>
                             )}
                         </CardContent>
@@ -378,8 +378,8 @@ export function DashboardPage() {
             {/* Page Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold">每日清单</h1>
-                    <p className="text-muted-foreground">今天的任务进度 • 重置时间: 凌晨 4:00</p>
+                    <h1 className="text-2xl font-bold">{t('DASHBOARD_DAILY_CHECKLIST_TITLE')}</h1>
+                    <p className="text-muted-foreground">{t('DASHBOARD_DAILY_CHECKLIST_DESC')}</p>
                 </div>
             </div>
 
@@ -418,7 +418,7 @@ export function DashboardPage() {
                                         <div>
                                             <CardTitle className="text-lg">{category.category}</CardTitle>
                                             <CardDescription>
-                                                {completedItems}/{totalItems} 已完成
+                                                {t('DASHBOARD_ITEMS_COMPLETED', [completedItems, totalItems])}
                                             </CardDescription>
                                         </div>
                                     </div>
@@ -456,7 +456,7 @@ export function DashboardPage() {
                                                             onClick={() => navigate(item.link)}
                                                             className="h-6 px-2 text-xs"
                                                         >
-                                                            前往
+                                                            {t('DASHBOARD_GO_TO')}
                                                         </Button>
                                                     )}
                                                 </div>

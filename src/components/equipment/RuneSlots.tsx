@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import type { Rune } from '@/mocks/types';
 import { RUNE_TYPE_CONFIG } from '@/constants/equipment';
 import { Plus, X } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RuneSlotsProps {
     runes: Rune[];
@@ -12,12 +13,13 @@ interface RuneSlotsProps {
 }
 
 export function RuneSlots({ runes, maxSlots, onAddRune, onRemoveRune, readonly = false }: RuneSlotsProps) {
+    const { t } = useTranslation();
     const slots = [...Array(maxSlots)].map((_, index) => runes[index] || null);
 
     return (
         <div className="space-y-3">
             <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">符石插槽</span>
+                <span className="text-sm font-medium">{t('[CommonSphereLabel]')}</span>
                 <Badge variant="secondary">
                     {runes.length} / {maxSlots}
                 </Badge>
@@ -45,7 +47,7 @@ export function RuneSlots({ runes, maxSlots, onAddRune, onRemoveRune, readonly =
                                         <div>
                                             <div className="font-semibold text-sm leading-tight">{rune.name}</div>
                                             <div className="text-xs text-muted-foreground">
-                                                {RUNE_TYPE_CONFIG[rune.type]?.name}
+                                                {t(RUNE_TYPE_CONFIG[rune.type]?.nameKey || '[CommonSphereLabel]')}
                                             </div>
                                         </div>
                                     </div>
@@ -78,7 +80,7 @@ export function RuneSlots({ runes, maxSlots, onAddRune, onRemoveRune, readonly =
                         ) : (
                             <div className="flex flex-col items-center justify-center py-4 text-muted-foreground">
                                 <Plus className="w-6 h-6 mb-1" />
-                                <span className="text-xs">空闲插槽</span>
+                                <span className="text-xs">{t('EQUIPMENT_EMPTY_SLOT')}</span>
                             </div>
                         )}
                     </div>

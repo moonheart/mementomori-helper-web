@@ -55,7 +55,24 @@ export function ResourceSection({
 
    const getTabName = (tabId: number) => {
        const tab = tradeShopTabMap[tabId];
-       return tab ? (t(tab.tabNameKey) || tab.memo || `商店 #${tabId}`) : `商店 #${tabId}`;
+       return tab ? (t(tab.tabNameKey) || tab.memo || t('RESOURCE_SHOP_FALLBACK', [tabId])) : t('RESOURCE_SHOP_FALLBACK', [tabId]);
+   };
+
+   const getRelicTargetLabel = (type: GachaRelicType) => {
+       switch (type) {
+           case GachaRelicType.None:
+               return t('[CommonNoneLabel]');
+           case GachaRelicType.ChaliceOfHeavenly:
+               return t('RESOURCE_GACHA_RELIC_CHALICE');
+           case GachaRelicType.SilverOrderOfTheBlueSky:
+               return t('RESOURCE_GACHA_RELIC_SILVER_ORDER');
+           case GachaRelicType.DivineWingsOfDesire:
+               return t('RESOURCE_GACHA_RELIC_DIVINE_WINGS');
+           case GachaRelicType.FruitOfTheGarden:
+               return t('RESOURCE_GACHA_RELIC_FRUIT');
+           default:
+               return String(type);
+       }
    };
 
    const handleItemTypeToggle = (type: AutoUseItemType) => {
@@ -98,22 +115,22 @@ export function ResourceSection({
                     <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-2">
                             <ShoppingCart className="h-5 w-5 text-primary" />
-                            <CardTitle>商店自动购买 (Shop)</CardTitle>
+                            <CardTitle>{t('RESOURCE_SHOP_TITLE')}</CardTitle>
                         </div>
                         <div className="flex items-center gap-2">
                             <Link to="/shop">
                                 <Button variant="outline" size="sm">
                                     <Store className="mr-2 h-4 w-4" />
-                                    前往商店添加
+                                    {t('RESOURCE_GO_TO_SHOP')}
                                 </Button>
                             </Link>
                             <Button variant="outline" size="sm" onClick={resetShopDefaults}>
                                 <RotateCcw className="mr-2 h-4 w-4" />
-                                重置默认
+                                {t('RESOURCE_RESET_DEFAULT')}
                             </Button>
                         </div>
                     </div>
-                    <CardDescription>配置在商店自动购买的物品与折扣</CardDescription>
+                    <CardDescription>{t('RESOURCE_SHOP_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
@@ -125,7 +142,7 @@ export function ResourceSection({
                                             {getTabName(item.shopTabId)}
                                         </div>
                                         <div className="font-semibold text-sm truncate">
-                                            {!item.buyItem || item.buyItem.itemId === 0 ? '任意物品' : getItemName(item.buyItem.itemType, item.buyItem.itemId)}
+                                            {!item.buyItem || item.buyItem.itemId === 0 ? t('RESOURCE_ANY_ITEM') : getItemName(item.buyItem.itemType, item.buyItem.itemId)}
                                         </div>
                                     </div>
                                     <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 -mr-1 -mt-1 text-muted-foreground hover:text-destructive" onClick={() => removeShopItem(idx)}>
@@ -134,7 +151,7 @@ export function ResourceSection({
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
                                     <span className="truncate">
-                                        消耗: {item.consumeItem ? getItemName(item.consumeItem.itemType, item.consumeItem.itemId) : '任意物品'}
+                                        {t('RESOURCE_CONSUME')}: {item.consumeItem ? getItemName(item.consumeItem.itemType, item.consumeItem.itemId) : t('RESOURCE_ANY_ITEM')}
                                     </span>
                                     <span className={`shrink-0 ml-2 font-medium ${item.minDiscountPercent > 0 ? 'text-green-600' : ''}`}>
                                         ≥{item.minDiscountPercent}% OFF
@@ -144,7 +161,7 @@ export function ResourceSection({
                         ))}
                     </div>
                     {(shop.autoBuyItems || []).length === 0 && (
-                        <p className="text-sm text-muted-foreground italic text-center py-4">未配置自动购买项，请在商店页面点击闹钟图标添加</p>
+                        <p className="text-sm text-muted-foreground italic text-center py-4">{t('RESOURCE_EMPTY_SHOP_ITEMS')}</p>
                     )}
                 </CardContent>
             </Card>
@@ -154,13 +171,13 @@ export function ResourceSection({
                     <CardHeader>
                         <div className="flex items-center space-x-2">
                             <Sparkles className="h-5 w-5 text-primary" />
-                            <CardTitle>自动抽卡 (Gacha)</CardTitle>
+                            <CardTitle>{t('RESOURCE_GACHA_TITLE')}</CardTitle>
                         </div>
-                        <CardDescription>配置自动免费抽卡与圣遗物目标</CardDescription>
+                        <CardDescription>{t('RESOURCE_GACHA_DESC')}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="space-y-2">
-                            <Label>圣遗物愿望目标</Label>
+                            <Label>{t('RESOURCE_GACHA_TARGET')}</Label>
                             <Select
                                 value={(gacha.targetRelicType ?? GachaRelicType.None).toString()}
                                 onValueChange={(val) => onUpdateGacha({ ...gacha, targetRelicType: parseInt(val) })}
@@ -169,19 +186,19 @@ export function ResourceSection({
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value={GachaRelicType.None.toString()}>无</SelectItem>
-                                    <SelectItem value={GachaRelicType.ChaliceOfHeavenly.toString()}>天之杯</SelectItem>
-                                    <SelectItem value={GachaRelicType.SilverOrderOfTheBlueSky.toString()}>青空银令</SelectItem>
-                                    <SelectItem value={GachaRelicType.DivineWingsOfDesire.toString()}>欲求神翼</SelectItem>
-                                    <SelectItem value={GachaRelicType.FruitOfTheGarden.toString()}>庭院果实</SelectItem>
+                                    <SelectItem value={GachaRelicType.None.toString()}>{getRelicTargetLabel(GachaRelicType.None)}</SelectItem>
+                                    <SelectItem value={GachaRelicType.ChaliceOfHeavenly.toString()}>{getRelicTargetLabel(GachaRelicType.ChaliceOfHeavenly)}</SelectItem>
+                                    <SelectItem value={GachaRelicType.SilverOrderOfTheBlueSky.toString()}>{getRelicTargetLabel(GachaRelicType.SilverOrderOfTheBlueSky)}</SelectItem>
+                                    <SelectItem value={GachaRelicType.DivineWingsOfDesire.toString()}>{getRelicTargetLabel(GachaRelicType.DivineWingsOfDesire)}</SelectItem>
+                                    <SelectItem value={GachaRelicType.FruitOfTheGarden.toString()}>{getRelicTargetLabel(GachaRelicType.FruitOfTheGarden)}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
 
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
                             <Label htmlFor="auto-gacha-relic" className="flex flex-col space-y-1">
-                                <span>自动抽取圣遗物</span>
-                                <span className="font-normal text-xs text-muted-foreground">满足条件时自动执行10连抽 (最多3次)</span>
+                                <span>{t('RESOURCE_GACHA_AUTO_RELIC')}</span>
+                                <span className="font-normal text-xs text-muted-foreground">{t('RESOURCE_GACHA_AUTO_RELIC_DESC')}</span>
                             </Label>
                             <Switch
                                 id="auto-gacha-relic"
@@ -191,7 +208,7 @@ export function ResourceSection({
                         </div>
 
                         <div className="space-y-2 pt-4 border-t">
-                            <Label>自动抽卡消耗物品</Label>
+                            <Label>{t('RESOURCE_GACHA_CONSUME_ITEMS')}</Label>
                             <div className="grid gap-2">
                                 {(gacha.autoGachaConsumeUserItems || []).map((item, idx) => (
                                     <div key={idx} className="flex items-center justify-between rounded border p-2 text-sm">
@@ -218,7 +235,7 @@ export function ResourceSection({
                                     }}
                                 >
                                     <Plus className="mr-2 h-4 w-4" />
-                                    添加消耗物品
+                                    {t('RESOURCE_ADD_CONSUME_ITEM')}
                                 </Button>
                             </div>
                         </div>
@@ -229,9 +246,9 @@ export function ResourceSection({
                     <CardHeader>
                         <div className="flex items-center space-x-2">
                             <Box className="h-5 w-5 text-primary" />
-                            <CardTitle>物品使用 (Items)</CardTitle>
+                            <CardTitle>{t('RESOURCE_ITEMS_TITLE')}</CardTitle>
                         </div>
-                        <CardDescription>配置允许自动化任务自动消耗的物品类型</CardDescription>
+                        <CardDescription>{t('RESOURCE_ITEMS_DESC')}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4">

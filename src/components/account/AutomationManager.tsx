@@ -20,9 +20,11 @@ import { AutoJobModel } from '@/api/generated/autoJobModel';
 import { JobStatusDto } from '@/api/generated/jobStatusDto';
 import { useJobLogs } from '@/hooks/useJobLogs';
 import dayjs from 'dayjs';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function AutomationManager() {
     const { currentAccountId } = useAccountStore();
+    const { t } = useTranslation();
     const [config, setConfig] = useState<AutoJobModel | null>(null);
     const [status, setStatus] = useState<JobStatusDto[]>([]);
     const [loading, setLoading] = useState(false);
@@ -77,12 +79,11 @@ export function AutomationManager() {
     return (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-                {/* 任务列表 */}
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0">
                         <div>
-                            <CardTitle className="text-lg">活跃任务</CardTitle>
-                            <CardDescription>当前后台调度的定时任务</CardDescription>
+                            <CardTitle className="text-lg">{t('AUTOMATION_ACTIVE_TASKS')}</CardTitle>
+                            <CardDescription>{t('AUTOMATION_ACTIVE_TASKS_DESC')}</CardDescription>
                         </div>
                         <Button variant="ghost" size="icon" onClick={fetchData} disabled={loading}>
                             <RefreshCcw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
@@ -91,7 +92,7 @@ export function AutomationManager() {
                     <CardContent>
                         <div className="space-y-4">
                             {status.length === 0 ? (
-                                <p className="text-sm text-muted-foreground text-center py-4">暂无活跃任务，请检查配置或是否已禁用所有任务。</p>
+                                <p className="text-sm text-muted-foreground text-center py-4">{t('AUTOMATION_NO_ACTIVE_TASKS')}</p>
                             ) : (
                                 status.map((job) => (
                                     <div key={job.jobType} className="flex items-center justify-between p-3 border rounded-lg bg-card">
@@ -102,12 +103,12 @@ export function AutomationManager() {
                                             </div>
                                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                                                 <Clock className="h-3 w-3" />
-                                                <span>下次运行: {job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : '未计划'}</span>
+                                                <span>{t('AUTOMATION_NEXT_RUN')}: {job.nextRunTime ? dayjs(job.nextRunTime).format('MM-DD HH:mm') : t('AUTOMATION_NOT_SCHEDULED')}</span>
                                             </div>
                                         </div>
                                         <Button size="sm" variant="outline" onClick={() => handleTriggerJob(job.jobType)}>
                                             <Play className="h-3 w-3 mr-1" />
-                                            执行
+                                            {t('AUTOMATION_EXECUTE')}
                                         </Button>
                                     </div>
                                 ))
@@ -116,26 +117,25 @@ export function AutomationManager() {
                     </CardContent>
                 </Card>
 
-                {/* 控制台日志 */}
                 <Card className="flex flex-col h-[400px]">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <div className="flex items-center gap-2">
                             <Terminal className="h-4 w-4" />
-                            <CardTitle className="text-sm font-medium">执行日志</CardTitle>
+                            <CardTitle className="text-sm font-medium">{t('AUTOMATION_EXECUTION_LOG')}</CardTitle>
                             {isConnected ? (
-                                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px]">已连接</Badge>
+                                <Badge variant="secondary" className="bg-green-100 text-green-700 hover:bg-green-100 text-[10px]">{t('AUTOMATION_CONNECTED')}</Badge>
                             ) : (
-                                <Badge variant="destructive" className="text-[10px]">未连接</Badge>
+                                <Badge variant="destructive" className="text-[10px]">{t('AUTOMATION_DISCONNECTED')}</Badge>
                             )}
                         </div>
                         <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={clearLogs}>
-                            清空
+                            {t('AUTOMATION_CLEAR')}
                         </Button>
                     </CardHeader>
                     <CardContent className="flex-1 overflow-auto bg-black rounded-b-lg p-3 font-mono text-[11px]">
                         <div className="space-y-1">
                             {logs.length === 0 ? (
-                                <p className="text-zinc-500 italic">等待任务执行日志...</p>
+                                <p className="text-zinc-500 italic">{t('AUTOMATION_WAITING_LOGS')}</p>
                             ) : (
                                 logs.map((log, i) => (
                                     <div key={i} className="flex gap-2">
@@ -151,96 +151,92 @@ export function AutomationManager() {
                 </Card>
             </div>
 
-            {/* 配置面板 */}
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <div>
                         <CardTitle className="text-lg flex items-center gap-2">
                             <Settings2 className="h-5 w-5" />
-                            托管设置
+                            {t('AUTOMATION_HOSTING_SETTINGS')}
                         </CardTitle>
-                        <CardDescription>个性化配置每个账号的自动化行为</CardDescription>
+                        <CardDescription>{t('AUTOMATION_HOSTING_SETTINGS_DESC')}</CardDescription>
                     </div>
                     <Button onClick={handleSaveConfig} disabled={saving || !config}>
                         {saving ? <RefreshCcw className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        保存配置
+                        {t('AUTOMATION_SAVE_CONFIG')}
                     </Button>
                 </CardHeader>
                 <CardContent>
                     {config ? (
                         <div className="space-y-8">
-                            {/* 全局开关 */}
                             <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-dashed">
                                 <div className="space-y-0.5">
-                                    <Label className="text-base">禁用所有自动化任务</Label>
-                                    <p className="text-sm text-muted-foreground">开启后，该账号的所有后台定时任务将停止运行。</p>
+                                    <Label className="text-base">{t('AUTOMATION_DISABLE_ALL')}</Label>
+                                    <p className="text-sm text-muted-foreground">{t('AUTOMATION_DISABLE_ALL_DESC')}</p>
                                 </div>
-                                <Switch 
-                                    checked={config.disableAll} 
+                                <Switch
+                                    checked={config.disableAll}
                                     onCheckedChange={(checked) => setConfig({ ...config, disableAll: checked })}
                                 />
                             </div>
 
                             <div className="grid gap-8 md:grid-cols-2">
-                                {/* 定时周期配置 */}
                                 <div className="space-y-4">
                                     <h3 className="font-semibold flex items-center gap-2">
                                         <Clock className="h-4 w-4 text-primary" />
-                                        运行频率 (Cron)
+                                        {t('AUTOMATION_CRON_FREQUENCY')}
                                     </h3>
                                     <div className="space-y-4">
                                         <div className="grid gap-2">
-                                            <Label htmlFor="daily-cron">每日任务周期</Label>
-                                            <Input 
-                                                id="daily-cron" 
-                                                value={config.dailyJobCron} 
+                                            <Label htmlFor="daily-cron">{t('AUTOMATION_DAILY_CRON')}</Label>
+                                            <Input
+                                                id="daily-cron"
+                                                value={config.dailyJobCron}
                                                 onChange={(e) => setConfig({ ...config, dailyJobCron: e.target.value })}
                                             />
                                         </div>
                                         <div className="grid gap-2">
-                                            <Label htmlFor="hourly-cron">每小时任务周期</Label>
-                                            <Input 
-                                                id="hourly-cron" 
-                                                value={config.hourlyJobCron} 
+                                            <Label htmlFor="hourly-cron">{t('AUTOMATION_HOURLY_CRON')}</Label>
+                                            <Input
+                                                id="hourly-cron"
+                                                value={config.hourlyJobCron}
                                                 onChange={(e) => setConfig({ ...config, hourlyJobCron: e.target.value })}
                                             />
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* 功能细项开关 */}
                                 <div className="space-y-4">
                                     <h3 className="font-semibold flex items-center gap-2">
                                         <CheckCircle2 className="h-4 w-4 text-primary" />
-                                        自动化细项
+                                        {t('AUTOMATION_FEATURE_SWITCHES')}
                                     </h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="flex items-center justify-between gap-4">
-                                            <Label htmlFor="auto-pvp" className="text-sm">自动竞技场 (PVP)</Label>
-                                            <Switch 
+                                            <Label htmlFor="auto-pvp" className="text-sm">{t('AUTOMATION_AUTO_PVP')}</Label>
+                                            <Switch
                                                 id="auto-pvp"
-                                                checked={config.autoPvp} 
+                                                checked={config.autoPvp}
                                                 onCheckedChange={(checked) => setConfig({ ...config, autoPvp: checked })}
                                             />
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
-                                            <Label htmlFor="auto-use-items" className="text-sm">自动使用道具</Label>
-                                            <Switch 
+                                            <Label htmlFor="auto-use-items" className="text-sm">{t('AUTOMATION_AUTO_USE_ITEMS')}</Label>
+                                            <Switch
                                                 id="auto-use-items"
-                                                checked={config.autoUseItems} 
+                                                checked={config.autoUseItems}
                                                 onCheckedChange={(checked) => setConfig({ ...config, autoUseItems: checked })}
                                             />
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
-                                            <Label htmlFor="auto-free-gacha" className="text-sm">自动免费抽卡</Label>
-                                            <Switch 
+                                            <Label htmlFor="auto-free-gacha" className="text-sm">{t('AUTOMATION_AUTO_FREE_GACHA')}</Label>
+                                            <Switch
                                                 id="auto-free-gacha"
-                                                checked={config.autoFreeGacha} 
+                                                checked={config.autoFreeGacha}
                                                 onCheckedChange={(checked) => setConfig({ ...config, autoFreeGacha: checked })}
                                             />
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
-                                            <Label htmlFor="auto-local-raid" className="text-sm">自动多人副本</Label>
+                                            <Label htmlFor="auto-local-raid" className="text-sm">{t('AUTOMATION_AUTO_LOCAL_RAID')}</Label>
                                             <Switch
                                                 id="auto-local-raid"
                                                 checked={config.autoLocalRaid}
@@ -248,7 +244,7 @@ export function AutomationManager() {
                                             />
                                         </div>
                                         <div className="flex items-center justify-between gap-4">
-                                            <Label htmlFor="auto-buy-shop" className="text-sm">自动购买商店物品</Label>
+                                            <Label htmlFor="auto-buy-shop" className="text-sm">{t('AUTOMATION_AUTO_BUY_SHOP')}</Label>
                                             <Switch
                                                 id="auto-buy-shop"
                                                 checked={config.autoBuyShopItem}
@@ -262,7 +258,7 @@ export function AutomationManager() {
                     ) : (
                         <div className="text-center py-8">
                             <RefreshCcw className="h-8 w-8 animate-spin mx-auto mb-2 text-muted-foreground" />
-                            <p className="text-sm text-muted-foreground">加载配置中...</p>
+                            <p className="text-sm text-muted-foreground">{t('AUTOMATION_LOADING_CONFIG')}</p>
                         </div>
                     )}
                 </CardContent>

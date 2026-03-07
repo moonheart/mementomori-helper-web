@@ -14,6 +14,7 @@ import { ItemType } from '@/api/generated/itemType';
 import { BountyQuestOption } from '@/api/generated/bountyQuestOption';
 import { BountyQuestAutoConfig } from '@/api/generated/bountyQuestAutoConfig';
 import { UserItem } from '@/api/generated/userItem';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SocialSectionProps {
     friendManage: FriendManageOption;
@@ -35,6 +36,7 @@ export function SocialSection({
     onUpdateBounty,
 }: SocialSectionProps) {
     const { getItemName } = useItemName();
+    const { t } = useTranslation();
 
     // 自动初始化逻辑：如果奖励列表为空，自动填充推荐权重
     React.useEffect(() => {
@@ -105,6 +107,17 @@ export function SocialSection({
         });
     };
 
+    const getLocalRaidRoomStrategyText = () => {
+        return localRaid.selfCreateRoom
+            ? t('SETTINGS_SOCIAL_LOCAL_RAID_ROOM_SELF_CREATE')
+            : t('SETTINGS_SOCIAL_LOCAL_RAID_ROOM_AUTO_JOIN');
+    };
+
+    const getLocalRaidRewardTypeText = (itemType: ItemType) => {
+        return itemType === ItemType.ExchangePlaceItem
+            ? t('SETTINGS_SOCIAL_LOCAL_RAID_REWARD_TYPE_EXCHANGE')
+            : t('SETTINGS_SOCIAL_LOCAL_RAID_REWARD_TYPE_MATERIAL');
+    };
 
     return (
         <div className="space-y-6">
@@ -112,15 +125,15 @@ export function SocialSection({
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Users className="h-5 w-5 text-primary" />
-                        <CardTitle>好友管理 (Friends)</CardTitle>
+                        <CardTitle>{t('SETTINGS_SOCIAL_FRIENDS_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>配置自动清理和申请逻辑</CardDescription>
+                    <CardDescription>{t('SETTINGS_SOCIAL_FRIENDS_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
                         <Label htmlFor="auto-remove" className="flex flex-col space-y-1">
-                            <span>自动移除不活跃好友 (7天)</span>
-                            <span className="font-normal text-xs text-muted-foreground">自动清理超过7天未登录的好友</span>
+                            <span>{t('SETTINGS_SOCIAL_AUTO_REMOVE_INACTIVE')}</span>
+                            <span className="font-normal text-xs text-muted-foreground">{t('SETTINGS_SOCIAL_AUTO_REMOVE_INACTIVE_DESC')}</span>
                         </Label>
                         <Switch
                             id="auto-remove"
@@ -130,10 +143,10 @@ export function SocialSection({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>移除白名单 (不被自动清理的玩家 ID)</Label>
+                        <Label>{t('SETTINGS_SOCIAL_WHITELIST_LABEL')}</Label>
                         <div className="flex space-x-2">
                             <Input
-                                placeholder="输入玩家 ID 并按添加"
+                                placeholder={t('SETTINGS_SOCIAL_WHITELIST_PLACEHOLDER')}
                                 onKeyDown={(e) => {
                                     if (e.key === 'Enter') {
                                         handleWhitelistAdd(e.currentTarget.value);
@@ -160,14 +173,14 @@ export function SocialSection({
                                 </Badge>
                             ))}
                             {(friendManage.autoRemoveWhitelist || []).length === 0 && (
-                                <p className="text-sm text-muted-foreground italic">无白名单记录</p>
+                                <p className="text-sm text-muted-foreground italic">{t('SETTINGS_SOCIAL_WHITELIST_EMPTY')}</p>
                             )}
                         </div>
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="auto-accept">自动接受好友请求</Label>
+                            <Label htmlFor="auto-accept">{t('SETTINGS_SOCIAL_AUTO_ACCEPT')}</Label>
                             <Switch
                                 id="auto-accept"
                                 checked={friendManage.autoAcceptFriendRequest}
@@ -175,7 +188,7 @@ export function SocialSection({
                             />
                         </div>
                         <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
-                            <Label htmlFor="auto-send">自动发送好友申请</Label>
+                            <Label htmlFor="auto-send">{t('SETTINGS_SOCIAL_AUTO_SEND')}</Label>
                             <Switch
                                 id="auto-send"
                                 checked={friendManage.autoSendFriendRequest}
@@ -190,16 +203,16 @@ export function SocialSection({
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Tent className="h-5 w-5 text-primary" />
-                        <CardTitle>本地团队战 (Local Raid)</CardTitle>
+                        <CardTitle>{t('SETTINGS_SOCIAL_LOCAL_RAID_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>配置自动挑战时的房间策略与奖励权重</CardDescription>
+                    <CardDescription>{t('SETTINGS_SOCIAL_LOCAL_RAID_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="flex items-center justify-between space-x-2 rounded-lg border p-3">
                         <Label htmlFor="self-create" className="flex flex-col space-y-1">
-                            <span>房间策略</span>
+                            <span>{t('SETTINGS_SOCIAL_LOCAL_RAID_ROOM_STRATEGY')}</span>
                             <span className="font-normal text-xs text-muted-foreground text-wrap">
-                                {localRaid.selfCreateRoom ? '自己创建房间等待他人加入' : '自动寻找并加入已有房间 (推荐)'}
+                                {getLocalRaidRoomStrategyText()}
                             </span>
                         </Label>
                         <Switch
@@ -211,7 +224,7 @@ export function SocialSection({
 
                     {localRaid.selfCreateRoom && (
                         <div className="space-y-2">
-                            <Label>战前等待时间 (秒)</Label>
+                            <Label>{t('SETTINGS_SOCIAL_LOCAL_RAID_WAIT_SECONDS')}</Label>
                             <Input
                                 type="number"
                                 value={localRaid.waitSeconds}
@@ -222,9 +235,9 @@ export function SocialSection({
 
                     <div className="space-y-4">
                         <div className="flex flex-col space-y-1">
-                            <Label>任务奖励权重配置</Label>
+                            <Label>{t('SETTINGS_SOCIAL_LOCAL_RAID_REWARD_WEIGHT')}</Label>
                             <span className="text-xs text-muted-foreground">
-                                系统将基于 <b>(报酬数量 / 最大产出) * 权重</b> 选择任务。输入 0 可忽略该项。
+                                {t('SETTINGS_SOCIAL_LOCAL_RAID_REWARD_WEIGHT_DESC')}
                             </span>
                         </div>
                         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -246,12 +259,12 @@ export function SocialSection({
                                                     {getItemName(defaultItem.itemType, defaultItem.itemId)}
                                                 </span>
                                                 <span className="text-[10px] text-muted-foreground">
-                                                    {defaultItem.itemType === ItemType.ExchangePlaceItem ? '兑换所道具' : '养成/强化材料'}
+                                                    {getLocalRaidRewardTypeText(defaultItem.itemType)}
                                                 </span>
                                             </div>
                                         </div>
                                         <div className="flex items-center space-x-2">
-                                            <span className="text-xs text-muted-foreground whitespace-nowrap">权重:</span>
+                                            <span className="text-xs text-muted-foreground whitespace-nowrap">{t('SETTINGS_SOCIAL_LOCAL_RAID_WEIGHT_LABEL')}</span>
                                             <Input
                                                 className="h-9 w-24 text-right font-mono"
                                                 type="number"
@@ -295,7 +308,7 @@ export function SocialSection({
                                     });
                                 }}
                             >
-                                恢复推荐权重
+                                {t('SETTINGS_SOCIAL_LOCAL_RAID_RESET_RECOMMENDED')}
                             </Button>
                         </div>
                     </div>
@@ -306,13 +319,13 @@ export function SocialSection({
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Plus className="h-5 w-5 text-primary" />
-                        <CardTitle>悬赏任务 (Bounty Quest)</CardTitle>
+                        <CardTitle>{t('SETTINGS_SOCIAL_BOUNTY_TITLE')}</CardTitle>
                     </div>
-                    <CardDescription>配置自动刷新与领取策略</CardDescription>
+                    <CardDescription>{t('SETTINGS_SOCIAL_BOUNTY_DESC')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-4">
-                        <Label>自动派遣目标项目 (勾选即为自动派遣目标)</Label>
+                        <Label>{t('SETTINGS_SOCIAL_BOUNTY_TARGET_ITEMS')}</Label>
                         <div className="grid grid-cols-2 gap-x-6 gap-y-2 rounded-lg border p-4 sm:grid-cols-3">
                             {bountyQuestRewardItems.map((item, idx) => (
                                 <div key={idx} className="flex items-center space-x-2">
@@ -333,14 +346,14 @@ export function SocialSection({
                     </div>
 
                     <div className="space-y-2">
-                        <Label>最大自动刷新次数 (消耗钻石)</Label>
+                        <Label>{t('SETTINGS_SOCIAL_BOUNTY_MAX_REFRESH')}</Label>
                         <Input
                             type="number"
                             className="w-32"
                             value={bountyQuest.maxRefreshCount}
                             onChange={(e) => onUpdateBounty({ option: { ...bountyQuest, maxRefreshCount: parseInt(e.target.value) || 0 }, auto: bountyQuestAuto })}
                         />
-                        <p className="text-xs text-muted-foreground">当当前任务中没有上述目标项目时，将尝试刷新任务。设置为 0 则禁用自动刷新。</p>
+                        <p className="text-xs text-muted-foreground">{t('SETTINGS_SOCIAL_BOUNTY_MAX_REFRESH_DESC')}</p>
                     </div>
                 </CardContent>
             </Card>

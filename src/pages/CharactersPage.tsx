@@ -68,7 +68,7 @@ export function CharactersPage() {
             return {
                 ...char,
                 master,
-                nameKey: master?.nameKey ?? `Character ${char.characterId}`,
+                nameKey: master?.nameKey ?? t('CHARACTER_FALLBACK_NAME', [char.characterId]),
                 element: master?.elementType ?? ElementType.None,
                 job: master?.jobFlags ?? JobFlags.None
             };
@@ -134,14 +134,14 @@ export function CharactersPage() {
             [ElementType.Light]: { nameKey: '[ElementTypeLight]', color: 'text-yellow-400', bg: 'bg-yellow-400/10', icon: '☀️' },
             [ElementType.Dark]: { nameKey: '[ElementTypeDark]', color: 'text-purple-500', bg: 'bg-purple-500/10', icon: '🌙' }
         };
-        return data[element] || { nameKey: '无', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
+        return data[element] || { nameKey: '[CommonNoneLabel]', color: 'text-gray-500', bg: 'bg-gray-500/10', icon: '❓' };
     };
 
     const getJobData = (job: JobFlags) => {
-        if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, desc: '物理攻击 • 剑' };
-        if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, desc: '物理攻击 • 枪炮' };
-        if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, desc: '魔法攻击 • 魔导书' };
-        return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, desc: '' };
+        if (job & JobFlags.Warrior) return { nameKey: '[JobFlagsWarrior]', color: 'text-red-600', icon: Swords, descKey: '[JobDescriptionWarrior]' };
+        if (job & JobFlags.Sniper) return { nameKey: '[JobFlagsSniper]', color: 'text-green-600', icon: Zap, descKey: '[JobDescriptionSniper]' };
+        if (job & JobFlags.Sorcerer) return { nameKey: '[JobFlagsSorcerer]', color: 'text-purple-600', icon: BookOpen, descKey: '[JobDescriptionSorcerer]' };
+        return { nameKey: '[PictureBookRefineDialogJobFlags]', color: 'text-gray-600', icon: Swords, descKey: '' };
     };
 
     const getRarityData = (rarity: CharacterRarityFlags) => {
@@ -169,8 +169,8 @@ export function CharactersPage() {
             <div className="flex items-center justify-center h-[60vh]">
                 <Card className="w-full max-w-md">
                     <CardHeader>
-                        <CardTitle>未登录</CardTitle>
-                        <CardDescription>请先登录账户以查看角色信息</CardDescription>
+                        <CardTitle>{t('CHARACTER_NOT_LOGGED_IN_TITLE')}</CardTitle>
+                        <CardDescription>{t('CHARACTER_NOT_LOGGED_IN_DESC')}</CardDescription>
                     </CardHeader>
                 </Card>
             </div>
@@ -182,7 +182,7 @@ export function CharactersPage() {
             <div className="flex items-center justify-center h-[60vh]">
                 <div className="text-center">
                     <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                    <p className="text-muted-foreground">加载角色数据中...</p>
+                    <p className="text-muted-foreground">{t('CHARACTER_LOADING')}</p>
                 </div>
             </div>
         );
@@ -192,8 +192,8 @@ export function CharactersPage() {
         <div className="space-y-6">
             {/* Page Header */}
             <div>
-                <h1 className="text-3xl font-bold">角色管理</h1>
-                <p className="text-muted-foreground">管理和强化你的角色 • 稀有度: N → R → SR → SSR → UR → LR</p>
+                <h1 className="text-3xl font-bold">{t('CHARACTER_PAGE_TITLE')}</h1>
+                <p className="text-muted-foreground">{t('CHARACTER_PAGE_DESC')}</p>
             </div>
 
             {/* Summary Stats */}
@@ -202,7 +202,7 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">持有角色</p>
+                                <p className="text-sm text-muted-foreground">{t('[CharacterMenuTabOwnedCharacter]')}</p>
                                 <p className="text-2xl font-bold">{stats.total}</p>
                             </div>
                             <Users className="h-8 w-8 text-blue-500" />
@@ -213,7 +213,7 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">SSR及以上</p>
+                                <p className="text-sm text-muted-foreground">{t('CHARACTER_SSR_AND_ABOVE')}</p>
                                 <p className="text-2xl font-bold">{stats.highRarityCount}</p>
                             </div>
                             <Star className="h-8 w-8 text-yellow-500" />
@@ -224,7 +224,7 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">平均等级</p>
+                                <p className="text-sm text-muted-foreground">{t('CHARACTER_AVG_LEVEL')}</p>
                                 <p className="text-2xl font-bold">{stats.avgLevel}</p>
                             </div>
                             <ArrowUp className="h-8 w-8 text-green-500" />
@@ -235,7 +235,7 @@ export function CharactersPage() {
                     <CardContent className="p-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <p className="text-sm text-muted-foreground">最高等级</p>
+                                <p className="text-sm text-muted-foreground">{t('[LevelLinkMaxLevel]')}</p>
                                 <p className="text-2xl font-bold">{stats.maxLevel}</p>
                             </div>
                             <TrendingUp className="h-8 w-8 text-orange-500" />
@@ -251,7 +251,7 @@ export function CharactersPage() {
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                             <Input
-                                placeholder="搜索角色名称..."
+                                placeholder={t('CHARACTER_SEARCH_PLACEHOLDER')}
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
                                 className="pl-10"
@@ -260,10 +260,10 @@ export function CharactersPage() {
 
                         <Select value={selectedRarity} onValueChange={setSelectedRarity}>
                             <SelectTrigger>
-                                <SelectValue placeholder="稀有度" />
+                                <SelectValue placeholder={t('CHARACTER_RARITY_PLACEHOLDER')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">全部稀有度</SelectItem>
+                                <SelectItem value="all">{t('CHARACTER_ALL_RARITIES')}</SelectItem>
                                 <SelectItem value={CharacterRarityFlags.LR.toString()}>LR</SelectItem>
                                 <SelectItem value={CharacterRarityFlags.UR.toString()}>UR</SelectItem>
                                 <SelectItem value={CharacterRarityFlags.SSR.toString()}>SSR</SelectItem>
@@ -274,10 +274,10 @@ export function CharactersPage() {
 
                         <Select value={selectedElement} onValueChange={setSelectedElement}>
                             <SelectTrigger>
-                                <SelectValue placeholder="属性" />
+                                <SelectValue placeholder={t('CHARACTER_ELEMENT_PLACEHOLDER')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">全部属性</SelectItem>
+                                <SelectItem value="all">{t('CHARACTER_ALL_ELEMENTS')}</SelectItem>
                                 <SelectItem value={ElementType.Red.toString()}>🔥 {t('[ElementTypeRed]')}</SelectItem>
                                 <SelectItem value={ElementType.Blue.toString()}>💧 {t('[ElementTypeBlue]')}</SelectItem>
                                 <SelectItem value={ElementType.Green.toString()}>🍃 {t('[ElementTypeGreen]')}</SelectItem>
@@ -289,10 +289,10 @@ export function CharactersPage() {
 
                         <Select value={selectedClass} onValueChange={setSelectedClass}>
                             <SelectTrigger>
-                                <SelectValue placeholder="类型" />
+                                <SelectValue placeholder={t('CHARACTER_JOB_PLACEHOLDER')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">全部类型</SelectItem>
+                                <SelectItem value="all">{t('CHARACTER_ALL_JOBS')}</SelectItem>
                                 <SelectItem value={JobFlags.Warrior.toString()}>⚔️ {t('[JobFlagsWarrior]')}</SelectItem>
                                 <SelectItem value={JobFlags.Sniper.toString()}>🏹 {t('[JobFlagsSniper]')}</SelectItem>
                                 <SelectItem value={JobFlags.Sorcerer.toString()}>📖 {t('[JobFlagsSorcerer]')}</SelectItem>
@@ -302,7 +302,7 @@ export function CharactersPage() {
 
                     <div className="mt-4">
                         <p className="text-sm text-muted-foreground">
-                            找到 {filteredCharacters.length} 个角色
+                            {t('CHARACTER_FOUND_COUNT', [filteredCharacters.length])}
                         </p>
                     </div>
                 </CardContent>
@@ -396,8 +396,8 @@ export function CharactersPage() {
             {filteredCharacters.length === 0 && !loading && (
                 <Card>
                     <CardContent className="text-center py-12">
-                        <p className="text-muted-foreground">未找到符合条件的角色</p>
-                        <p className="text-sm text-muted-foreground mt-2">尝试清除搜索或筛选条件</p>
+                        <p className="text-muted-foreground">{t('CHARACTER_EMPTY_TITLE')}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{t('CHARACTER_EMPTY_DESC')}</p>
                     </CardContent>
                 </Card>
             )}
