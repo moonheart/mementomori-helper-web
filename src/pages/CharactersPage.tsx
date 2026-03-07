@@ -260,7 +260,7 @@ export function CharactersPage() {
 
                         <Select value={selectedRarity} onValueChange={setSelectedRarity}>
                             <SelectTrigger>
-                                <SelectValue placeholder={t('CHARACTER_RARITY_PLACEHOLDER')} />
+                                <SelectValue placeholder={t('[CharacterSortTypeRarity]')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">{t('CHARACTER_ALL_RARITIES')}</SelectItem>
@@ -274,7 +274,7 @@ export function CharactersPage() {
 
                         <Select value={selectedElement} onValueChange={setSelectedElement}>
                             <SelectTrigger>
-                                <SelectValue placeholder={t('CHARACTER_ELEMENT_PLACEHOLDER')} />
+                                <SelectValue placeholder={t('[CharacterSortTypeCharacterAttribute]')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">{t('CHARACTER_ALL_ELEMENTS')}</SelectItem>

@@ -134,7 +134,7 @@ export function BattleSection({
     return (
         <div className="space-y-6">
             <div className="grid gap-6 md:grid-cols-2">
-                {renderPvpSettings(t('SETTINGS_BATTLE_ARENA_TITLE'), battleLeague, 'battleLeague')}
+                {renderPvpSettings(t('[LockEquipmentDeckTypeLeague]'), battleLeague, 'battleLeague')}
                 {renderPvpSettings(t('SETTINGS_BATTLE_LEGEND_TITLE'), legendLeague, 'legendLeague')}
             </div>
 
@@ -142,7 +142,7 @@ export function BattleSection({
                 <CardHeader>
                     <div className="flex items-center space-x-2">
                         <Mountain className="h-5 w-5 text-primary" />
-                        <CardTitle>{t('SETTINGS_BATTLE_DUNGEON_TITLE')}</CardTitle>
+                        <CardTitle>{t('[CommonHeaderDungeonBattleLabel]')}</CardTitle>
                     </div>
                     <CardDescription>{t('SETTINGS_BATTLE_DUNGEON_DESC')}</CardDescription>
                 </CardHeader>

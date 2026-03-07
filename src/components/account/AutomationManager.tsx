@@ -129,7 +129,7 @@ export function AutomationManager() {
                             )}
                         </div>
                         <Button variant="ghost" size="sm" className="h-8 text-xs text-muted-foreground" onClick={clearLogs}>
-                            {t('AUTOMATION_CLEAR')}
+                            {t('[EquipmentRemoveAllButton]')}
                         </Button>
                     </CardHeader>
                     <CardContent className="flex-1 overflow-auto bg-black rounded-b-lg p-3 font-mono text-[11px]">

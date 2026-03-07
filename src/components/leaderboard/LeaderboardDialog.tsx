@@ -539,7 +539,7 @@ export function LeaderboardDialog({ open, onOpenChange }: LeaderboardDialogProps
                                                     <CardTitle className="flex items-center gap-2">
                                                         <TrendingUp className="h-6 w-6 text-green-500" />{t('[GuildRankingTypeLevel]')}
                                                     </CardTitle>
-                                                    <CardDescription>{getGuildRankingDescription(t('LEADERBOARD_GUILD_LEVEL'), guildData?.levelRanking)}</CardDescription>
+                                                    <CardDescription>{getGuildRankingDescription(t('[GuildRankingTypeLevel]'), guildData?.levelRanking)}</CardDescription>
                                                 </CardHeader>
                                                 <CardContent>
                                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

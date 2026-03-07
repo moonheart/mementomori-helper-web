@@ -177,16 +177,16 @@ export function AccountManagement() {
                                             <div className="flex items-center gap-2">
                                                 <span className="font-medium">{account.name}</span>
                                                 {account.isLoggedIn && (
-                                                    <Badge variant="default" className="bg-green-600">{t('ACCOUNT_ONLINE')}</Badge>
+                                                    <Badge variant="default" className="bg-green-600">{t('[Online]')}</Badge>
                                                 )}
                                             </div>
                                             <div className="text-sm text-muted-foreground">
                                                 ID: {account.userId}
-                                                {account.currentWorldId && ` • ${t('ACCOUNT_WORLD')} ${account.currentWorldId}`}
+                                                {account.currentWorldId && ` • ${t('[TitleWarningListWorld]')} ${account.currentWorldId}`}
                                             </div>
                                             {account.lastLoginTime && (
                                                 <div className="text-xs text-muted-foreground">
-                                                    {t('ACCOUNT_LAST_LOGIN')}: {formatLastLogin(account.lastLoginTime)}
+                                                    {t('[GuildPlayerListSortItemTypeLastAccess]')}: {formatLastLogin(account.lastLoginTime)}
                                                 </div>
                                             )}
                                         </div>
@@ -215,7 +215,7 @@ export function AccountManagement() {
                                             ) : (
                                                 <>
                                                     <LogIn className="mr-2 h-4 w-4" />
-                                                    {t('ACCOUNT_LOGIN')}
+                                                    {t('[GuildTowerUseCharacterEntryContinuationLabel]')}
                                                 </>
                                             )}
                                         </Button>
@@ -232,7 +232,7 @@ export function AccountManagement() {
                                                     onClick={() => setDeleteUserId(account.userId)}
                                                 >
                                                     <Trash2 className="mr-2 h-4 w-4" />
-                                                    {t('ACCOUNT_DELETE')}
+                                                    {t('[AccountDeleteTitle]')}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -258,8 +258,8 @@ export function AccountManagement() {
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>{t('ACCOUNT_CANCEL')}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>{t('ACCOUNT_DELETE')}</AlertDialogAction>
+                        <AlertDialogCancel>{t('[CommonCancelLabel]')}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>{t('[AccountDeleteTitle]')}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

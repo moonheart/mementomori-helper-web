@@ -69,16 +69,16 @@ export function DashboardPage() {
     const dailyChecklist = [
         {
             id: 'auto-battle',
-            category: t('DASHBOARD_CATEGORY_AUTO_BATTLE'),
+            category: t('[BattleTypeAuto]'),
             icon: Zap,
             items: [
                 { name: t('[AutoBattleButtonQuickForward]'), current: userData?.shopCurrencyMissionProgressMap?.['HighSpeedBattle'] || 0, max: statusInfo?.vip ? (statusInfo.vip >= 1 ? 5 : 3) : 3, completed: false, link: '/missions' },
-                { name: t('DASHBOARD_ITEM_BOSS_CHALLENGE'), current: bossInfo?.bossTodayWinCount || 0, max: 3, completed: (bossInfo?.bossTodayWinCount || 0) >= 3, link: '/missions' },
+                { name: t('[AutoBattleButtonBoss]'), current: bossInfo?.bossTodayWinCount || 0, max: 3, completed: (bossInfo?.bossTodayWinCount || 0) >= 3, link: '/missions' },
             ]
         },
         {
             id: 'arena',
-            category: t('DASHBOARD_CATEGORY_ARENA'),
+            category: t('[LockEquipmentDeckTypeLeague]'),
             icon: Swords,
             items: [
                 { name: t('[CommonHeaderLocalPvpLabel]'), current: pvpInfo?.pvpTodayCount || 0, max: 5, completed: (pvpInfo?.pvpTodayCount || 0) >= 5, link: '/pvp' },
@@ -91,7 +91,7 @@ export function DashboardPage() {
             icon: MapPin,
             items: [
                 { name: t('[TowerTypeInfinite]'), current: towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0, max: 3, completed: (towerInfos.find(t => t.towerType === TowerType.Infinite)?.todayBattleCount || 0) >= 3, link: '/dungeon' },
-                { name: t('DASHBOARD_ITEM_ELEMENT_TOWER'), current: towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0), max: 3, completed: (towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0)) >= 3, link: '/dungeon' },
+                { name: t('[LockEquipmentDeckTypeElementTowerBlue]'), current: towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0), max: 3, completed: (towerInfos.filter(t => t.towerType !== TowerType.Infinite).reduce((acc, curr) => acc + curr.todayBattleCount, 0)) >= 3, link: '/dungeon' },
             ]
         },
         {
@@ -99,14 +99,14 @@ export function DashboardPage() {
             category: t('[CommonFooterGuildButtonLabel]'),
             icon: Users,
             items: [
-                { name: t('DASHBOARD_ITEM_GUILD_CHECKIN'), current: statusInfo?.isFirstVisitGuildAtDay ? 0 : 1, max: 1, completed: !statusInfo?.isFirstVisitGuildAtDay, link: '/guild' },
+                { name: t('[MissionName533]'), current: statusInfo?.isFirstVisitGuildAtDay ? 0 : 1, max: 1, completed: !statusInfo?.isFirstVisitGuildAtDay, link: '/guild' },
                 { name: t('[CommonHeaderGuildRaidLabel]'), current: 0, max: 2, completed: false, link: '/guild' },
-                { name: t('DASHBOARD_ITEM_GUILD_TREE'), current: 0, max: 3, completed: false, link: '/guild' },
+                { name: t('[GuildTowerTitle]'), current: 0, max: 3, completed: false, link: '/guild' },
             ]
         },
         {
             id: 'daily-tasks',
-            category: t('DASHBOARD_CATEGORY_MISSION'),
+            category: t('[ShopCurrencyMissionTypeActivityMedal]'),
             icon: Trophy,
             items: [
                 { name: t('[MyPageMenuButtonMissionLabel]'), current: userData?.userMissionActivityDtoInfos?.find(m => m.missionGroupType === MissionGroupType.Daily)?.progressCount || 0, max: 500, completed: false, link: '/missions' },
@@ -115,7 +115,7 @@ export function DashboardPage() {
         },
         {
             id: 'other',
-            category: t('DASHBOARD_CATEGORY_OTHER'),
+            category: t('[TutorialDescriptionBanner38Text4]'),
             icon: Gift,
             items: [
                 { name: t('DASHBOARD_ITEM_RE_SIGN'), current: 0, max: statusInfo?.vip || 0, completed: false, link: '/missions' },
@@ -267,8 +267,8 @@ export function DashboardPage() {
                             </div>
                             {resource.name === t('[ItemName4]') && (
                                 <div className="mt-1 text-[10px] text-muted-foreground flex gap-2">
-                                    <span>{t('DASHBOARD_FREE')}: {resource.free?.toLocaleString()}</span>
-                                    <span>{t('DASHBOARD_PAID')}: {resource.paid?.toLocaleString()}</span>
+                                    <span>{t('[ShopProductFreeLabel]')}: {resource.free?.toLocaleString()}</span>
+                                    <span>{t('[CommonCurrencyPaidLabel]')}: {resource.paid?.toLocaleString()}</span>
                                 </div>
                             )}
                         </CardContent>
@@ -456,7 +456,7 @@ export function DashboardPage() {
                                                             onClick={() => navigate(item.link)}
                                                             className="h-6 px-2 text-xs"
                                                         >
-                                                            {t('DASHBOARD_GO_TO')}
+                                                            {t('[TutorialDescriptionBanner61Text6]')}
                                                         </Button>
                                                     )}
                                                 </div>

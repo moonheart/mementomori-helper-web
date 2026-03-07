@@ -90,7 +90,7 @@ export function FriendsPage() {
 
     // 格式化上次登录时间
     const formatLastLogin = (timestamp: number): string => {
-        if (!timestamp) return t('FRIENDS_UNKNOWN');
+        if (!timestamp) return t('[CharacterBloodTypeNone]');
         const now = timeManager.getServerNowMs();
         const diff = now - timestamp;
         const minutes = Math.floor(diff / 60000);

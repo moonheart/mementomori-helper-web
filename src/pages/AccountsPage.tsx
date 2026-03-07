@@ -65,7 +65,7 @@ export function AccountsPage() {
                                 </div>
                                 <div className="flex gap-4 border-l border-white/10 pl-4">
                                     <div>
-                                        <div className="text-xs text-slate-400">{t('ACCOUNT_LEVEL')}</div>
+                                        <div className="text-xs text-slate-400">{t('[RankingGuildLevelLabel]')}</div>
                                         <div className="font-mono text-white">Lv.{userInfo.rank}</div>
                                     </div>
                                     <div>

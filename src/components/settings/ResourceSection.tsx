@@ -151,7 +151,7 @@ export function ResourceSection({
                                 </div>
                                 <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t">
                                     <span className="truncate">
-                                        {t('RESOURCE_CONSUME')}: {item.consumeItem ? getItemName(item.consumeItem.itemType, item.consumeItem.itemId) : t('RESOURCE_ANY_ITEM')}
+                                        {t('[ItemBoxTabConsumption]')}: {item.consumeItem ? getItemName(item.consumeItem.itemType, item.consumeItem.itemId) : t('RESOURCE_ANY_ITEM')}
                                     </span>
                                     <span className={`shrink-0 ml-2 font-medium ${item.minDiscountPercent > 0 ? 'text-green-600' : ''}`}>
                                         ≥{item.minDiscountPercent}% OFF

@@ -144,7 +144,7 @@ export function Header() {
                 {/* Currency & Actions */}
                 <div className="flex items-center gap-4">
                     {/* Server Time */}
-                    <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title={t('HEADER_SERVER_TIME_TITLE')}>
+                    <div className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 font-mono text-sm" title={t('[MyPagePlayerInformationServerTimeLabel]')}>
                         <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
                         <span className="tabular-nums">{t('[MyPagePlayerInformationServerTimeLabel]')} {serverTimeStr}</span>
                     </div>
@@ -187,7 +187,7 @@ export function Header() {
                                 {t('HEADER_ACCOUNT_MANAGEMENT')}
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => navigate('/settings')}>
-                                {t('HEADER_SETTINGS')}
+                                {t('[GvgPartySyncDeckButtonLabel]')}
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem className="text-destructive">
