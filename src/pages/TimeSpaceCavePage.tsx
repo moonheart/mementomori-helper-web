@@ -14,7 +14,6 @@ import {
     Trophy,
     Users,
     Skull,
-    BookOpen,
     Loader2,
     Zap,
     Flame,
@@ -29,6 +28,7 @@ import { useLocalizationStore } from '@/store/localization-store';
 import { useAccountStore } from '@/store/accountStore';
 import { useTimeManager } from '@/hooks/useTimeManager';
 import { useItemName } from '@/hooks/useItemName';
+import { CharacterIcon } from '@/components/character/CharacterIcon';
 import {
     DungeonBattleGetDungeonBattleInfoResponse,
     DungeonBattleRelicMB,
@@ -40,7 +40,9 @@ import {
     DungeonBattleGuestMB,
     ElementType,
     CharacterRarityFlags,
-    DungeonBattleGridState
+    DungeonBattleGridState,
+    UserCharacterInfo,
+    BattleFieldCharacterGroupType
 } from '@/api/generated';
 
 export function TimeSpaceCavePage() {
@@ -65,7 +67,7 @@ export function TimeSpaceCavePage() {
     // 增援角色选择状态
     const [selectedGuestCharacterId, setSelectedGuestCharacterId] = useState<number | null>(null);
 
-    const { currentAccountId } = useAccountStore();
+    const { currentAccountId, getCurrentUserSyncData } = useAccountStore();
     const timeManager = useTimeManager();
     const sync = useMasterStore(state => state.sync);
     const getTable = useMasterStore(state => state.getTable);
@@ -169,10 +171,29 @@ export function TimeSpaceCavePage() {
             const currentTermId = battleInfo.currentTermId;
 
             switch (action) {
-                case 'battle':
-                    // TODO: 实现战斗逻辑
-                    console.log('开始战斗', currentGridGuid);
+                case 'battle': {
+                    // 获取当前队伍角色 GUID 列表
+                    const characterGuids = battleInfo.userDungeonBattleCharacterDtoInfos?.map(c => c.guid) || [];
+                    if (characterGuids.length === 0) {
+                        console.error('No characters available for battle');
+                        break;
+                    }
+
+                    const res = await ortegaApi.dungeonBattle.execBattle({
+                        dungeonGridGuid: currentGridGuid,
+                        currentTermId,
+                        characterGuids
+                    });
+
+                    // 判断战斗结果
+                    const isWin = res.battleSimulationResult?.battleEndInfo?.winGroupType === BattleFieldCharacterGroupType.Attacker;
+                    if (isWin) {
+                        console.log('战斗胜利');
+                    } else {
+                        console.log('战斗失败');
+                    }
                     break;
+                }
                 case 'recovery':
                     await ortegaApi.dungeonBattle.execRecovery({
                         dungeonGridGuid: currentGridGuid,
@@ -617,8 +638,9 @@ export function TimeSpaceCavePage() {
             {/* 标签页内容 */}
             <Card>
                 <Tabs defaultValue="explore" className="p-6">
-                    <TabsList className="grid w-full grid-cols-3">
+                    <TabsList className="grid w-full grid-cols-4">
                         <TabsTrigger value="explore">探索</TabsTrigger>
+                        <TabsTrigger value="team">队伍</TabsTrigger>
                         <TabsTrigger value="blessings">加护</TabsTrigger>
                         <TabsTrigger value="reinforcements">增援</TabsTrigger>
                     </TabsList>
@@ -769,6 +791,75 @@ export function TimeSpaceCavePage() {
                         )}
                     </TabsContent>
 
+                    {/* 队伍状态 */}
+                    <TabsContent value="team" className="space-y-4">
+                        <CardHeader className="px-0">
+                            <CardTitle>当前队伍</CardTitle>
+                            <CardDescription>
+                                显示当前队伍中所有角色的状态
+                            </CardDescription>
+                        </CardHeader>
+                        <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                            {(() => {
+                                const userSyncData = getCurrentUserSyncData();
+                                return battleInfo.userDungeonBattleCharacterDtoInfos?.map((dungeonChar) => {
+                                    // 从 accountStore 的 userSyncData 中查找完整的角色信息
+                                    const userCharInfo = userSyncData?.userCharacterDtoInfos?.find(
+                                        c => c.guid === dungeonChar.guid
+                                    );
+
+                                    // 如果没有找到角色信息，跳过
+                                    if (!userCharInfo) return null;
+
+                                    // 构建 UserCharacterInfo 对象
+                                    const characterInfo: UserCharacterInfo = {
+                                        guid: userCharInfo.guid,
+                                        playerId: userCharInfo.playerId,
+                                        characterId: userCharInfo.characterId,
+                                        level: userCharInfo.level,
+                                        subLevel: 0,
+                                        exp: userCharInfo.exp,
+                                        rarityFlags: userCharInfo.rarityFlags,
+                                        isLocked: userCharInfo.isLocked
+                                    };
+
+                                    // 计算 HP 百分比 (PerMill = 千分比，1000 = 100%)
+                                    const hpPercent = (dungeonChar.currentHpPerMill / 10).toFixed(1);
+                                    const isLowHp = dungeonChar.currentHpPerMill < 300; // 30% 以下
+
+                                    return (
+                                        <div key={dungeonChar.guid} className="flex flex-col items-center gap-2">
+                                            <CharacterIcon
+                                                userCharacterInfo={characterInfo}
+                                                size={80}
+                                                userSyncData={userSyncData}
+                                            />
+                                            <div className="w-full space-y-1">
+                                                {/* HP 条 */}
+                                                <div className="relative h-2 bg-secondary rounded-full overflow-hidden">
+                                                    <div
+                                                        className={`absolute inset-y-0 left-0 rounded-full transition-all ${
+                                                            isLowHp ? 'bg-red-500' : 'bg-green-500'
+                                                        }`}
+                                                        style={{ width: `${hpPercent}%` }}
+                                                    />
+                                                </div>
+                                                <p className={`text-xs text-center ${isLowHp ? 'text-red-500' : 'text-muted-foreground'}`}>
+                                                    HP: {hpPercent}%
+                                                </p>
+                                            </div>
+                                        </div>
+                                    );
+                                });
+                            })()}
+                            {(!battleInfo.userDungeonBattleCharacterDtoInfos || battleInfo.userDungeonBattleCharacterDtoInfos.length === 0) && (
+                                <p className="col-span-full text-center text-muted-foreground py-8">
+                                    暂无队伍成员
+                                </p>
+                            )}
+                        </div>
+                    </TabsContent>
+
                     {/* 加护列表 */}
                     <TabsContent value="blessings" className="space-y-4">
                         <CardHeader className="px-0">
@@ -856,23 +947,6 @@ export function TimeSpaceCavePage() {
                         </div>
                     </TabsContent>
                 </Tabs>
-            </Card>
-
-            {/* 战斗说明 */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <BookOpen className="w-5 h-5" />
-                        玩法说明
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground space-y-2">
-                    <p>• 时空洞窟每天重置一次，共3层</p>
-                    <p>• 每层结束后可以选择进入困难模式获得更高奖励</p>
-                    <p>• 获得的加护会在本次探索中一直生效</p>
-                    <p>• 回复果实可以恢复角色HP,每日最多使用20次</p>
-                    <p>• 未探索的次数会累积,并提供额外奖励加成</p>
-                </CardContent>
             </Card>
 
             {/* 当前石台操作弹窗 - 当 CurrentGridState 不是 Done 时显示 */}
