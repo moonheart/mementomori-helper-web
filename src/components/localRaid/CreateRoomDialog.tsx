@@ -21,6 +21,7 @@ import {
 import { LocalRaidQuestInfo } from '@/api/generated';
 import { LocalRaidRoomConditionsType } from '@/api/generated';
 import { CreateRoomParams } from '@/api/localRaidSignalRService';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface CreateRoomDialogProps {
     open: boolean;
@@ -37,6 +38,7 @@ export function CreateRoomDialog({
     myBattlePower,
     onCreate,
 }: CreateRoomDialogProps) {
+    const { t } = useTranslation();
     const [conditionsType, setConditionsType] = useState<LocalRaidRoomConditionsType>(
         LocalRaidRoomConditionsType.None
     );
@@ -72,35 +74,35 @@ export function CreateRoomDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-md">
                 <DialogHeader>
-                    <DialogTitle>创建房间</DialogTitle>
+                    <DialogTitle>{t('CREATE_ROOM_TITLE')}</DialogTitle>
                     <DialogDescription>
-                        创建一个房间邀请其他玩家一起挑战
+                        {t('CREATE_ROOM_DESC')}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4 py-4">
                     {/* 房间条件 */}
                     <div className="space-y-2">
-                        <Label>房间条件</Label>
+                        <Label>{t('CREATE_ROOM_CONDITIONS')}</Label>
                         <Select
                             value={conditionsType.toString()}
                             onValueChange={(v) => setConditionsType(parseInt(v) as LocalRaidRoomConditionsType)}
                         >
                             <SelectTrigger>
-                                <SelectValue placeholder="选择条件类型" />
+                                <SelectValue placeholder={t('CREATE_ROOM_SELECT_CONDITION')} />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value={LocalRaidRoomConditionsType.None.toString()}>
-                                    无限制
+                                    {t('CREATE_ROOM_NO_LIMIT')}
                                 </SelectItem>
                                 <SelectItem value={LocalRaidRoomConditionsType.BattlePower.toString()}>
-                                    战力限制
+                                    {t('CREATE_ROOM_POWER_LIMIT')}
                                 </SelectItem>
                                 <SelectItem value={LocalRaidRoomConditionsType.Password.toString()}>
-                                    密码房间
+                                    {t('CREATE_ROOM_PASSWORD_ROOM')}
                                 </SelectItem>
                                 <SelectItem value={LocalRaidRoomConditionsType.All.toString()}>
-                                    战力+密码
+                                    {t('CREATE_ROOM_POWER_AND_PASSWORD')}
                                 </SelectItem>
                             </SelectContent>
                         </Select>
@@ -110,15 +112,15 @@ export function CreateRoomDialog({
                     {(conditionsType === LocalRaidRoomConditionsType.BattlePower ||
                       conditionsType === LocalRaidRoomConditionsType.All) && (
                         <div className="space-y-2">
-                            <Label>最低战力要求</Label>
+                            <Label>{t('CREATE_ROOM_MIN_POWER')}</Label>
                             <Input
                                 type="number"
                                 value={requiredBattlePower}
                                 onChange={(e) => setRequiredBattlePower(parseInt(e.target.value) || 0)}
-                                placeholder="输入最低战力"
+                                placeholder={t('CREATE_ROOM_ENTER_POWER')}
                             />
                             <p className="text-xs text-muted-foreground">
-                                我的战力: {myBattlePower.toLocaleString()}
+                                {t('CREATE_ROOM_MY_POWER', [myBattlePower.toLocaleString()])}
                             </p>
                         </div>
                     )}
@@ -127,12 +129,12 @@ export function CreateRoomDialog({
                     {(conditionsType === LocalRaidRoomConditionsType.Password ||
                       conditionsType === LocalRaidRoomConditionsType.All) && (
                         <div className="space-y-2">
-                            <Label>房间密码</Label>
+                            <Label>{t('CREATE_ROOM_PASSWORD')}</Label>
                             <Input
                                 type="number"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
-                                placeholder="输入4-6位数字密码"
+                                placeholder={t('CREATE_ROOM_PASSWORD_PLACEHOLDER')}
                             />
                         </div>
                     )}
@@ -140,9 +142,9 @@ export function CreateRoomDialog({
                     {/* 自动开始 */}
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label>自动开始</Label>
+                            <Label>{t('CREATE_ROOM_AUTO_START_LABEL')}</Label>
                             <p className="text-xs text-muted-foreground">
-                                所有成员准备后自动开始战斗
+                                {t('CREATE_ROOM_AUTO_START_DESC')}
                             </p>
                         </div>
                         <Switch
@@ -154,10 +156,10 @@ export function CreateRoomDialog({
 
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>
-                        取消
+                        {t('COMMON_CANCEL')}
                     </Button>
                     <Button onClick={handleCreate} disabled={creating}>
-                        {creating ? '创建中...' : '创建房间'}
+                        {creating ? t('CREATE_ROOM_CREATING') : t('LOCAL_RAID_CREATE_ROOM')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

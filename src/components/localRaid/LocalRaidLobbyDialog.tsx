@@ -33,6 +33,7 @@ import { RoomWaitingDialog } from '@/components/localRaid/RoomWaitingDialog';
 import { BattleLogModal } from '@/components/battle-log/BattleLogModal';
 import { BattleSimulationResult } from '@/api/generated/battleSimulationResult';
 import { ortegaApi } from '@/api/ortega-client';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface LocalRaidLobbyDialogProps {
     open: boolean;
@@ -49,6 +50,7 @@ export function LocalRaidLobbyDialog({
     myBattlePower = 0,
     myPlayerId = 0,
 }: LocalRaidLobbyDialogProps) {
+    const { t } = useTranslation();
     const { toast } = useToast();
     const [loading, setLoading] = useState(false);
     const [connecting, setConnecting] = useState(false);
@@ -97,8 +99,8 @@ export function LocalRaidLobbyDialog({
                     setCurrentRoom(null);
                     setShowWaitingRoom(false);
                     toast({
-                        title: '房间已解散',
-                        description: '房主已解散房间',
+                        title: t('LOCAL_RAID_ROOM_DISSOLVED'),
+                        description: t('LOCAL_RAID_HOST_DISSOLVED'),
                     });
                 },
                 onBattleStarted: async () => {
@@ -110,19 +112,19 @@ export function LocalRaidLobbyDialog({
                             setBattleSimResult(result.battleResult.simulationResult);
                             setShowBattleResult(true);
                         } else {
-                            toast({ title: '战斗结束', description: '无法获取战斗结果' });
+                            toast({ title: t('LOCAL_RAID_BATTLE_END'), description: t('LOCAL_RAID_NO_RESULT') });
                         }
                     } catch (e) {
                         console.error('Failed to fetch battle result:', e);
-                        toast({ title: '战斗结束', description: '获取战斗结果失败' });
+                        toast({ title: t('LOCAL_RAID_BATTLE_END'), description: t('LOCAL_RAID_RESULT_FAILED') });
                     }
                 },
                 onError: (error: LocalRaidError) => {
                     setLoading(false);
                     toast({
                         variant: 'destructive',
-                        title: '错误',
-                        description: error.message || `错误码: ${error.errorCode}`,
+                        title: t('LOCAL_RAID_ERROR'),
+                        description: error.message || t('LOCAL_RAID_ERROR_CODE', [String(error.errorCode)]),
                     });
                 },
                 onConnectionStateChanged: (connected: boolean) => {
@@ -145,14 +147,14 @@ export function LocalRaidLobbyDialog({
             console.error('Failed to connect:', error);
             toast({
                 variant: 'destructive',
-                title: '连接失败',
-                description: '无法连接到组队服务器',
+                title: t('LOCAL_RAID_CONNECT_FAILED'),
+                description: t('LOCAL_RAID_CONNECT_SERVER_FAILED'),
             });
             initializedRef.current = false;
         } finally {
             setConnecting(false);
         }
-    }, [open, toast]);
+    }, [open, toast, t]);
 
     // 刷新房间列表
     const refreshRooms = useCallback(async () => {
@@ -183,7 +185,7 @@ export function LocalRaidLobbyDialog({
         if (!joinRoomId.trim()) {
             toast({
                 variant: 'destructive',
-                title: '请输入房间ID',
+                title: t('LOCAL_RAID_ENTER_ROOM_ID'),
             });
             return;
         }
@@ -288,12 +290,12 @@ export function LocalRaidLobbyDialog({
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
                             <Users className="h-5 w-5" />
-                            组队大厅
+                            {t('LOCAL_RAID_LOBBY_TITLE')}
                         </DialogTitle>
                         <DialogDescription>
                             {quest && (
                                 <span>
-                                    任务: {quest.id} • 推荐战力: {quest.recommendedBattlePower.toLocaleString()}
+                                    {t('LOCAL_RAID_QUEST_INFO', [String(quest.id), quest.recommendedBattlePower.toLocaleString()])}
                                 </span>
                             )}
                         </DialogDescription>
@@ -302,7 +304,7 @@ export function LocalRaidLobbyDialog({
                     {connecting ? (
                         <div className="flex items-center justify-center py-12">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                            <span className="ml-2">连接中...</span>
+                            <span className="ml-2">{t('LOCAL_RAID_CONNECTING')}</span>
                         </div>
                     ) : (
                         <div className="flex-1 overflow-hidden flex flex-col space-y-4">
@@ -315,7 +317,7 @@ export function LocalRaidLobbyDialog({
                                     disabled={loading}
                                 >
                                     <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-                                    刷新
+                                    {t('LOCAL_RAID_REFRESH')}
                                 </Button>
                                 <Button
                                     size="sm"
@@ -323,7 +325,7 @@ export function LocalRaidLobbyDialog({
                                     disabled={loading}
                                 >
                                     <Plus className="h-4 w-4 mr-2" />
-                                    创建房间
+                                    {t('LOCAL_RAID_CREATE_ROOM')}
                                 </Button>
                                 <Button
                                     variant="secondary"
@@ -332,20 +334,20 @@ export function LocalRaidLobbyDialog({
                                     disabled={loading}
                                 >
                                     <LogIn className="h-4 w-4 mr-2" />
-                                    随机加入
+                                    {t('LOCAL_RAID_RANDOM_JOIN')}
                                 </Button>
                             </div>
 
                             {/* 房间ID加入 */}
                             <div className="flex items-center gap-2">
                                 <Input
-                                    placeholder="输入房间ID"
+                                    placeholder={t('LOCAL_RAID_ENTER_ROOM_ID_PLACEHOLDER')}
                                     value={joinRoomId}
                                     onChange={(e) => setJoinRoomId(e.target.value)}
                                     className="flex-1"
                                 />
                                 <Input
-                                    placeholder="密码(可选)"
+                                    placeholder={t('LOCAL_RAID_PASSWORD_OPTIONAL')}
                                     value={joinPassword}
                                     onChange={(e) => setJoinPassword(e.target.value)}
                                     className="w-24"
@@ -356,29 +358,29 @@ export function LocalRaidLobbyDialog({
                                     onClick={joinSpecificRoom}
                                     disabled={loading}
                                 >
-                                    加入
+                                    {t('LOCAL_RAID_JOIN')}
                                 </Button>
                             </div>
 
                             {/* 我的战力 */}
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <Trophy className="h-4 w-4" />
-                                <span>我的战力: {myBattlePower.toLocaleString()}</span>
+                                <span>{t('LOCAL_RAID_MY_POWER', [myBattlePower.toLocaleString()])}</span>
                             </div>
 
                             {/* 房间列表 */}
                             <Tabs defaultValue="all" className="flex-1 overflow-hidden flex flex-col">
                                 <TabsList className="grid w-full grid-cols-2">
-                                    <TabsTrigger value="all">全部房间 ({rooms.length})</TabsTrigger>
-                                    <TabsTrigger value="friends">好友房间</TabsTrigger>
+                                    <TabsTrigger value="all">{t('LOCAL_RAID_ALL_ROOMS', [String(rooms.length)])}</TabsTrigger>
+                                    <TabsTrigger value="friends">{t('LOCAL_RAID_FRIEND_ROOMS')}</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="all" className="flex-1 overflow-y-auto space-y-2 mt-2">
                                     {rooms.length === 0 ? (
                                         <div className="text-center py-8 text-muted-foreground">
                                             <AlertCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                            <div>暂无可加入的房间</div>
-                                            <div className="text-sm mt-1">创建一个房间开始挑战吧</div>
+                                            <div>{t('LOCAL_RAID_NO_ROOMS')}</div>
+                                            <div className="text-sm mt-1">{t('LOCAL_RAID_CREATE_PROMPT')}</div>
                                         </div>
                                     ) : (
                                         rooms.map((room) => (
@@ -395,7 +397,7 @@ export function LocalRaidLobbyDialog({
                                 <TabsContent value="friends" className="flex-1 overflow-y-auto space-y-2 mt-2">
                                     <div className="text-center py-8 text-muted-foreground">
                                         <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                                        <div>好友房间功能暂未开放</div>
+                                        <div>{t('LOCAL_RAID_FRIEND_ROOMS_UNAVAILABLE')}</div>
                                     </div>
                                 </TabsContent>
                             </Tabs>

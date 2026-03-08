@@ -24,6 +24,7 @@ import { LocalRaidPartyInfo } from '@/api/localRaidSignalRService';
 import { LocalRaidRoomConditionsType } from '@/api/generated';
 import { CreateRoomParams } from '@/api/localRaidSignalRService';
 import { clsx } from 'clsx';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RoomWaitingDialogProps {
     open: boolean;
@@ -45,6 +46,7 @@ export function RoomWaitingDialog({
     onStartBattle,
     onDisband,
 }: RoomWaitingDialogProps) {
+    const { t } = useTranslation();
     const [isReady, setIsReady] = useState(false);
     const [loading, setLoading] = useState(false);
 
@@ -115,10 +117,10 @@ export function RoomWaitingDialog({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Users className="h-5 w-5" />
-                        等待队友
+                        {t('ROOM_WAITING_TITLE')}
                     </DialogTitle>
                     <DialogDescription>
-                        房间ID: {room.roomId?.slice(0, 12) || 'Unknown'}...
+                        {t('ROOM_WAITING_ID', [room.roomId?.slice(0, 12) || 'Unknown'])}
                     </DialogDescription>
                 </DialogHeader>
 
@@ -127,25 +129,25 @@ export function RoomWaitingDialog({
                     <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div className="flex items-center gap-2">
                             <Users className="h-4 w-4" />
-                            <span>{memberCount}/3 人</span>
+                            <span>{t('ROOM_MEMBERS', [String(memberCount)])}</span>
                         </div>
                         <div className="flex items-center gap-2">
                             {room.conditionsType !== LocalRaidRoomConditionsType.None && (
                                 <Badge variant="outline">
                                     {room.conditionsType === LocalRaidRoomConditionsType.BattlePower && (
-                                        <span>战力: {room.requiredBattlePower.toLocaleString()}</span>
+                                        <span>{t('ROOM_WAITING_POWER', [room.requiredBattlePower.toLocaleString()])}</span>
                                     )}
                                     {room.conditionsType === LocalRaidRoomConditionsType.Password && (
-                                        <span>密码房间</span>
+                                        <span>{t('ROOM_WAITING_PASSWORD_ROOM')}</span>
                                     )}
                                     {room.conditionsType === LocalRaidRoomConditionsType.All && (
-                                        <span>战力+密码</span>
+                                        <span>{t('ROOM_WAITING_POWER_AND_PASSWORD')}</span>
                                     )}
                                 </Badge>
                             )}
                             {room.isAutoStart && (
                                 <Badge variant="outline" className="bg-green-50 text-green-700">
-                                    自动开始
+                                    {t('ROOM_AUTO_START')}
                                 </Badge>
                             )}
                         </div>
@@ -155,7 +157,7 @@ export function RoomWaitingDialog({
                     <div className="flex items-center justify-between p-3 bg-muted rounded-lg">
                         <div className="flex items-center gap-2">
                             <Trophy className="h-4 w-4" />
-                            <span>总战力</span>
+                            <span>{t('ROOM_WAITING_TOTAL_POWER')}</span>
                         </div>
                         <span className="font-bold">
                             {room.totalBattlePower?.toLocaleString() || '--'}
@@ -164,7 +166,7 @@ export function RoomWaitingDialog({
 
                     {/* 成员列表 */}
                     <div className="space-y-2">
-                        <h4 className="text-sm font-medium">成员</h4>
+                        <h4 className="text-sm font-medium">{t('ROOM_WAITING_MEMBERS')}</h4>
                         {room.localRaidBattleLogPlayerInfoList?.map((member, index) => (
                             <Card key={index} className={clsx(
                                 member.isLeader && "border-yellow-500"
@@ -184,27 +186,27 @@ export function RoomWaitingDialog({
                                             </div>
                                             <div>
                                                 <div className="font-medium text-sm">
-                                                    {member.playerInfo?.playerName || '未知'}
+                                                    {member.playerInfo?.playerName || t('ROOM_WAITING_UNKNOWN')}
                                                 </div>
                                                 <div className="text-xs text-muted-foreground">
-                                                    战力: {member.playerInfo?.battlePower?.toLocaleString() || '--'}
+                                                    {t('ROOM_WAITING_POWER', [member.playerInfo?.battlePower?.toLocaleString() || '--'])}
                                                 </div>
                                             </div>
                                         </div>
                                         <div>
                                             {member.isLeader ? (
                                                 <Badge variant="outline" className="text-yellow-600">
-                                                    房主
+                                                    {t('ROOM_WAITING_HOST')}
                                                 </Badge>
                                             ) : member.isReady ? (
                                                 <Badge className="bg-green-500">
                                                     <Check className="h-3 w-3 mr-1" />
-                                                    准备
+                                                    {t('ROOM_WAITING_READY')}
                                                 </Badge>
                                             ) : (
                                                 <Badge variant="secondary">
                                                     <Clock className="h-3 w-3 mr-1" />
-                                                    等待
+                                                    {t('ROOM_WAITING_WAITING')}
                                                 </Badge>
                                             )}
                                         </div>
@@ -226,7 +228,7 @@ export function RoomWaitingDialog({
                                     disabled={loading}
                                 >
                                     <LogOut className="h-4 w-4 mr-2" />
-                                    解散房间
+                                    {t('ROOM_WAITING_DISBAND')}
                                 </Button>
                                 <Button
                                     className="flex-1"
@@ -238,7 +240,7 @@ export function RoomWaitingDialog({
                                     ) : (
                                         <Play className="h-4 w-4 mr-2" />
                                     )}
-                                    开始战斗
+                                    {t('ROOM_WAITING_START_BATTLE')}
                                 </Button>
                             </>
                         ) : (
@@ -251,7 +253,7 @@ export function RoomWaitingDialog({
                                     disabled={loading}
                                 >
                                     <LogOut className="h-4 w-4 mr-2" />
-                                    离开房间
+                                    {t('ROOM_WAITING_LEAVE')}
                                 </Button>
                                 <Button
                                     className="flex-1"
@@ -266,7 +268,7 @@ export function RoomWaitingDialog({
                                     ) : (
                                         <Check className="h-4 w-4 mr-2" />
                                     )}
-                                    {isReady ? '取消准备' : '准备'}
+                                    {isReady ? t('ROOM_WAITING_CANCEL_READY') : t('ROOM_WAITING_READY')}
                                 </Button>
                             </>
                         )}
@@ -275,12 +277,12 @@ export function RoomWaitingDialog({
                     {/* 提示 */}
                     {isLeader && !allReady && (
                         <p className="text-xs text-muted-foreground text-center">
-                            等待所有成员准备就绪后可开始战斗
+                            {t('ROOM_WAITING_WAIT_ALL_READY')}
                         </p>
                     )}
                     {room.isAutoStart && allReady && isFull && (
                         <p className="text-xs text-green-600 text-center">
-                            所有人已准备，即将自动开始...
+                            {t('ROOM_WAITING_AUTO_STARTING')}
                         </p>
                     )}
                 </div>

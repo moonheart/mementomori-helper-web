@@ -22,7 +22,6 @@ export default {
 
     'WF_LOADING_SYNC': '同步任务数据中...',
 
-    'WF_SERVER_TIME': '当前服务器时间: {0}',
 
     'WF_HELP_TITLE': '祈愿之泉说明：',
     'WF_HELP_DESC1': '常规任务每天凌晨4:00更新，联合任务需要好友/公会支援，游击任务随机出现。',
@@ -37,9 +36,7 @@ export default {
 
     // Automation Actions
     'AUTO_DAILY_ACTIONS_TITLE': '每日任务动作',
-    'AUTO_DAILY_ACTIONS_DESC': '选择每日任务中要执行的动作',
     'AUTO_HOURLY_ACTIONS_TITLE': '每小时任务动作',
-    'AUTO_HOURLY_ACTIONS_DESC': '选择每小时任务中要执行的动作',
     'ACTION_DailyLoginBonus': '每日登录奖励',
     'ACTION_VipDailyGift': 'VIP每日礼包',
     'ACTION_MonthlyBoost': '月度加成',
@@ -233,8 +230,6 @@ export default {
     'HEADER_ACCOUNT_MANAGEMENT': '账号管理',
     'HEADER_LOG_OUT': '退出登录',
     'SIDEBAR_AUTOMATION': '托管管理',
-    'LANGUAGE_ZH_CN': '简体中文',
-    'LANGUAGE_JA_JP': '日本語',
     'RESOURCE_SHOP_FALLBACK': '商店 #{0}',
     'RESOURCE_SHOP_TITLE': '商店自动购买 (Shop)',
     'RESOURCE_GO_TO_SHOP': '前往商店添加',
@@ -389,7 +384,6 @@ export default {
     'DASHBOARD_ITEM_FRIEND_BATTLE': '好友对战',
     'DASHBOARD_ALERT_VIP_DAILY': '有可领取的 VIP 每日福利',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_ACTIVE': '幻影神殿已开放',
-    'DASHBOARD_ALERT_PHANTOM_TEMPLE_SOON': '幻影神殿即将开放',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_TIME': '开放时间: 12:30-13:30, 19:30-20:30',
     'DASHBOARD_ALERT_GVG_PREPARE': '公会战备战期间，记得部署防守部队 (7:45-20:30)',
     'DASHBOARD_DAILY_CHECKLIST_TITLE': '每日清单',
@@ -397,10 +391,8 @@ export default {
     'DASHBOARD_ITEMS_COMPLETED': '{0}/{1} 已完成',
 
     // Battle Log
-    'BATTLE_LOG_UNKNOWN': '未知',
     'BATTLE_LOG_TURN_START': '═══ 回合 {0} 开始 ═══',
     'BATTLE_LOG_TURN_END': '═══ 回合 {0} 结束 ═══',
-    'BATTLE_LOG_USE_SKILL': '使用',
     'BATTLE_LOG_GAIN_EFFECT': '获得效果: ',
     'BATTLE_LOG_PASSIVE': '被动',
     'BATTLE_LOG_TURNS': '{0}回合',
@@ -409,8 +401,6 @@ export default {
     'BATTLE_LOG_HEAL': '治疗',
     'BATTLE_LOG_TAKEN': '承伤',
     'BATTLE_LOG_IGNORE_DEFENSE': '无视防御',
-    'BATTLE_LOG_MISS': '闪避',
-    'BATTLE_LOG_CRITICAL': '暴击',
     'BATTLE_LOG_SHIELD1': '多重屏障',
     'BATTLE_LOG_SHIELD1_CRITICAL': '多重屏障·暴击',
     'BATTLE_LOG_SHIELD2': '护盾',
@@ -419,8 +409,6 @@ export default {
     'BATTLE_LOG_SHIELD_BREAK_CRITICAL': '破盾·暴击',
     'BATTLE_LOG_EFFECT_SPEED_UP': '速度上升',
     'BATTLE_LOG_EFFECT_MAX_HP_UP': '最大HP上升',
-    'BATTLE_LOG_EFFECT_ATTACK_POWER_UP': '攻击力上升',
-    'BATTLE_LOG_EFFECT_DEFENSE_UP': '防御力上升',
     'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP': '物理防御上升',
     'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP': '魔法防御上升',
     'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP': '伤害增强上升',
@@ -444,14 +432,9 @@ export default {
     'BATTLE_LOG_EFFECT_DAMAGE_GUARD': '伤害免疫',
     'BATTLE_LOG_EFFECT_SHIELD1_BUFF': '多重屏障',
     'BATTLE_LOG_EFFECT_SHIELD2_BUFF': '护盾',
-    'BATTLE_LOG_EFFECT_DEBUFF_GUARD': '弱化效果免疫',
-    'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD': '控制效果免疫',
-    'BATTLE_LOG_EFFECT_TAUNT': '挑衅',
     'BATTLE_LOG_EFFECT_STEALTH': '隐身',
     'BATTLE_LOG_EFFECT_NON_TARGET': '透明',
     'BATTLE_LOG_EFFECT_HEAL_OVER_TIME': '再生',
-    'BATTLE_LOG_EFFECT_IMMORTAL': '不死之身',
-    'BATTLE_LOG_EFFECT_BUFF_COVER': '增益效果护罩',
     'BATTLE_LOG_EFFECT_NON_HIT': '无法被命中',
     'BATTLE_LOG_EFFECT_SPEED_DOWN': '速度下降',
     'BATTLE_LOG_EFFECT_MAX_HP_DOWN': '最大HP下降',
@@ -475,9 +458,7 @@ export default {
     'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_DOWN': '闪避率下降',
     'BATTLE_LOG_EFFECT_CRITICAL_RATE_DOWN': '暴击率下降',
     'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN': '抗暴率下降',
-    'BATTLE_LOG_EFFECT_STUN': '晕厥',
     'BATTLE_LOG_EFFECT_CONFUSE': '混乱',
-    'BATTLE_LOG_EFFECT_SILENCE': '沉默',
     'BATTLE_LOG_EFFECT_STUBBORN': '固执',
     'BATTLE_LOG_EFFECT_POISON': '中毒',
     'BATTLE_LOG_EFFECT_BLEEDING': '流血',
@@ -485,7 +466,6 @@ export default {
     'BATTLE_LOG_EFFECT_BURN': '灼烧',
     'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN': '不治',
     'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN': '禁锢',
-    'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN': '增益效果免疫',
     'BATTLE_LOG_EFFECT_RESONANCE_SELF': '献身',
     'BATTLE_LOG_EFFECT_RESONANCE_HIGH_HP': '共鸣(高HP)',
     'BATTLE_LOG_EFFECT_RESONANCE_LOW_HP': '共鸣(低HP)',
@@ -495,7 +475,6 @@ export default {
     'BATTLE_LOG_SKILL_MAGIC_ATTACK': '魔法攻击',
     'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE': '直接伤害',
     'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE': '魔法直接伤害',
-    'BATTLE_LOG_SKILL_HP_DRAIN': '吸血',
     'BATTLE_LOG_SKILL_BUFF': '增益',
     'BATTLE_LOG_SKILL_DEBUFF': '减益',
     'BATTLE_LOG_SKILL_PHYSICAL_COUNTER': '物理反击',
@@ -505,22 +484,15 @@ export default {
     'BATTLE_LOG_SKILL_REMOVE_EFFECT': '移除效果',
     'BATTLE_LOG_SKILL_BURST_EFFECT': '爆发效果',
     'BATTLE_LOG_SKILL_SELF_INJURY': '自损',
-    'BATTLE_LOG_SKILL_RESURRECTION': '复活',
     'BATTLE_LOG_SKILL_SILENCE_HEAL': '沉默治疗',
     'BATTLE_LOG_EFFECT_FALLBACK': '效果#{0}',
 
     // BookSort
-    'BOOKSORT_DISPATCH_HELPERS': '派遣小帮手',
-    'BOOKSORT_MISSIONS': '任务',
-    'BOOKSORT_SHOP': '商城',
     'BOOKSORT_CLEANING_ITEMS': '扫除道具',
     'BOOKSORT_NO_ITEMS': '暂无清扫道具',
 
     // Battle Log Modal
-    'BATTLE_LOG_MODAL_TITLE': '战斗记录',
     'BATTLE_LOG_MODAL_TURNS': '回合数: {0}',
-    'BATTLE_LOG_MODAL_CLOSE': '关闭',
-    'BATTLE_LOG_MODAL_REPLAY': '重播',
     'BATTLE_LOG_MODAL_REPLAY_TOOLTIP': '观看战斗重播',
     'BATTLE_LOG_MODAL_NO_LOG': '无战斗日志数据',
     'BATTLE_LOG_MODAL_ALLY_TEAM': '我方',
@@ -549,25 +521,15 @@ export default {
     'COMMON_CLOSE': '关闭',
     'COMMON_LOADING': '加载中...',
     'COMMON_RETRY': '重试',
-    'COMMON_SUCCESS': '成功',
-    'COMMON_FAILED': '失败',
-    'COMMON_NO_DATA': '暂无数据',
-    'COMMON_NO_LOGS': '暂无日志',
 
     // BookSort
     'BOOKSORT_NO_MISSIONS': '暂无书库大扫除任务',
 
     // Items
-    'ITEMS_NO_CONSUMABLES': '暂无消耗品道具',
-    'ITEMS_NO_EQUIPMENT': '暂无装备道具',
-    'ITEMS_NO_MATERIALS': '暂无材料道具',
-    'ITEMS_NO_SET_PIECES': '暂无套装残片道具',
-    'ITEMS_NO_SPHERES': '暂无符石道具',
     'ITEMS_USE_SUCCESS': '成功使用 {0} 个{1}',
     'ITEMS_USE_FAILED': '使用道具失败',
 
     // Local Raid
-    'LOCAL_RAID_CONNECT_FAILED': '连接失败',
 
     // Battle Character Avatar
     'BATTLE_CHARACTER_TURNS': '{0}回合',
@@ -595,37 +557,21 @@ export default {
 
     // BookSort Grid
     'BOOKSORT_GRID_CLEANED': '已清扫',
-    'BOOKSORT_GRID_FLOOR': '第 {0} 层',
     'BOOKSORT_GRID_BULK_USE': '批量使用',
-    'BOOKSORT_GRID_SELECT': '选择',
 
     // Equipment Card
     'EQUIPMENT_EQUIPPED_BY': '由 {0} 装备',
-    'EQUIPMENT_COMBAT_POWER': '战斗力',
-    'EQUIPMENT_ENHANCE': '强化',
     'EQUIPMENT_SACRED': '圣装',
     'EQUIPMENT_MAGIC': '魔装',
-    'EQUIPMENT_BASE_STATS': '基础属性',
-    'EQUIPMENT_RUNE': '符石',
-    'EQUIPMENT_UNEQUIP': '卸下',
-    'EQUIPMENT_EQUIP': '装备',
     'EQUIPMENT_ENHANCE_BTN': '强化',
-    'EQUIPMENT_LEGEND_SACRED': '传说圣遗物 Lv.{0}',
-    'EQUIPMENT_MATCHLESS_SACRED': '无双圣遗物 Lv.{0}',
 
     // Equipment Filters
     'EQUIPMENT_FILTER_SEARCH': '搜索装备名称...',
     'EQUIPMENT_FILTER_SORT': '排序方式',
-    'EQUIPMENT_FILTER_SORT_POWER': '战斗力',
-    'EQUIPMENT_FILTER_SORT_RARITY': '稀有度',
-    'EQUIPMENT_FILTER_SORT_LEVEL': '等级',
-    'EQUIPMENT_FILTER_SORT_ENHANCE': '强化等级',
     'EQUIPMENT_FILTER_ADVANCED': '高级筛选',
-    'EQUIPMENT_FILTER_ALL': '全部',
     'EQUIPMENT_FILTER_RARITY_FILTER': '稀有度筛选',
     'EQUIPMENT_FILTER_EQUIPMENT_STATUS': '装备状态',
     'EQUIPMENT_FILTER_EQUIPPED': '已装备',
-    'EQUIPMENT_FILTER_UNEQUIPPED': '未装备',
     'EQUIPMENT_FILTER_SET_FILTER': '套装筛选',
     'EQUIPMENT_FILTER_SELECT_SET': '选择套装',
     'EQUIPMENT_FILTER_ALL_SETS': '全部套装',
@@ -633,16 +579,11 @@ export default {
     'EQUIPMENT_FILTER_RESET': '重置所有筛选',
 
     // Set Bonus Display
-    'EQUIPMENT_SET_BONUS': '套装效果',
     'EQUIPMENT_SET_PIECES_EQUIPPED': '{0}件装备',
     'EQUIPMENT_SET_PIECES': '{0}件套',
     'EQUIPMENT_SET_ACTIVE': '已激活',
 
     // Item Tabs
-    'ITEMS_SEALED_EQUIPMENT': '已解除封印',
-    'ITEMS_UNSEALED_EQUIPMENT': '未解除封印',
-    'ITEMS_EQUIPMENT_COUNT': '{0} 个',
-    'ITEMS_GEM': '宝石:',
 
     // Use Item Dialog
     'USE_ITEM_INVALID_COUNT': '使用数量无效',
@@ -698,17 +639,14 @@ export default {
     'GLOBAL_LOG_WAITING': '等待任务执行日志...',
 
     // BookSort Dialog
-    'BOOKSORT_DIALOG_CLEANING_TOOLS': '清扫道具',
-    'BOOKSORT_DIALOG_OBTAINED_ITEM': '获得道具',
     'BOOKSORT_DIALOG_OBTAINED_ITEM_DESC': '获得了 {0} x{1}',
-    'BOOKSORT_DIALOG_TITLE': '魔女的书库大扫除',
     'BOOKSORT_DIALOG_DESCRIPTION': '书库大扫除活动弹窗',
     'BOOKSORT_DIALOG_ENTERING': '进入书库中...',
-    'BOOKSORT_DIALOG_MISSIONS_TITLE': '书库大扫除任务',
     'BOOKSORT_DIALOG_MISSIONS_DESC': '完成书库大扫除任务获取奖励',
     'BOOKSORT_DIALOG_CLAIM_ALL': '一键领取',
 
     // Local Raid
+    'LOCAL_RAID_CONNECT_FAILED': '连接失败',
     'LOCAL_RAID_ROOM_DISSOLVED': '房间已解散',
     'LOCAL_RAID_HOST_DISSOLVED': '房主已解散房间',
     'LOCAL_RAID_BATTLE_END': '战斗结束',
@@ -786,18 +724,11 @@ export default {
     'BATTLE_TEAM_TOTAL_TAKEN': '总承伤',
 
     // Present Box
-    'PRESENT_BOX_TITLE': '礼物箱',
     'PRESENT_BOX_ITEM_COUNT': '{0} 件',
     'PRESENT_BOX_LOAD_FAILED': '获取礼物箱失败，请重试',
     'PRESENT_BOX_EMPTY': '礼物箱是空的',
     'PRESENT_BOX_RECEIVED_ITEMS': '已领取道具：',
-    'PRESENT_BOX_EXPIRY_NOTICE': '※超过期限的礼物将由系统自动删除。',
-    'PRESENT_BOX_GIFT': '礼物',
-    'PRESENT_BOX_RECEIVED': '已领取',
     'PRESENT_BOX_DEADLINE': '领取期限：',
     'PRESENT_BOX_REMAINING_DAYS': '尚余 {0} 天',
     'PRESENT_BOX_RECEIVED_DATE': '领取日期：{0}',
-    'PRESENT_BOX_RECEIVE': '领取',
-    'PRESENT_BOX_DELETE_READ': '删除已读',
-    'PRESENT_BOX_RECEIVE_ALL': '全部领取'
 };

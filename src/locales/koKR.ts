@@ -19,7 +19,6 @@ export default {
 
 
     'WF_LOADING_SYNC': '퀘스트 데이터 동기화 중...',
-    'WF_SERVER_TIME': '현재 서버 시간: {0}',
 
     'WF_HELP_TITLE': '기원의 샘 안내:',
     'WF_HELP_DESC1': '일반 퀘스트는 매일 4:00에 갱신됩니다. 연합 퀘스트는 친구/길드의 지원이 필요하며, 게릴라 퀘스트는 무작위로 등장합니다.',
@@ -34,9 +33,7 @@ export default {
 
     // Automation Actions
     'AUTO_DAILY_ACTIONS_TITLE': '일일 태스크 액션',
-    'AUTO_DAILY_ACTIONS_DESC': '일일 태스크에서 실행할 액션을 선택하세요',
     'AUTO_HOURLY_ACTIONS_TITLE': '시간당 태스크 액션',
-    'AUTO_HOURLY_ACTIONS_DESC': '시간당 태스크에서 실행할 액션을 선택하세요',
     'ACTION_DailyLoginBonus': '일일 로그인 보너스',
     'ACTION_VipDailyGift': 'VIP 일일 선물',
     'ACTION_MonthlyBoost': '월간 부스트',
@@ -230,8 +227,6 @@ export default {
     'HEADER_ACCOUNT_MANAGEMENT': '계정 관리',
     'HEADER_LOG_OUT': '로그아웃',
     'SIDEBAR_AUTOMATION': '자동 관리',
-    'LANGUAGE_ZH_CN': '중국어(간체)',
-    'LANGUAGE_JA_JP': '일본어',
     'RESOURCE_SHOP_FALLBACK': '상점 #{0}',
     'RESOURCE_SHOP_TITLE': '상점 자동 구매',
     'RESOURCE_GO_TO_SHOP': '상점으로 이동하여 추가',
@@ -386,7 +381,6 @@ export default {
     'DASHBOARD_ITEM_FRIEND_BATTLE': '친구 대전',
     'DASHBOARD_ALERT_VIP_DAILY': 'VIP 일일 보상 수령 가능',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_ACTIVE': '환영 신전이 열렸습니다',
-    'DASHBOARD_ALERT_PHANTOM_TEMPLE_SOON': '환영 신전이 곧 열립니다',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_TIME': '오픈 시간: 12:30-13:30, 19:30-20:30',
     'DASHBOARD_ALERT_GVG_PREPARE': '길드전 준비 기간 - 방어 부대 배치를 잊지 마세요 (7:45-20:30)',
     'DASHBOARD_DAILY_CHECKLIST_TITLE': '일일 체크리스트',
@@ -394,10 +388,8 @@ export default {
     'DASHBOARD_ITEMS_COMPLETED': '{0}/{1} 완료',
 
     // Battle Log
-    'BATTLE_LOG_UNKNOWN': '알 수 없음',
     'BATTLE_LOG_TURN_START': '═══ 턴 {0} 시작 ═══',
     'BATTLE_LOG_TURN_END': '═══ 턴 {0} 종료 ═══',
-    'BATTLE_LOG_USE_SKILL': '사용',
     'BATTLE_LOG_GAIN_EFFECT': '효과 획득: ',
     'BATTLE_LOG_PASSIVE': '패시브',
     'BATTLE_LOG_TURNS': '{0}턴',
@@ -406,8 +398,6 @@ export default {
     'BATTLE_LOG_HEAL': '힐',
     'BATTLE_LOG_TAKEN': '받은 데미지',
     'BATTLE_LOG_IGNORE_DEFENSE': '방어 무시',
-    'BATTLE_LOG_MISS': '회피',
-    'BATTLE_LOG_CRITICAL': '크리티컬',
     'BATTLE_LOG_SHIELD1': '다중 배리어',
     'BATTLE_LOG_SHIELD1_CRITICAL': '다중 배리어·크리',
     'BATTLE_LOG_SHIELD2': '실드',
@@ -416,8 +406,6 @@ export default {
     'BATTLE_LOG_SHIELD_BREAK_CRITICAL': '실드 파괴·크리',
     'BATTLE_LOG_EFFECT_SPEED_UP': '속도 상승',
     'BATTLE_LOG_EFFECT_MAX_HP_UP': '최대 HP 상승',
-    'BATTLE_LOG_EFFECT_ATTACK_POWER_UP': '공격력 상승',
-    'BATTLE_LOG_EFFECT_DEFENSE_UP': '방어력 상승',
     'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP': '물리 방어 상승',
     'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP': '마법 방어 상승',
     'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP': '데미지 강화 상승',
@@ -441,14 +429,9 @@ export default {
     'BATTLE_LOG_EFFECT_DAMAGE_GUARD': '데미지 면역',
     'BATTLE_LOG_EFFECT_SHIELD1_BUFF': '다중 배리어',
     'BATTLE_LOG_EFFECT_SHIELD2_BUFF': '실드',
-    'BATTLE_LOG_EFFECT_DEBUFF_GUARD': '디버프 면역',
-    'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD': 'CC 면역',
-    'BATTLE_LOG_EFFECT_TAUNT': '도발',
     'BATTLE_LOG_EFFECT_STEALTH': '은신',
     'BATTLE_LOG_EFFECT_NON_TARGET': '투명',
     'BATTLE_LOG_EFFECT_HEAL_OVER_TIME': '재생',
-    'BATTLE_LOG_EFFECT_IMMORTAL': '불사',
-    'BATTLE_LOG_EFFECT_BUFF_COVER': '버프 커버',
     'BATTLE_LOG_EFFECT_NON_HIT': '회피 불가',
     'BATTLE_LOG_EFFECT_SPEED_DOWN': '속도 하락',
     'BATTLE_LOG_EFFECT_MAX_HP_DOWN': '최대 HP 하락',
@@ -472,9 +455,7 @@ export default {
     'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_DOWN': '회피율 하락',
     'BATTLE_LOG_EFFECT_CRITICAL_RATE_DOWN': '크리티컬률 하락',
     'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN': '크리티컬 저항률 하락',
-    'BATTLE_LOG_EFFECT_STUN': '기절',
     'BATTLE_LOG_EFFECT_CONFUSE': '혼란',
-    'BATTLE_LOG_EFFECT_SILENCE': '침묵',
     'BATTLE_LOG_EFFECT_STUBBORN': '고집',
     'BATTLE_LOG_EFFECT_POISON': '독',
     'BATTLE_LOG_EFFECT_BLEEDING': '출혈',
@@ -482,7 +463,6 @@ export default {
     'BATTLE_LOG_EFFECT_BURN': '화상',
     'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN': '치료 불가',
     'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN': '속박',
-    'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN': '버프 면역',
     'BATTLE_LOG_EFFECT_RESONANCE_SELF': '헌신',
     'BATTLE_LOG_EFFECT_RESONANCE_HIGH_HP': '공명(고HP)',
     'BATTLE_LOG_EFFECT_RESONANCE_LOW_HP': '공명(저HP)',
@@ -492,7 +472,6 @@ export default {
     'BATTLE_LOG_SKILL_MAGIC_ATTACK': '마법 공격',
     'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE': '직접 데미지',
     'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE': '마법 직접 데미지',
-    'BATTLE_LOG_SKILL_HP_DRAIN': 'HP 흡수',
     'BATTLE_LOG_SKILL_BUFF': '버프',
     'BATTLE_LOG_SKILL_DEBUFF': '디버프',
     'BATTLE_LOG_SKILL_PHYSICAL_COUNTER': '물리 반격',
@@ -502,22 +481,15 @@ export default {
     'BATTLE_LOG_SKILL_REMOVE_EFFECT': '효과 제거',
     'BATTLE_LOG_SKILL_BURST_EFFECT': '버스트 효과',
     'BATTLE_LOG_SKILL_SELF_INJURY': '자해',
-    'BATTLE_LOG_SKILL_RESURRECTION': '부활',
     'BATTLE_LOG_SKILL_SILENCE_HEAL': '침묵 힐',
     'BATTLE_LOG_EFFECT_FALLBACK': '효과#{0}',
 
     // BookSort
-    'BOOKSORT_DISPATCH_HELPERS': '파견 도우미',
-    'BOOKSORT_MISSIONS': '미션',
-    'BOOKSORT_SHOP': '상점',
     'BOOKSORT_CLEANING_ITEMS': '청소 아이템',
     'BOOKSORT_NO_ITEMS': '청소 아이템이 없습니다',
 
     // Battle Log Modal
-    'BATTLE_LOG_MODAL_TITLE': '전투 기록',
     'BATTLE_LOG_MODAL_TURNS': '턴 수: {0}',
-    'BATTLE_LOG_MODAL_CLOSE': '닫기',
-    'BATTLE_LOG_MODAL_REPLAY': '리플레이',
     'BATTLE_LOG_MODAL_REPLAY_TOOLTIP': '전투 리플레이 보기',
     'BATTLE_LOG_MODAL_NO_LOG': '전투 로그 데이터가 없습니다',
     'BATTLE_LOG_MODAL_ALLY_TEAM': '아군',
@@ -546,25 +518,15 @@ export default {
     'COMMON_CLOSE': '닫기',
     'COMMON_LOADING': '로딩 중...',
     'COMMON_RETRY': '재시도',
-    'COMMON_SUCCESS': '성공',
-    'COMMON_FAILED': '실패',
-    'COMMON_NO_DATA': '데이터가 없습니다',
-    'COMMON_NO_LOGS': '로그가 없습니다',
 
     // BookSort
     'BOOKSORT_NO_MISSIONS': '서고 청소 미션이 없습니다',
 
     // Items
-    'ITEMS_NO_CONSUMABLES': '소비 아이템이 없습니다',
-    'ITEMS_NO_EQUIPMENT': '장비가 없습니다',
-    'ITEMS_NO_MATERIALS': '재료가 없습니다',
-    'ITEMS_NO_SET_PIECES': '세트 조각이 없습니다',
-    'ITEMS_NO_SPHERES': '스피어가 없습니다',
     'ITEMS_USE_SUCCESS': '{0}개의 {1}을(를) 사용했습니다',
     'ITEMS_USE_FAILED': '아이템 사용 실패',
 
     // Local Raid
-    'LOCAL_RAID_CONNECT_FAILED': '연결 실패',
 
     // Battle Character Avatar
     'BATTLE_CHARACTER_TURNS': '{0}턴',
@@ -592,37 +554,21 @@ export default {
 
     // BookSort Grid
     'BOOKSORT_GRID_CLEANED': '청소 완료',
-    'BOOKSORT_GRID_FLOOR': '{0}층',
     'BOOKSORT_GRID_BULK_USE': '일괄 사용',
-    'BOOKSORT_GRID_SELECT': '선택',
 
     // Equipment Card
     'EQUIPMENT_EQUIPPED_BY': '{0}이(가) 장착 중',
-    'EQUIPMENT_COMBAT_POWER': '전투력',
-    'EQUIPMENT_ENHANCE': '강화',
     'EQUIPMENT_SACRED': '성장비',
     'EQUIPMENT_MAGIC': '마장비',
-    'EQUIPMENT_BASE_STATS': '기본 스탯',
-    'EQUIPMENT_RUNE': '룬',
-    'EQUIPMENT_UNEQUIP': '해제',
-    'EQUIPMENT_EQUIP': '장착',
     'EQUIPMENT_ENHANCE_BTN': '강화',
-    'EQUIPMENT_LEGEND_SACRED': '전설 성유물 Lv.{0}',
-    'EQUIPMENT_MATCHLESS_SACRED': '무쌍 성유물 Lv.{0}',
 
     // Equipment Filters
     'EQUIPMENT_FILTER_SEARCH': '장비명 검색...',
     'EQUIPMENT_FILTER_SORT': '정렬',
-    'EQUIPMENT_FILTER_SORT_POWER': '전투력',
-    'EQUIPMENT_FILTER_SORT_RARITY': '희귀도',
-    'EQUIPMENT_FILTER_SORT_LEVEL': '레벨',
-    'EQUIPMENT_FILTER_SORT_ENHANCE': '강화 레벨',
     'EQUIPMENT_FILTER_ADVANCED': '상세 필터',
-    'EQUIPMENT_FILTER_ALL': '전체',
     'EQUIPMENT_FILTER_RARITY_FILTER': '희귀도 필터',
     'EQUIPMENT_FILTER_EQUIPMENT_STATUS': '장비 상태',
     'EQUIPMENT_FILTER_EQUIPPED': '장착 중',
-    'EQUIPMENT_FILTER_UNEQUIPPED': '미장착',
     'EQUIPMENT_FILTER_SET_FILTER': '세트 필터',
     'EQUIPMENT_FILTER_SELECT_SET': '세트 선택',
     'EQUIPMENT_FILTER_ALL_SETS': '모든 세트',
@@ -630,16 +576,11 @@ export default {
     'EQUIPMENT_FILTER_RESET': '필터 초기화',
 
     // Set Bonus Display
-    'EQUIPMENT_SET_BONUS': '세트 효과',
     'EQUIPMENT_SET_PIECES_EQUIPPED': '{0}개 장착',
     'EQUIPMENT_SET_PIECES': '{0}피스 세트',
     'EQUIPMENT_SET_ACTIVE': '발동 중',
 
     // Item Tabs
-    'ITEMS_SEALED_EQUIPMENT': '봉인 해제',
-    'ITEMS_UNSEALED_EQUIPMENT': '미해제',
-    'ITEMS_EQUIPMENT_COUNT': '{0}개',
-    'ITEMS_GEM': '젬:',
 
     // Use Item Dialog
     'USE_ITEM_INVALID_COUNT': '사용 수량이 유효하지 않습니다',
@@ -695,28 +636,25 @@ export default {
     'GLOBAL_LOG_WAITING': '작업 실행 로그 대기 중...',
 
     // BookSort Dialog
-    'BOOKSORT_DIALOG_CLEANING_TOOLS': '청소 도구',
-    'BOOKSORT_DIALOG_OBTAINED_ITEM': '아이템 획득',
     'BOOKSORT_DIALOG_OBTAINED_ITEM_DESC': '{0} x{1}을(를) 획득했습니다',
-    'BOOKSORT_DIALOG_TITLE': '마녀의 서고 대청소',
     'BOOKSORT_DIALOG_DESCRIPTION': '서고 청소 이벤트 대화상자',
     'BOOKSORT_DIALOG_ENTERING': '서고로 들어가는 중...',
-    'BOOKSORT_DIALOG_MISSIONS_TITLE': '서고 청소 미션',
     'BOOKSORT_DIALOG_MISSIONS_DESC': '청소 미션을 완료하고 보상을 받으세요',
     'BOOKSORT_DIALOG_CLAIM_ALL': '전체 수령',
 
     // Local Raid
+    'LOCAL_RAID_CONNECT_FAILED': '연결 실패',
     'LOCAL_RAID_ROOM_DISSOLVED': '방이 해산되었습니다',
-    'LOCAL_RAID_HOST_DISSOLVED': '호스트가 방을 해산했습니다',
+    'LOCAL_RAID_HOST_DISSOLVED': '방장이 방을 해산했습니다',
     'LOCAL_RAID_BATTLE_END': '전투 종료',
     'LOCAL_RAID_NO_RESULT': '전투 결과를 가져올 수 없습니다',
     'LOCAL_RAID_RESULT_FAILED': '전투 결과 가져오기 실패',
     'LOCAL_RAID_ERROR': '오류',
     'LOCAL_RAID_ERROR_CODE': '오류 코드: {0}',
     'LOCAL_RAID_CONNECT_SERVER_FAILED': '협동 서버에 연결할 수 없습니다',
-    'LOCAL_RAID_ENTER_ROOM_ID': '방 ID를 입력하세요',
+    'LOCAL_RAID_ENTER_ROOM_ID': '방 ID를 입력해 주세요',
     'LOCAL_RAID_LOBBY_TITLE': '협동 로비',
-    'LOCAL_RAID_QUEST_INFO': '퀘스트: {0} • 권장 전투력: {1}',
+    'LOCAL_RAID_QUEST_INFO': '퀘스트: {0} • 추천 전력: {1}',
     'LOCAL_RAID_CONNECTING': '연결 중...',
     'LOCAL_RAID_REFRESH': '새로고침',
     'LOCAL_RAID_CREATE_ROOM': '방 만들기',
@@ -724,11 +662,11 @@ export default {
     'LOCAL_RAID_ENTER_ROOM_ID_PLACEHOLDER': '방 ID 입력',
     'LOCAL_RAID_PASSWORD_OPTIONAL': '비밀번호(선택)',
     'LOCAL_RAID_JOIN': '참여',
-    'LOCAL_RAID_MY_POWER': '내 전투력: {0}',
+    'LOCAL_RAID_MY_POWER': '내 전력: {0}',
     'LOCAL_RAID_ALL_ROOMS': '모든 방 ({0})',
     'LOCAL_RAID_FRIEND_ROOMS': '친구 방',
     'LOCAL_RAID_NO_ROOMS': '참여 가능한 방이 없습니다',
-    'LOCAL_RAID_CREATE_PROMPT': '방을 만들어 도전을 시작하세요',
+    'LOCAL_RAID_CREATE_PROMPT': '방을 만들어 챌린지를 시작하세요',
     'LOCAL_RAID_FRIEND_ROOMS_UNAVAILABLE': '친구 방 기능은 아직 구현되지 않았습니다',
 
     // Room Card
@@ -740,39 +678,39 @@ export default {
 
     // Create Room Dialog
     'CREATE_ROOM_TITLE': '방 만들기',
-    'CREATE_ROOM_DESC': '다른 플레이어를 초대할 방을 만듭니다',
+    'CREATE_ROOM_DESC': '방을 만들어 다른 플레이어를 초대하세요',
     'CREATE_ROOM_CONDITIONS': '방 조건',
     'CREATE_ROOM_SELECT_CONDITION': '조건 유형 선택',
     'CREATE_ROOM_NO_LIMIT': '제한 없음',
-    'CREATE_ROOM_POWER_LIMIT': '전투력 제한',
+    'CREATE_ROOM_POWER_LIMIT': '전력 제한',
     'CREATE_ROOM_PASSWORD_ROOM': '비밀번호 방',
-    'CREATE_ROOM_POWER_AND_PASSWORD': '전투력+비밀번호',
-    'CREATE_ROOM_MIN_POWER': '최소 전투력',
-    'CREATE_ROOM_ENTER_POWER': '최소 전투력 입력',
-    'CREATE_ROOM_MY_POWER': '내 전투력: {0}',
+    'CREATE_ROOM_POWER_AND_PASSWORD': '전력+비밀번호',
+    'CREATE_ROOM_MIN_POWER': '최소 전력 요구',
+    'CREATE_ROOM_ENTER_POWER': '최소 전력 입력',
+    'CREATE_ROOM_MY_POWER': '내 전력: {0}',
     'CREATE_ROOM_PASSWORD': '방 비밀번호',
     'CREATE_ROOM_PASSWORD_PLACEHOLDER': '4-6자리 숫자 입력',
     'CREATE_ROOM_AUTO_START_LABEL': '자동 시작',
-    'CREATE_ROOM_AUTO_START_DESC': '모든 멤버 준비 완료 시 자동 시작',
+    'CREATE_ROOM_AUTO_START_DESC': '모든 멤버가 준비되면 자동으로 전투 시작',
     'CREATE_ROOM_CREATING': '생성 중...',
 
     // Room Waiting Dialog
     'ROOM_WAITING_TITLE': '팀원 대기 중',
     'ROOM_WAITING_ID': '방 ID: {0}...',
-    'ROOM_WAITING_POWER': '전투력: {0}',
+    'ROOM_WAITING_POWER': '전력: {0}',
     'ROOM_WAITING_PASSWORD_ROOM': '비밀번호 방',
-    'ROOM_WAITING_POWER_AND_PASSWORD': '전투력+비밀번호',
-    'ROOM_WAITING_TOTAL_POWER': '총 전투력',
+    'ROOM_WAITING_POWER_AND_PASSWORD': '전력+비밀번호',
+    'ROOM_WAITING_TOTAL_POWER': '총 전력',
     'ROOM_WAITING_MEMBERS': '멤버',
     'ROOM_WAITING_UNKNOWN': '알 수 없음',
-    'ROOM_WAITING_HOST': '호스트',
-    'ROOM_WAITING_READY': '준비 완료',
-    'ROOM_WAITING_WAITING': '대기 중',
+    'ROOM_WAITING_HOST': '방장',
+    'ROOM_WAITING_READY': '준비',
+    'ROOM_WAITING_WAITING': '대기',
     'ROOM_WAITING_DISBAND': '방 해산',
     'ROOM_WAITING_START_BATTLE': '전투 시작',
     'ROOM_WAITING_LEAVE': '방 나가기',
     'ROOM_WAITING_CANCEL_READY': '준비 취소',
-    'ROOM_WAITING_WAIT_ALL_READY': '모든 멤버의 준비를 기다리고 있습니다',
+    'ROOM_WAITING_WAIT_ALL_READY': '모든 멤버가 준비될 때까지 대기 중',
     'ROOM_WAITING_AUTO_STARTING': '모두 준비 완료, 자동 시작 중...',
 
     // Battle Team Stats
@@ -783,18 +721,11 @@ export default {
     'BATTLE_TEAM_TOTAL_TAKEN': '받은 데미지',
 
     // Present Box
-    'PRESENT_BOX_TITLE': '선물함',
     'PRESENT_BOX_ITEM_COUNT': '{0}개',
     'PRESENT_BOX_LOAD_FAILED': '선물함 불러오기 실패, 다시 시도해 주세요',
     'PRESENT_BOX_EMPTY': '선물함이 비어있습니다',
     'PRESENT_BOX_RECEIVED_ITEMS': '아이템 수령 완료:',
-    'PRESENT_BOX_EXPIRY_NOTICE': '※기한이 지난 선물은 시스템에서 자동 삭제됩니다.',
-    'PRESENT_BOX_GIFT': '선물',
-    'PRESENT_BOX_RECEIVED': '수령 완료',
     'PRESENT_BOX_DEADLINE': '수령 기한: ',
     'PRESENT_BOX_REMAINING_DAYS': '{0}일 남음',
     'PRESENT_BOX_RECEIVED_DATE': '수령일: {0}',
-    'PRESENT_BOX_RECEIVE': '받기',
-    'PRESENT_BOX_DELETE_READ': '읽음 삭제',
-    'PRESENT_BOX_RECEIVE_ALL': '전체 받기'
 };

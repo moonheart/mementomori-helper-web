@@ -19,7 +19,6 @@ export default {
 
 
     'WF_LOADING_SYNC': 'Syncing quest data...',
-    'WF_SERVER_TIME': 'Server Time: {0}',
 
     'WF_HELP_TITLE': 'Wishing Fountain Info:',
     'WF_HELP_DESC1': 'Regular quests update at 4:00 AM. Team quests require Guild/Friend support. Guerrilla quests appear randomly.',
@@ -34,9 +33,7 @@ export default {
 
     // Automation Actions
     'AUTO_DAILY_ACTIONS_TITLE': 'Daily Job Actions',
-    'AUTO_DAILY_ACTIONS_DESC': 'Select which actions to execute in daily job',
     'AUTO_HOURLY_ACTIONS_TITLE': 'Hourly Job Actions',
-    'AUTO_HOURLY_ACTIONS_DESC': 'Select which actions to execute in hourly job',
     'ACTION_DailyLoginBonus': 'Daily Login Bonus',
     'ACTION_VipDailyGift': 'VIP Daily Gift',
     'ACTION_MonthlyBoost': 'Monthly Boost',
@@ -230,8 +227,6 @@ export default {
     'HEADER_ACCOUNT_MANAGEMENT': 'Account Management',
     'HEADER_LOG_OUT': 'Log Out',
     'SIDEBAR_AUTOMATION': 'Automation',
-    'LANGUAGE_ZH_CN': 'Simplified Chinese',
-    'LANGUAGE_JA_JP': 'Japanese',
     'RESOURCE_SHOP_FALLBACK': 'Shop #{0}',
     'RESOURCE_SHOP_TITLE': 'Shop Auto Purchase',
     'RESOURCE_GO_TO_SHOP': 'Go to Shop to Add',
@@ -386,7 +381,6 @@ export default {
     'DASHBOARD_ITEM_FRIEND_BATTLE': 'Friend Battle',
     'DASHBOARD_ALERT_VIP_DAILY': 'VIP daily reward available',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_ACTIVE': 'Phantom Temple is now open',
-    'DASHBOARD_ALERT_PHANTOM_TEMPLE_SOON': 'Phantom Temple opening soon',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_TIME': 'Open: 12:30-13:30, 19:30-20:30',
     'DASHBOARD_ALERT_GVG_PREPARE': 'Guild battle preparation time - remember to deploy defense (7:45-20:30)',
     'DASHBOARD_DAILY_CHECKLIST_TITLE': 'Daily Checklist',
@@ -394,10 +388,8 @@ export default {
     'DASHBOARD_ITEMS_COMPLETED': '{0}/{1} completed',
 
     // Battle Log
-    'BATTLE_LOG_UNKNOWN': 'Unknown',
     'BATTLE_LOG_TURN_START': '═══ Turn {0} Start ═══',
     'BATTLE_LOG_TURN_END': '═══ Turn {0} End ═══',
-    'BATTLE_LOG_USE_SKILL': 'uses',
     'BATTLE_LOG_GAIN_EFFECT': 'Gained effect: ',
     'BATTLE_LOG_PASSIVE': 'Passive',
     'BATTLE_LOG_TURNS': '{0} turns',
@@ -406,8 +398,6 @@ export default {
     'BATTLE_LOG_HEAL': 'Heal',
     'BATTLE_LOG_TAKEN': 'Taken',
     'BATTLE_LOG_IGNORE_DEFENSE': 'Ignore DEF',
-    'BATTLE_LOG_MISS': 'Miss',
-    'BATTLE_LOG_CRITICAL': 'Critical',
     'BATTLE_LOG_SHIELD1': 'Multi-Barrier',
     'BATTLE_LOG_SHIELD1_CRITICAL': 'Multi-Barrier·Crit',
     'BATTLE_LOG_SHIELD2': 'Shield',
@@ -416,8 +406,6 @@ export default {
     'BATTLE_LOG_SHIELD_BREAK_CRITICAL': 'Shield Break·Crit',
     'BATTLE_LOG_EFFECT_SPEED_UP': 'Speed Up',
     'BATTLE_LOG_EFFECT_MAX_HP_UP': 'Max HP Up',
-    'BATTLE_LOG_EFFECT_ATTACK_POWER_UP': 'ATK Up',
-    'BATTLE_LOG_EFFECT_DEFENSE_UP': 'DEF Up',
     'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP': 'Physical DEF Up',
     'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP': 'Magic DEF Up',
     'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP': 'Damage Enhance Up',
@@ -441,14 +429,9 @@ export default {
     'BATTLE_LOG_EFFECT_DAMAGE_GUARD': 'Damage Immunity',
     'BATTLE_LOG_EFFECT_SHIELD1_BUFF': 'Multi-Barrier',
     'BATTLE_LOG_EFFECT_SHIELD2_BUFF': 'Shield',
-    'BATTLE_LOG_EFFECT_DEBUFF_GUARD': 'Debuff Immunity',
-    'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD': 'CC Immunity',
-    'BATTLE_LOG_EFFECT_TAUNT': 'Taunt',
     'BATTLE_LOG_EFFECT_STEALTH': 'Stealth',
     'BATTLE_LOG_EFFECT_NON_TARGET': 'Transparent',
     'BATTLE_LOG_EFFECT_HEAL_OVER_TIME': 'Regeneration',
-    'BATTLE_LOG_EFFECT_IMMORTAL': 'Immortal',
-    'BATTLE_LOG_EFFECT_BUFF_COVER': 'Buff Cover',
     'BATTLE_LOG_EFFECT_NON_HIT': 'Untouchable',
     'BATTLE_LOG_EFFECT_SPEED_DOWN': 'Speed Down',
     'BATTLE_LOG_EFFECT_MAX_HP_DOWN': 'Max HP Down',
@@ -472,9 +455,7 @@ export default {
     'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_DOWN': 'Evasion Rate Down',
     'BATTLE_LOG_EFFECT_CRITICAL_RATE_DOWN': 'Crit Rate Down',
     'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN': 'Crit Resist Rate Down',
-    'BATTLE_LOG_EFFECT_STUN': 'Stun',
     'BATTLE_LOG_EFFECT_CONFUSE': 'Confuse',
-    'BATTLE_LOG_EFFECT_SILENCE': 'Silence',
     'BATTLE_LOG_EFFECT_STUBBORN': 'Stubborn',
     'BATTLE_LOG_EFFECT_POISON': 'Poison',
     'BATTLE_LOG_EFFECT_BLEEDING': 'Bleed',
@@ -482,7 +463,6 @@ export default {
     'BATTLE_LOG_EFFECT_BURN': 'Burn',
     'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN': 'No Healing',
     'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN': 'Bound',
-    'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN': 'Buff Immunity',
     'BATTLE_LOG_EFFECT_RESONANCE_SELF': 'Devotion',
     'BATTLE_LOG_EFFECT_RESONANCE_HIGH_HP': 'Resonance(High HP)',
     'BATTLE_LOG_EFFECT_RESONANCE_LOW_HP': 'Resonance(Low HP)',
@@ -492,7 +472,6 @@ export default {
     'BATTLE_LOG_SKILL_MAGIC_ATTACK': 'Magic Attack',
     'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE': 'Direct Damage',
     'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE': 'Magic Direct Damage',
-    'BATTLE_LOG_SKILL_HP_DRAIN': 'HP Drain',
     'BATTLE_LOG_SKILL_BUFF': 'Buff',
     'BATTLE_LOG_SKILL_DEBUFF': 'Debuff',
     'BATTLE_LOG_SKILL_PHYSICAL_COUNTER': 'Physical Counter',
@@ -502,22 +481,15 @@ export default {
     'BATTLE_LOG_SKILL_REMOVE_EFFECT': 'Remove Effect',
     'BATTLE_LOG_SKILL_BURST_EFFECT': 'Burst Effect',
     'BATTLE_LOG_SKILL_SELF_INJURY': 'Self Damage',
-    'BATTLE_LOG_SKILL_RESURRECTION': 'Resurrection',
     'BATTLE_LOG_SKILL_SILENCE_HEAL': 'Silence Heal',
     'BATTLE_LOG_EFFECT_FALLBACK': 'Effect#{0}',
 
     // BookSort
-    'BOOKSORT_DISPATCH_HELPERS': 'Dispatch Helpers',
-    'BOOKSORT_MISSIONS': 'Missions',
-    'BOOKSORT_SHOP': 'Shop',
     'BOOKSORT_CLEANING_ITEMS': 'Cleaning Items',
     'BOOKSORT_NO_ITEMS': 'No cleaning items available',
 
     // Battle Log Modal
-    'BATTLE_LOG_MODAL_TITLE': 'Battle Record',
     'BATTLE_LOG_MODAL_TURNS': 'Turns: {0}',
-    'BATTLE_LOG_MODAL_CLOSE': 'Close',
-    'BATTLE_LOG_MODAL_REPLAY': 'Replay',
     'BATTLE_LOG_MODAL_REPLAY_TOOLTIP': 'Watch battle replay',
     'BATTLE_LOG_MODAL_NO_LOG': 'No battle log data',
     'BATTLE_LOG_MODAL_ALLY_TEAM': 'Ally',
@@ -546,25 +518,15 @@ export default {
     'COMMON_CLOSE': 'Close',
     'COMMON_LOADING': 'Loading...',
     'COMMON_RETRY': 'Retry',
-    'COMMON_SUCCESS': 'Success',
-    'COMMON_FAILED': 'Failed',
-    'COMMON_NO_DATA': 'No data available',
-    'COMMON_NO_LOGS': 'No logs',
 
     // BookSort
     'BOOKSORT_NO_MISSIONS': 'No BookSort missions available',
 
     // Items
-    'ITEMS_NO_CONSUMABLES': 'No consumable items',
-    'ITEMS_NO_EQUIPMENT': 'No equipment items',
-    'ITEMS_NO_MATERIALS': 'No material items',
-    'ITEMS_NO_SET_PIECES': 'No set piece items',
-    'ITEMS_NO_SPHERES': 'No sphere items',
     'ITEMS_USE_SUCCESS': 'Successfully used {0} {1}',
     'ITEMS_USE_FAILED': 'Failed to use item',
 
     // Local Raid
-    'LOCAL_RAID_CONNECT_FAILED': 'Connection failed',
 
     // Battle Character Avatar
     'BATTLE_CHARACTER_TURNS': '{0} turns',
@@ -592,37 +554,21 @@ export default {
 
     // BookSort Grid
     'BOOKSORT_GRID_CLEANED': 'Cleaned',
-    'BOOKSORT_GRID_FLOOR': 'Floor {0}',
     'BOOKSORT_GRID_BULK_USE': 'Bulk Use',
-    'BOOKSORT_GRID_SELECT': 'Select',
 
     // Equipment Card
     'EQUIPMENT_EQUIPPED_BY': 'Equipped by {0}',
-    'EQUIPMENT_COMBAT_POWER': 'Combat Power',
-    'EQUIPMENT_ENHANCE': 'Enhance',
     'EQUIPMENT_SACRED': 'Sacred',
     'EQUIPMENT_MAGIC': 'Magic',
-    'EQUIPMENT_BASE_STATS': 'Base Stats',
-    'EQUIPMENT_RUNE': 'Rune',
-    'EQUIPMENT_UNEQUIP': 'Unequip',
-    'EQUIPMENT_EQUIP': 'Equip',
     'EQUIPMENT_ENHANCE_BTN': 'Enhance',
-    'EQUIPMENT_LEGEND_SACRED': 'Legend Sacred Lv.{0}',
-    'EQUIPMENT_MATCHLESS_SACRED': 'Matchless Sacred Lv.{0}',
 
     // Equipment Filters
     'EQUIPMENT_FILTER_SEARCH': 'Search equipment name...',
     'EQUIPMENT_FILTER_SORT': 'Sort by',
-    'EQUIPMENT_FILTER_SORT_POWER': 'Combat Power',
-    'EQUIPMENT_FILTER_SORT_RARITY': 'Rarity',
-    'EQUIPMENT_FILTER_SORT_LEVEL': 'Level',
-    'EQUIPMENT_FILTER_SORT_ENHANCE': 'Enhance Level',
     'EQUIPMENT_FILTER_ADVANCED': 'Advanced Filter',
-    'EQUIPMENT_FILTER_ALL': 'All',
     'EQUIPMENT_FILTER_RARITY_FILTER': 'Rarity Filter',
     'EQUIPMENT_FILTER_EQUIPMENT_STATUS': 'Equipment Status',
     'EQUIPMENT_FILTER_EQUIPPED': 'Equipped',
-    'EQUIPMENT_FILTER_UNEQUIPPED': 'Unequipped',
     'EQUIPMENT_FILTER_SET_FILTER': 'Set Filter',
     'EQUIPMENT_FILTER_SELECT_SET': 'Select Set',
     'EQUIPMENT_FILTER_ALL_SETS': 'All Sets',
@@ -630,16 +576,11 @@ export default {
     'EQUIPMENT_FILTER_RESET': 'Reset All Filters',
 
     // Set Bonus Display
-    'EQUIPMENT_SET_BONUS': 'Set Bonus',
     'EQUIPMENT_SET_PIECES_EQUIPPED': '{0} pieces',
     'EQUIPMENT_SET_PIECES': '{0}-Piece Set',
     'EQUIPMENT_SET_ACTIVE': 'Active',
 
     // Item Tabs
-    'ITEMS_SEALED_EQUIPMENT': 'Unsealed',
-    'ITEMS_UNSEALED_EQUIPMENT': 'Sealed',
-    'ITEMS_EQUIPMENT_COUNT': '{0} items',
-    'ITEMS_GEM': 'Gem:',
 
     // Use Item Dialog
     'USE_ITEM_INVALID_COUNT': 'Invalid use count',
@@ -695,28 +636,25 @@ export default {
     'GLOBAL_LOG_WAITING': 'Waiting for task execution logs...',
 
     // BookSort Dialog
-    'BOOKSORT_DIALOG_CLEANING_TOOLS': 'Cleaning Tools',
-    'BOOKSORT_DIALOG_OBTAINED_ITEM': 'Item Obtained',
     'BOOKSORT_DIALOG_OBTAINED_ITEM_DESC': 'Obtained {0} x{1}',
-    'BOOKSORT_DIALOG_TITLE': "Witch's Library Cleanup",
     'BOOKSORT_DIALOG_DESCRIPTION': 'Library cleanup event dialog',
     'BOOKSORT_DIALOG_ENTERING': 'Entering the library...',
-    'BOOKSORT_DIALOG_MISSIONS_TITLE': 'Library Cleanup Missions',
     'BOOKSORT_DIALOG_MISSIONS_DESC': 'Complete cleanup missions to get rewards',
     'BOOKSORT_DIALOG_CLAIM_ALL': 'Claim All',
 
     // Local Raid
-    'LOCAL_RAID_ROOM_DISSOLVED': 'Room Dissolved',
+    'LOCAL_RAID_CONNECT_FAILED': 'Connection failed',
+    'LOCAL_RAID_ROOM_DISSOLVED': 'Room dissolved',
     'LOCAL_RAID_HOST_DISSOLVED': 'Host has dissolved the room',
-    'LOCAL_RAID_BATTLE_END': 'Battle End',
+    'LOCAL_RAID_BATTLE_END': 'Battle ended',
     'LOCAL_RAID_NO_RESULT': 'Unable to get battle result',
     'LOCAL_RAID_RESULT_FAILED': 'Failed to get battle result',
     'LOCAL_RAID_ERROR': 'Error',
     'LOCAL_RAID_ERROR_CODE': 'Error code: {0}',
-    'LOCAL_RAID_CONNECT_SERVER_FAILED': 'Unable to connect to co-op server',
+    'LOCAL_RAID_CONNECT_SERVER_FAILED': 'Unable to connect to coop server',
     'LOCAL_RAID_ENTER_ROOM_ID': 'Please enter room ID',
-    'LOCAL_RAID_LOBBY_TITLE': 'Co-op Lobby',
-    'LOCAL_RAID_QUEST_INFO': 'Quest: {0} • Recommended Power: {1}',
+    'LOCAL_RAID_LOBBY_TITLE': 'Coop Lobby',
+    'LOCAL_RAID_QUEST_INFO': 'Quest: {0} • Recommended BP: {1}',
     'LOCAL_RAID_CONNECTING': 'Connecting...',
     'LOCAL_RAID_REFRESH': 'Refresh',
     'LOCAL_RAID_CREATE_ROOM': 'Create Room',
@@ -724,12 +662,12 @@ export default {
     'LOCAL_RAID_ENTER_ROOM_ID_PLACEHOLDER': 'Enter room ID',
     'LOCAL_RAID_PASSWORD_OPTIONAL': 'Password (optional)',
     'LOCAL_RAID_JOIN': 'Join',
-    'LOCAL_RAID_MY_POWER': 'My Power: {0}',
+    'LOCAL_RAID_MY_POWER': 'My BP: {0}',
     'LOCAL_RAID_ALL_ROOMS': 'All Rooms ({0})',
     'LOCAL_RAID_FRIEND_ROOMS': 'Friend Rooms',
     'LOCAL_RAID_NO_ROOMS': 'No rooms available',
     'LOCAL_RAID_CREATE_PROMPT': 'Create a room to start the challenge',
-    'LOCAL_RAID_FRIEND_ROOMS_UNAVAILABLE': 'Friend rooms not available yet',
+    'LOCAL_RAID_FRIEND_ROOMS_UNAVAILABLE': 'Friend rooms feature is not available yet',
 
     // Room Card
     'ROOM_MEMBERS': '{0}/3 Players',
@@ -740,29 +678,29 @@ export default {
 
     // Create Room Dialog
     'CREATE_ROOM_TITLE': 'Create Room',
-    'CREATE_ROOM_DESC': 'Create a room to invite other players',
+    'CREATE_ROOM_DESC': 'Create a room and invite other players',
     'CREATE_ROOM_CONDITIONS': 'Room Conditions',
     'CREATE_ROOM_SELECT_CONDITION': 'Select condition type',
     'CREATE_ROOM_NO_LIMIT': 'No Limit',
-    'CREATE_ROOM_POWER_LIMIT': 'Power Limit',
+    'CREATE_ROOM_POWER_LIMIT': 'BP Limit',
     'CREATE_ROOM_PASSWORD_ROOM': 'Password Room',
-    'CREATE_ROOM_POWER_AND_PASSWORD': 'Power + Password',
-    'CREATE_ROOM_MIN_POWER': 'Minimum Power Required',
-    'CREATE_ROOM_ENTER_POWER': 'Enter minimum power',
-    'CREATE_ROOM_MY_POWER': 'My Power: {0}',
+    'CREATE_ROOM_POWER_AND_PASSWORD': 'BP + Password',
+    'CREATE_ROOM_MIN_POWER': 'Minimum BP Required',
+    'CREATE_ROOM_ENTER_POWER': 'Enter minimum BP',
+    'CREATE_ROOM_MY_POWER': 'My BP: {0}',
     'CREATE_ROOM_PASSWORD': 'Room Password',
     'CREATE_ROOM_PASSWORD_PLACEHOLDER': 'Enter 4-6 digit password',
     'CREATE_ROOM_AUTO_START_LABEL': 'Auto Start',
-    'CREATE_ROOM_AUTO_START_DESC': 'Auto-start when all members are ready',
+    'CREATE_ROOM_AUTO_START_DESC': 'Automatically start battle when all members are ready',
     'CREATE_ROOM_CREATING': 'Creating...',
 
     // Room Waiting Dialog
     'ROOM_WAITING_TITLE': 'Waiting for Teammates',
     'ROOM_WAITING_ID': 'Room ID: {0}...',
-    'ROOM_WAITING_POWER': 'Power: {0}',
+    'ROOM_WAITING_POWER': 'BP: {0}',
     'ROOM_WAITING_PASSWORD_ROOM': 'Password Room',
-    'ROOM_WAITING_POWER_AND_PASSWORD': 'Power + Password',
-    'ROOM_WAITING_TOTAL_POWER': 'Total Power',
+    'ROOM_WAITING_POWER_AND_PASSWORD': 'BP + Password',
+    'ROOM_WAITING_TOTAL_POWER': 'Total BP',
     'ROOM_WAITING_MEMBERS': 'Members',
     'ROOM_WAITING_UNKNOWN': 'Unknown',
     'ROOM_WAITING_HOST': 'Host',
@@ -773,7 +711,7 @@ export default {
     'ROOM_WAITING_LEAVE': 'Leave Room',
     'ROOM_WAITING_CANCEL_READY': 'Cancel Ready',
     'ROOM_WAITING_WAIT_ALL_READY': 'Waiting for all members to be ready',
-    'ROOM_WAITING_AUTO_STARTING': 'All ready, auto-starting...',
+    'ROOM_WAITING_AUTO_STARTING': 'All members ready, starting automatically...',
 
     // Battle Team Stats
     'BATTLE_TEAM_ALLY': 'Ally',
@@ -783,18 +721,11 @@ export default {
     'BATTLE_TEAM_TOTAL_TAKEN': 'Damage Taken',
 
     // Present Box
-    'PRESENT_BOX_TITLE': 'Present Box',
     'PRESENT_BOX_ITEM_COUNT': '{0} items',
     'PRESENT_BOX_LOAD_FAILED': 'Failed to load present box, please retry',
     'PRESENT_BOX_EMPTY': 'Present box is empty',
     'PRESENT_BOX_RECEIVED_ITEMS': 'Items received:',
-    'PRESENT_BOX_EXPIRY_NOTICE': '※Presents past their expiration date will be automatically deleted by the system.',
-    'PRESENT_BOX_GIFT': 'Gift',
-    'PRESENT_BOX_RECEIVED': 'Received',
     'PRESENT_BOX_DEADLINE': 'Expiration: ',
     'PRESENT_BOX_REMAINING_DAYS': '{0} days remaining',
     'PRESENT_BOX_RECEIVED_DATE': 'Received date: {0}',
-    'PRESENT_BOX_RECEIVE': 'Receive',
-    'PRESENT_BOX_DELETE_READ': 'Delete Read',
-    'PRESENT_BOX_RECEIVE_ALL': 'Receive All'
 };

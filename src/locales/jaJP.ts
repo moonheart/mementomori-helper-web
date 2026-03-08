@@ -20,7 +20,6 @@ export default {
 
 
     'WF_LOADING_SYNC': 'クエストデータを同期中...',
-    'WF_SERVER_TIME': 'サーバー時刻: {0}',
 
     'WF_HELP_TITLE': '祈りの泉について：',
     'WF_HELP_DESC1': '通常クエストは毎日4:00に更新されます。協力クエストはフレンド/ギルドの支援が必要です。ゲリラクエストはランダムで出現します。',
@@ -34,9 +33,7 @@ export default {
 
     // Automation Actions
     'AUTO_DAILY_ACTIONS_TITLE': '毎日タスクアクション',
-    'AUTO_DAILY_ACTIONS_DESC': '毎日タスクで実行するアクションを選択します',
     'AUTO_HOURLY_ACTIONS_TITLE': '毎時タスクアクション',
-    'AUTO_HOURLY_ACTIONS_DESC': '毎時タスクで実行するアクションを選択します',
     'ACTION_DailyLoginBonus': '毎日ログインボーナス',
     'ACTION_VipDailyGift': 'VIP毎日ギフト',
     'ACTION_MonthlyBoost': '月間ブースト',
@@ -230,8 +227,6 @@ export default {
     'HEADER_ACCOUNT_MANAGEMENT': 'アカウント管理',
     'HEADER_LOG_OUT': 'ログアウト',
     'SIDEBAR_AUTOMATION': '自動管理',
-    'LANGUAGE_ZH_CN': '簡体字中国語',
-    'LANGUAGE_JA_JP': '日本語',
     'RESOURCE_SHOP_FALLBACK': 'ショップ #{0}',
     'RESOURCE_SHOP_TITLE': 'ショップ自動購入',
     'RESOURCE_GO_TO_SHOP': 'ショップで追加',
@@ -386,7 +381,6 @@ export default {
     'DASHBOARD_ITEM_FRIEND_BATTLE': 'フレンド対戦',
     'DASHBOARD_ALERT_VIP_DAILY': 'VIP毎日ギフトを受け取れます',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_ACTIVE': '幻影神殿がオープンしました',
-    'DASHBOARD_ALERT_PHANTOM_TEMPLE_SOON': '幻影神殿がまもなくオープン',
     'DASHBOARD_ALERT_PHANTOM_TEMPLE_TIME': '開催時間: 12:30-13:30, 19:30-20:30',
     'DASHBOARD_ALERT_GVG_PREPARE': 'ギルド戦準備期間中 - 防衛部隊を配置してください (7:45-20:30)',
     'DASHBOARD_DAILY_CHECKLIST_TITLE': 'デイリーチェックリスト',
@@ -394,10 +388,8 @@ export default {
     'DASHBOARD_ITEMS_COMPLETED': '{0}/{1} 完了',
 
     // Battle Log
-    'BATTLE_LOG_UNKNOWN': '不明',
     'BATTLE_LOG_TURN_START': '═══ ターン {0} 開始 ═══',
     'BATTLE_LOG_TURN_END': '═══ ターン {0} 終了 ═══',
-    'BATTLE_LOG_USE_SKILL': '使用',
     'BATTLE_LOG_GAIN_EFFECT': '効果獲得: ',
     'BATTLE_LOG_PASSIVE': 'パッシブ',
     'BATTLE_LOG_TURNS': '{0}ターン',
@@ -406,8 +398,6 @@ export default {
     'BATTLE_LOG_HEAL': '回復',
     'BATTLE_LOG_TAKEN': '被ダメージ',
     'BATTLE_LOG_IGNORE_DEFENSE': '防御無視',
-    'BATTLE_LOG_MISS': '回避',
-    'BATTLE_LOG_CRITICAL': 'クリティカル',
     'BATTLE_LOG_SHIELD1': '多重バリア',
     'BATTLE_LOG_SHIELD1_CRITICAL': '多重バリア・クリ',
     'BATTLE_LOG_SHIELD2': 'シールド',
@@ -416,8 +406,6 @@ export default {
     'BATTLE_LOG_SHIELD_BREAK_CRITICAL': 'シールド破壊・クリ',
     'BATTLE_LOG_EFFECT_SPEED_UP': '速度上昇',
     'BATTLE_LOG_EFFECT_MAX_HP_UP': '最大HP上昇',
-    'BATTLE_LOG_EFFECT_ATTACK_POWER_UP': '攻撃力上昇',
-    'BATTLE_LOG_EFFECT_DEFENSE_UP': '防御力上昇',
     'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP': '物理防御上昇',
     'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP': '魔法防御上昇',
     'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP': 'ダメージ強化上昇',
@@ -441,14 +429,9 @@ export default {
     'BATTLE_LOG_EFFECT_DAMAGE_GUARD': 'ダメージ無効',
     'BATTLE_LOG_EFFECT_SHIELD1_BUFF': '多重バリア',
     'BATTLE_LOG_EFFECT_SHIELD2_BUFF': 'シールド',
-    'BATTLE_LOG_EFFECT_DEBUFF_GUARD': 'デバフ無効',
-    'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD': 'CC無効',
-    'BATTLE_LOG_EFFECT_TAUNT': '挑発',
     'BATTLE_LOG_EFFECT_STEALTH': 'ステルス',
     'BATTLE_LOG_EFFECT_NON_TARGET': '透明',
     'BATTLE_LOG_EFFECT_HEAL_OVER_TIME': '再生',
-    'BATTLE_LOG_EFFECT_IMMORTAL': '不死',
-    'BATTLE_LOG_EFFECT_BUFF_COVER': 'バフカバー',
     'BATTLE_LOG_EFFECT_NON_HIT': '回避不可',
     'BATTLE_LOG_EFFECT_SPEED_DOWN': '速度低下',
     'BATTLE_LOG_EFFECT_MAX_HP_DOWN': '最大HP低下',
@@ -472,9 +455,7 @@ export default {
     'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_DOWN': '回避率低下',
     'BATTLE_LOG_EFFECT_CRITICAL_RATE_DOWN': 'クリティカル率低下',
     'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN': 'クリティカル抵抗率低下',
-    'BATTLE_LOG_EFFECT_STUN': 'スタン',
     'BATTLE_LOG_EFFECT_CONFUSE': '混乱',
-    'BATTLE_LOG_EFFECT_SILENCE': '沈黙',
     'BATTLE_LOG_EFFECT_STUBBORN': '頑固',
     'BATTLE_LOG_EFFECT_POISON': '毒',
     'BATTLE_LOG_EFFECT_BLEEDING': '出血',
@@ -482,7 +463,6 @@ export default {
     'BATTLE_LOG_EFFECT_BURN': '火傷',
     'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN': '回復不可',
     'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN': '拘束',
-    'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN': 'バフ無効',
     'BATTLE_LOG_EFFECT_RESONANCE_SELF': '献身',
     'BATTLE_LOG_EFFECT_RESONANCE_HIGH_HP': '共鳴(高HP)',
     'BATTLE_LOG_EFFECT_RESONANCE_LOW_HP': '共鳴(低HP)',
@@ -492,7 +472,6 @@ export default {
     'BATTLE_LOG_SKILL_MAGIC_ATTACK': '魔法攻撃',
     'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE': '直接ダメージ',
     'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE': '魔法直接ダメージ',
-    'BATTLE_LOG_SKILL_HP_DRAIN': 'HP吸収',
     'BATTLE_LOG_SKILL_BUFF': 'バフ',
     'BATTLE_LOG_SKILL_DEBUFF': 'デバフ',
     'BATTLE_LOG_SKILL_PHYSICAL_COUNTER': '物理カウンター',
@@ -502,22 +481,15 @@ export default {
     'BATTLE_LOG_SKILL_REMOVE_EFFECT': '効果除去',
     'BATTLE_LOG_SKILL_BURST_EFFECT': 'バースト効果',
     'BATTLE_LOG_SKILL_SELF_INJURY': '自傷',
-    'BATTLE_LOG_SKILL_RESURRECTION': '復活',
     'BATTLE_LOG_SKILL_SILENCE_HEAL': '沈黙回復',
     'BATTLE_LOG_EFFECT_FALLBACK': '効果#{0}',
 
     // BookSort
-    'BOOKSORT_DISPATCH_HELPERS': '派遣ヘルパー',
-    'BOOKSORT_MISSIONS': 'ミッション',
-    'BOOKSORT_SHOP': 'ショップ',
     'BOOKSORT_CLEANING_ITEMS': '掃除アイテム',
     'BOOKSORT_NO_ITEMS': '掃除アイテムがありません',
 
     // Battle Log Modal
-    'BATTLE_LOG_MODAL_TITLE': 'バトル記録',
     'BATTLE_LOG_MODAL_TURNS': 'ターン数: {0}',
-    'BATTLE_LOG_MODAL_CLOSE': '閉じる',
-    'BATTLE_LOG_MODAL_REPLAY': 'リプレイ',
     'BATTLE_LOG_MODAL_REPLAY_TOOLTIP': 'バトルリプレイを見る',
     'BATTLE_LOG_MODAL_NO_LOG': 'バトルログデータがありません',
     'BATTLE_LOG_MODAL_ALLY_TEAM': '味方',
@@ -546,25 +518,15 @@ export default {
     'COMMON_CLOSE': '閉じる',
     'COMMON_LOADING': '読み込み中...',
     'COMMON_RETRY': '再試行',
-    'COMMON_SUCCESS': '成功',
-    'COMMON_FAILED': '失敗',
-    'COMMON_NO_DATA': 'データがありません',
-    'COMMON_NO_LOGS': 'ログがありません',
 
     // BookSort
     'BOOKSORT_NO_MISSIONS': '書庫掃除ミッションがありません',
 
     // Items
-    'ITEMS_NO_CONSUMABLES': '消耗品がありません',
-    'ITEMS_NO_EQUIPMENT': '装備がありません',
-    'ITEMS_NO_MATERIALS': '素材がありません',
-    'ITEMS_NO_SET_PIECES': 'セットピースがありません',
-    'ITEMS_NO_SPHERES': 'スフィアがありません',
     'ITEMS_USE_SUCCESS': '{0} 個の{1}を使用しました',
     'ITEMS_USE_FAILED': 'アイテムの使用に失敗しました',
 
     // Local Raid
-    'LOCAL_RAID_CONNECT_FAILED': '接続に失敗しました',
 
     // Battle Character Avatar
     'BATTLE_CHARACTER_TURNS': '{0}ターン',
@@ -592,37 +554,21 @@ export default {
 
     // BookSort Grid
     'BOOKSORT_GRID_CLEANED': '掃除済み',
-    'BOOKSORT_GRID_FLOOR': '{0}階',
     'BOOKSORT_GRID_BULK_USE': '一括使用',
-    'BOOKSORT_GRID_SELECT': '選択',
 
     // Equipment Card
     'EQUIPMENT_EQUIPPED_BY': '{0}が装備中',
-    'EQUIPMENT_COMBAT_POWER': '戦闘力',
-    'EQUIPMENT_ENHANCE': '強化',
     'EQUIPMENT_SACRED': '聖装',
     'EQUIPMENT_MAGIC': '魔装',
-    'EQUIPMENT_BASE_STATS': '基本ステータス',
-    'EQUIPMENT_RUNE': 'ルーン',
-    'EQUIPMENT_UNEQUIP': '外す',
-    'EQUIPMENT_EQUIP': '装備',
     'EQUIPMENT_ENHANCE_BTN': '強化',
-    'EQUIPMENT_LEGEND_SACRED': '伝説聖遺物 Lv.{0}',
-    'EQUIPMENT_MATCHLESS_SACRED': '無双聖遺物 Lv.{0}',
 
     // Equipment Filters
     'EQUIPMENT_FILTER_SEARCH': '装備名を検索...',
     'EQUIPMENT_FILTER_SORT': '並び替え',
-    'EQUIPMENT_FILTER_SORT_POWER': '戦闘力',
-    'EQUIPMENT_FILTER_SORT_RARITY': 'レアリティ',
-    'EQUIPMENT_FILTER_SORT_LEVEL': 'レベル',
-    'EQUIPMENT_FILTER_SORT_ENHANCE': '強化レベル',
     'EQUIPMENT_FILTER_ADVANCED': '詳細フィルター',
-    'EQUIPMENT_FILTER_ALL': 'すべて',
     'EQUIPMENT_FILTER_RARITY_FILTER': 'レアリティフィルター',
     'EQUIPMENT_FILTER_EQUIPMENT_STATUS': '装備状態',
     'EQUIPMENT_FILTER_EQUIPPED': '装備中',
-    'EQUIPMENT_FILTER_UNEQUIPPED': '未装備',
     'EQUIPMENT_FILTER_SET_FILTER': 'セットフィルター',
     'EQUIPMENT_FILTER_SELECT_SET': 'セットを選択',
     'EQUIPMENT_FILTER_ALL_SETS': 'すべてのセット',
@@ -630,16 +576,11 @@ export default {
     'EQUIPMENT_FILTER_RESET': 'フィルターをリセット',
 
     // Set Bonus Display
-    'EQUIPMENT_SET_BONUS': 'セット効果',
     'EQUIPMENT_SET_PIECES_EQUIPPED': '{0}個装備',
     'EQUIPMENT_SET_PIECES': '{0}個セット',
     'EQUIPMENT_SET_ACTIVE': '発動中',
 
     // Item Tabs
-    'ITEMS_SEALED_EQUIPMENT': '封印解除済み',
-    'ITEMS_UNSEALED_EQUIPMENT': '未解除',
-    'ITEMS_EQUIPMENT_COUNT': '{0}個',
-    'ITEMS_GEM': 'ジェム:',
 
     // Use Item Dialog
     'USE_ITEM_INVALID_COUNT': '使用数が無効です',
@@ -695,28 +636,25 @@ export default {
     'GLOBAL_LOG_WAITING': 'タスク実行ログを待機中...',
 
     // BookSort Dialog
-    'BOOKSORT_DIALOG_CLEANING_TOOLS': '掃除道具',
-    'BOOKSORT_DIALOG_OBTAINED_ITEM': 'アイテム獲得',
     'BOOKSORT_DIALOG_OBTAINED_ITEM_DESC': '{0} x{1}を獲得しました',
-    'BOOKSORT_DIALOG_TITLE': '魔女の書庫掃除',
     'BOOKSORT_DIALOG_DESCRIPTION': '書庫掃除イベントダイアログ',
     'BOOKSORT_DIALOG_ENTERING': '書庫に入っています...',
-    'BOOKSORT_DIALOG_MISSIONS_TITLE': '書庫掃除ミッション',
     'BOOKSORT_DIALOG_MISSIONS_DESC': '掃除ミッションを完了して報酬を獲得',
     'BOOKSORT_DIALOG_CLAIM_ALL': '一括受け取り',
 
     // Local Raid
-    'LOCAL_RAID_ROOM_DISSOLVED': 'ルームが解散しました',
+    'LOCAL_RAID_CONNECT_FAILED': '接続失敗',
+    'LOCAL_RAID_ROOM_DISSOLVED': 'ルームが解散されました',
     'LOCAL_RAID_HOST_DISSOLVED': 'ホストがルームを解散しました',
     'LOCAL_RAID_BATTLE_END': 'バトル終了',
     'LOCAL_RAID_NO_RESULT': 'バトル結果を取得できません',
-    'LOCAL_RAID_RESULT_FAILED': 'バトル結果の取得に失敗',
+    'LOCAL_RAID_RESULT_FAILED': 'バトル結果の取得に失敗しました',
     'LOCAL_RAID_ERROR': 'エラー',
     'LOCAL_RAID_ERROR_CODE': 'エラーコード: {0}',
-    'LOCAL_RAID_CONNECT_SERVER_FAILED': '協力プレイサーバーに接続できません',
+    'LOCAL_RAID_CONNECT_SERVER_FAILED': '協力サーバーに接続できません',
     'LOCAL_RAID_ENTER_ROOM_ID': 'ルームIDを入力してください',
-    'LOCAL_RAID_LOBBY_TITLE': '協力プレイロビー',
-    'LOCAL_RAID_QUEST_INFO': 'クエスト: {0} • 推奨戦闘力: {1}',
+    'LOCAL_RAID_LOBBY_TITLE': '協力ロビー',
+    'LOCAL_RAID_QUEST_INFO': 'クエスト: {0} • 推奨戦力: {1}',
     'LOCAL_RAID_CONNECTING': '接続中...',
     'LOCAL_RAID_REFRESH': '更新',
     'LOCAL_RAID_CREATE_ROOM': 'ルーム作成',
@@ -724,8 +662,8 @@ export default {
     'LOCAL_RAID_ENTER_ROOM_ID_PLACEHOLDER': 'ルームIDを入力',
     'LOCAL_RAID_PASSWORD_OPTIONAL': 'パスワード(任意)',
     'LOCAL_RAID_JOIN': '参加',
-    'LOCAL_RAID_MY_POWER': '自分の戦闘力: {0}',
-    'LOCAL_RAID_ALL_ROOMS': 'すべてのルーム ({0})',
+    'LOCAL_RAID_MY_POWER': '自分の戦力: {0}',
+    'LOCAL_RAID_ALL_ROOMS': '全ルーム ({0})',
     'LOCAL_RAID_FRIEND_ROOMS': 'フレンドルーム',
     'LOCAL_RAID_NO_ROOMS': '参加可能なルームがありません',
     'LOCAL_RAID_CREATE_PROMPT': 'ルームを作成してチャレンジを始めましょう',
@@ -740,29 +678,29 @@ export default {
 
     // Create Room Dialog
     'CREATE_ROOM_TITLE': 'ルーム作成',
-    'CREATE_ROOM_DESC': '他のプレイヤーを招待するルームを作成',
+    'CREATE_ROOM_DESC': 'ルームを作成して他のプレイヤーを招待',
     'CREATE_ROOM_CONDITIONS': 'ルーム条件',
     'CREATE_ROOM_SELECT_CONDITION': '条件タイプを選択',
     'CREATE_ROOM_NO_LIMIT': '制限なし',
-    'CREATE_ROOM_POWER_LIMIT': '戦闘力制限',
+    'CREATE_ROOM_POWER_LIMIT': '戦力制限',
     'CREATE_ROOM_PASSWORD_ROOM': 'パスワードルーム',
-    'CREATE_ROOM_POWER_AND_PASSWORD': '戦闘力+パスワード',
-    'CREATE_ROOM_MIN_POWER': '最低戦闘力',
-    'CREATE_ROOM_ENTER_POWER': '最低戦闘力を入力',
-    'CREATE_ROOM_MY_POWER': '自分の戦闘力: {0}',
+    'CREATE_ROOM_POWER_AND_PASSWORD': '戦力+パスワード',
+    'CREATE_ROOM_MIN_POWER': '最低戦力要件',
+    'CREATE_ROOM_ENTER_POWER': '最低戦力を入力',
+    'CREATE_ROOM_MY_POWER': '自分の戦力: {0}',
     'CREATE_ROOM_PASSWORD': 'ルームパスワード',
     'CREATE_ROOM_PASSWORD_PLACEHOLDER': '4-6桁の数字を入力',
     'CREATE_ROOM_AUTO_START_LABEL': '自動開始',
-    'CREATE_ROOM_AUTO_START_DESC': '全員準備完了で自動開始',
+    'CREATE_ROOM_AUTO_START_DESC': '全員準備完了で自動的にバトル開始',
     'CREATE_ROOM_CREATING': '作成中...',
 
     // Room Waiting Dialog
     'ROOM_WAITING_TITLE': 'メンバー待機中',
     'ROOM_WAITING_ID': 'ルームID: {0}...',
-    'ROOM_WAITING_POWER': '戦闘力: {0}',
+    'ROOM_WAITING_POWER': '戦力: {0}',
     'ROOM_WAITING_PASSWORD_ROOM': 'パスワードルーム',
-    'ROOM_WAITING_POWER_AND_PASSWORD': '戦闘力+パスワード',
-    'ROOM_WAITING_TOTAL_POWER': '合計戦闘力',
+    'ROOM_WAITING_POWER_AND_PASSWORD': '戦力+パスワード',
+    'ROOM_WAITING_TOTAL_POWER': '総戦力',
     'ROOM_WAITING_MEMBERS': 'メンバー',
     'ROOM_WAITING_UNKNOWN': '不明',
     'ROOM_WAITING_HOST': 'ホスト',
@@ -771,8 +709,8 @@ export default {
     'ROOM_WAITING_DISBAND': 'ルーム解散',
     'ROOM_WAITING_START_BATTLE': 'バトル開始',
     'ROOM_WAITING_LEAVE': 'ルーム退出',
-    'ROOM_WAITING_CANCEL_READY': '準備キャンセル',
-    'ROOM_WAITING_WAIT_ALL_READY': '全員の準備完了を待っています',
+    'ROOM_WAITING_CANCEL_READY': '準備取消',
+    'ROOM_WAITING_WAIT_ALL_READY': '全メンバーの準備完了を待っています',
     'ROOM_WAITING_AUTO_STARTING': '全員準備完了、自動開始します...',
 
     // Battle Team Stats
@@ -783,18 +721,11 @@ export default {
     'BATTLE_TEAM_TOTAL_TAKEN': '被ダメージ',
 
     // Present Box
-    'PRESENT_BOX_TITLE': 'プレゼントボックス',
     'PRESENT_BOX_ITEM_COUNT': '{0}件',
     'PRESENT_BOX_LOAD_FAILED': 'プレゼントボックスの取得に失敗しました',
     'PRESENT_BOX_EMPTY': 'プレゼントボックスは空です',
     'PRESENT_BOX_RECEIVED_ITEMS': 'アイテムを受け取りました：',
-    'PRESENT_BOX_EXPIRY_NOTICE': '※期限切れのプレゼントは自動的に削除されます。',
-    'PRESENT_BOX_GIFT': 'プレゼント',
-    'PRESENT_BOX_RECEIVED': '受取済み',
     'PRESENT_BOX_DEADLINE': '期限：',
     'PRESENT_BOX_REMAINING_DAYS': '残り{0}日',
     'PRESENT_BOX_RECEIVED_DATE': '受取日：{0}',
-    'PRESENT_BOX_RECEIVE': '受け取る',
-    'PRESENT_BOX_DELETE_READ': '既読削除',
-    'PRESENT_BOX_RECEIVE_ALL': '一括受取'
 };

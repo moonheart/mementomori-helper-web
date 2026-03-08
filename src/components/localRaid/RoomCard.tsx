@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Users, Lock, Trophy, Crown } from 'lucide-react';
 import { LocalRaidPartyInfo } from '@/api/localRaidSignalRService';
 import { LocalRaidRoomConditionsType } from '@/api/generated';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface RoomCardProps {
     room: LocalRaidPartyInfo;
@@ -12,9 +13,10 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room, myBattlePower, onJoin }: RoomCardProps) {
+    const { t } = useTranslation();
     const memberCount = room.localRaidBattleLogPlayerInfoList?.length || 0;
     const isFull = memberCount >= 3;
-    const hasPassword = room.conditionsType === LocalRaidRoomConditionsType.Password || 
+    const hasPassword = room.conditionsType === LocalRaidRoomConditionsType.Password ||
                         room.conditionsType === LocalRaidRoomConditionsType.All;
     const hasBattlePowerLimit = room.conditionsType === LocalRaidRoomConditionsType.BattlePower ||
                                 room.conditionsType === LocalRaidRoomConditionsType.All;
@@ -42,7 +44,7 @@ export function RoomCard({ room, myBattlePower, onJoin }: RoomCardProps) {
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                 <span>ID: {room.roomId?.slice(0, 8) || 'Unknown'}...</span>
                                 <span>•</span>
-                                <span>{memberCount}/3 人</span>
+                                <span>{t('ROOM_MEMBERS', [String(memberCount)])}</span>
                             </div>
                         </div>
                     </div>
@@ -52,12 +54,12 @@ export function RoomCard({ room, myBattlePower, onJoin }: RoomCardProps) {
                         {hasPassword && (
                             <Badge variant="outline" className="text-xs">
                                 <Lock className="h-3 w-3 mr-1" />
-                                需密码
+                                {t('ROOM_PASSWORD_REQUIRED')}
                             </Badge>
                         )}
                         {hasBattlePowerLimit && (
-                            <Badge 
-                                variant={meetsBattlePower ? 'outline' : 'destructive'} 
+                            <Badge
+                                variant={meetsBattlePower ? 'outline' : 'destructive'}
                                 className="text-xs"
                             >
                                 <Trophy className="h-3 w-3 mr-1" />
@@ -66,12 +68,12 @@ export function RoomCard({ room, myBattlePower, onJoin }: RoomCardProps) {
                         )}
                         {isFull && (
                             <Badge variant="secondary" className="text-xs">
-                                已满
+                                {t('ROOM_FULL')}
                             </Badge>
                         )}
                         {room.isAutoStart && (
                             <Badge variant="outline" className="text-xs bg-green-50 text-green-700">
-                                自动开始
+                                {t('ROOM_AUTO_START')}
                             </Badge>
                         )}
                     </div>
@@ -82,7 +84,7 @@ export function RoomCard({ room, myBattlePower, onJoin }: RoomCardProps) {
                         disabled={!canJoin}
                         onClick={() => onJoin(room)}
                     >
-                        加入
+                        {t('ROOM_JOIN')}
                     </Button>
                 </div>
             </CardContent>
