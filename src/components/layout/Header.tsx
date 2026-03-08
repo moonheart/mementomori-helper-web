@@ -31,12 +31,12 @@ export function Header() {
     const [status, setStatus] = useState<UserStatusDtoInfo | null>(null);
     const [serverTimeStr, setServerTimeStr] = useState('--:--:--');
 
-    const languages: { code: string; labelKey: string }[] = [
-        { code: 'zhCN', labelKey: 'LANGUAGE_ZH_CN' },
-        { code: 'zhTW', labelKey: 'LANGUAGE_ZH_TW' },
-        { code: 'enUS', labelKey: 'LANGUAGE_EN_US' },
-        { code: 'jaJP', labelKey: 'LANGUAGE_JA_JP' },
-        { code: 'koKR', labelKey: 'LANGUAGE_KO_KR' }
+    const languages: { code: string; label: string }[] = [
+        { code: 'zhCN', label: '简体中文' },
+        { code: 'zhTW', label: '繁體中文' },
+        { code: 'enUS', label: 'English' },
+        { code: 'jaJP', label: '日本語' },
+        { code: 'koKR', label: '한국어' }
     ];
 
     // 获取用户数据，并初始化时间偏移
@@ -163,7 +163,7 @@ export function Header() {
                                     onClick={() => setLanguage(lang.code)}
                                     className={currentLanguage === lang.code ? 'bg-accent' : ''}
                                 >
-                                    {t(lang.labelKey)}
+                                    {lang.label}
                                 </DropdownMenuItem>
                             ))}
                         </DropdownMenuContent>
