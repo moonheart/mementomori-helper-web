@@ -54,15 +54,20 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
     const [resultItems, setResultItems] = useState<PresentReceiveItemResponse['resultItems'] | null>(null);
     const { t: localize } = useLocalizationStore();
     const { t } = useTranslation();
+    const currentLanguage = useLocalizationStore(state => state.currentLanguage);
     const { data: itemTable } = useMasterTable<ItemMB>('ItemTable');
     const masterTables = { ItemTable: itemTable ?? undefined };
+
+    const getLanguageType = useCallback(() => {
+        return LanguageType[currentLanguage as keyof typeof LanguageType] ?? LanguageType.zhCN;
+    }, [currentLanguage]);
 
     const fetchPresents = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
             const resp = await ortegaApi.present.getList({
-                languageType: LanguageType.zhCN,
+                languageType: getLanguageType(),
             }) as PresentGetListResponse;
             setPresents(resp?.userPresentDtoInfos ?? []);
         } catch (err) {
@@ -90,7 +95,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
         try {
             setActionLoading(present.guid);
             const resp = await ortegaApi.present.receiveItem({
-                languageType: LanguageType.zhCN,
+                languageType: getLanguageType(),
                 presentGuid: present.guid,
             }) as PresentReceiveItemResponse;
 
@@ -112,7 +117,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
         try {
             setActionLoading('all');
             const resp = await ortegaApi.present.receiveItem({
-                languageType: LanguageType.zhCN,
+                languageType: getLanguageType(),
                 presentGuid: null!,
             }) as PresentReceiveItemResponse;
             if (resp?.resultItems?.length) {

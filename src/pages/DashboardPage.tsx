@@ -28,6 +28,7 @@ import { PresentBoxDialog } from '@/components/present/PresentBoxDialog';
 export function DashboardPage() {
     const navigate = useNavigate();
     const { t } = useLocalizationStore();
+    const currentLanguage = useLocalizationStore(state => state.currentLanguage);
     const [userData, setUserData] = useState<UserSyncData | null>(null);
     const [mypageData, setMypageData] = useState<UserGetMypageResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -37,13 +38,15 @@ export function DashboardPage() {
     const [leaderboardOpen, setLeaderboardOpen] = useState(false);
     const [presentBoxOpen, setPresentBoxOpen] = useState(false);
 
+    const getLanguageType = () => LanguageType[currentLanguage as keyof typeof LanguageType] ?? LanguageType.zhCN;
+
     useEffect(() => {
         async function fetchData() {
             try {
                 setIsLoading(true);
                 const [userResponse, mypageResponse] = await Promise.all([
                     ortegaApi.user.getUserData({}) as Promise<UserGetUserDataResponse>,
-                    ortegaApi.user.getMypage({ languageType: LanguageType.zhCN }) as Promise<UserGetMypageResponse>
+                    ortegaApi.user.getMypage({ languageType: getLanguageType() }) as Promise<UserGetMypageResponse>
                 ]);
                 if (userResponse && userResponse.userSyncData) {
                     setUserData(userResponse.userSyncData);

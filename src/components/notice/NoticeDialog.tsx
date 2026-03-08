@@ -15,6 +15,7 @@ import { NoticeGetMyPageNoticeInfoListResponse } from '@/api/generated/Noticeget
 import { LanguageType } from '@/api/generated/languageType';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLocalizationStore } from '@/store/localization-store';
 
 interface NoticeDialogProps {
     open: boolean;
@@ -23,12 +24,15 @@ interface NoticeDialogProps {
 
 export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
     const { t } = useTranslation();
+    const currentLanguage = useLocalizationStore(state => state.currentLanguage);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventList, setEventList] = useState<NoticeInfo[]>([]);
     const [noticeList, setNoticeList] = useState<NoticeInfo[]>([]);
     const [selectedNotice, setSelectedNotice] = useState<NoticeInfo | null>(null);
     const [activeTab, setActiveTab] = useState<'event' | 'notice'>('event');
+
+    const getLanguageType = () => LanguageType[currentLanguage as keyof typeof LanguageType] ?? LanguageType.zhCN;
 
     useEffect(() => {
         if (open) {
@@ -51,7 +55,7 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
             setLoading(true);
             setError(null);
             const response = await ortegaApi.notice.getMypageNoticeInfoList({
-                languageType: LanguageType.zhCN,
+                languageType: getLanguageType(),
             }) as NoticeGetMyPageNoticeInfoListResponse;
 
             const events = response?.eventInfoList ?? [];

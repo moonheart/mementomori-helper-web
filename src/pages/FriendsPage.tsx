@@ -25,6 +25,7 @@ import { LanguageType } from '@/api/generated/languageType';
 import { PlayerInfo } from '@/api/generated/playerInfo';
 import { useTimeManager } from '@/hooks/useTimeManager';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useLocalizationStore } from '@/store/localization-store';
 import { AssetManager } from '@/lib/asset-manager';
 import { parseOrtegaError } from '@/lib/errorHandler';
 import { PlayerInfoDialog } from '@/components/player/PlayerInfoDialog';
@@ -52,6 +53,7 @@ interface FriendStats {
 export function FriendsPage() {
     const timeManager = useTimeManager();
     const { t } = useTranslation();
+    const currentLanguage = useLocalizationStore(state => state.currentLanguage);
     const [activeTab, setActiveTab] = useState('friends');
     const [searchId, setSearchId] = useState('');
     const [searching, setSearching] = useState(false);
@@ -59,6 +61,8 @@ export function FriendsPage() {
     const [actionLoading, setActionLoading] = useState<number | string | null>(null);
     const [playerDialogOpen, setPlayerDialogOpen] = useState(false);
     const [playerDialogTarget, setPlayerDialogTarget] = useState<PlayerInfo | null>(null);
+
+    const getLanguageType = useCallback(() => LanguageType[currentLanguage as keyof typeof LanguageType] ?? LanguageType.zhCN, [currentLanguage]);
 
     // 各类玩家列表
     const [friends, setFriends] = useState<FriendPlayerInfo[]>([]);
@@ -115,7 +119,7 @@ export function FriendsPage() {
         try {
             const friendRes = await ortegaApi.friend.getPlayerInfoList({
                 friendInfoType: FriendInfoType.Friend,
-                languageType: LanguageType.zhCN
+                languageType: getLanguageType()
             });
 
             const processedFriends = (friendRes.playerInfoList || []).map(f => {
@@ -151,7 +155,7 @@ export function FriendsPage() {
         try {
             const pendingRes = await ortegaApi.friend.getPlayerInfoList({
                 friendInfoType: FriendInfoType.ApprovalPending,
-                languageType: LanguageType.zhCN
+                languageType: getLanguageType()
             });
             setPendingRequests(pendingRes.playerInfoList || []);
         } catch (error) {
@@ -169,11 +173,11 @@ export function FriendsPage() {
             const [applyingRes, recommendRes] = await Promise.all([
                 ortegaApi.friend.getPlayerInfoList({
                     friendInfoType: FriendInfoType.Applying,
-                    languageType: LanguageType.zhCN
+                    languageType: getLanguageType()
                 }),
                 ortegaApi.friend.getPlayerInfoList({
                     friendInfoType: FriendInfoType.Recommend,
-                    languageType: LanguageType.zhCN
+                    languageType: getLanguageType()
                 })
             ]);
             setSentRequests(applyingRes.playerInfoList || []);
@@ -192,7 +196,7 @@ export function FriendsPage() {
         try {
             const blockRes = await ortegaApi.friend.getPlayerInfoList({
                 friendInfoType: FriendInfoType.Block,
-                languageType: LanguageType.zhCN
+                languageType: getLanguageType()
             });
             setBlockedPlayers(blockRes.playerInfoList || []);
             setStats(prev => ({
