@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Sword,
     Zap,
@@ -17,25 +20,46 @@ import {
     Shield,
     Coins,
     BookOpen,
-    Loader2
+    Loader2,
+    Play,
+    Square,
+    RefreshCw
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
+import { backgroundTaskApi } from '@/api/background-task-service';
+import { createJobHubConnection } from '@/api/signalr-client';
 import { useMasterTable } from '@/hooks/useMasterData';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAccountStore } from '@/store/accountStore';
 import { UserSyncData } from '@/api/generated/userSyncData';
 import { UserBattleAutoDtoInfo } from '@/api/generated/userBattleAutoDtoInfo';
 import { QuestMB } from '@/api/generated/questMB';
 import { ChapterMB } from '@/api/generated/chapterMB';
+import { BackgroundTaskStatus } from '@/api/generated/backgroundTaskStatus';
 import { toast } from '@/hooks/use-toast';
 import { QuestQuickExecuteType } from '@/api/generated/questQuickExecuteType';
 import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
+import type { HubConnection } from '@microsoft/signalr';
 
 export function BattlePage() {
     const { t } = useTranslation();
+    const { currentAccountId } = useAccountStore();
     const [userData, setUserData] = useState<UserSyncData | null>(null);
     const [battleAutoData, setBattleAutoData] = useState<UserBattleAutoDtoInfo | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentTime, setCurrentTime] = useState(Date.now());
+
+    // 自动刷主线状态
+    const [taskStatus, setTaskStatus] = useState<BackgroundTaskStatus | null>(null);
+    const [targetQuestId, setTargetQuestId] = useState<string>('0');
+    const [bossLogs, setBossLogs] = useState<string[]>([]);
+    const jobHubRef = useRef<HubConnection | null>(null);
+    const logEndRef = useRef<HTMLDivElement>(null);
+
+    // 日志自动滚动到底部
+    useEffect(() => {
+        logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [bossLogs]);
 
     // 加载 Master 数据
     const { data: questTable } = useMasterTable<QuestMB>('QuestTable');
@@ -71,6 +95,72 @@ export function BattlePage() {
         const timer = setInterval(() => setCurrentTime(Date.now()), 60000);
         return () => clearInterval(timer);
     }, []);
+
+    // 获取后台任务状态
+    const fetchTaskStatus = async () => {
+        if (!currentAccountId) return;
+        try {
+            const status = await backgroundTaskApi.getStatus(currentAccountId);
+            setTaskStatus(status);
+        } catch (error) {
+            console.error('Failed to fetch task status:', error);
+        }
+    };
+
+    // SignalR 连接用于接收日志
+    useEffect(() => {
+        if (!currentAccountId) return;
+
+        const connection = createJobHubConnection(currentAccountId, (message) => {
+            setBossLogs(prev => [...prev.slice(-99), message]);
+        });
+
+        connection.start()
+            .then(() => {
+                jobHubRef.current = connection;
+                console.log('JobHub connected');
+            })
+            .catch(err => console.error('JobHub connection error:', err));
+
+        return () => {
+            connection.stop();
+            jobHubRef.current = null;
+        };
+    }, [currentAccountId]);
+
+    useEffect(() => {
+        fetchTaskStatus();
+        // 每5秒刷新一次状态
+        const interval = setInterval(fetchTaskStatus, 5000);
+        return () => clearInterval(interval);
+    }, [currentAccountId]);
+
+    // 开始自动刷主线
+    const handleStartAutoBoss = async () => {
+        if (!currentAccountId) return;
+        try {
+            const target = parseInt(targetQuestId) || 0;
+            await backgroundTaskApi.startAutoBoss(currentAccountId, target > 0 ? target : undefined);
+            toast({ title: '任务已启动', description: '自动刷主线任务已开始' });
+            fetchTaskStatus();
+        } catch (error) {
+            console.error('Failed to start auto boss:', error);
+            toast({ title: '启动失败', description: '无法启动自动刷主线任务', variant: 'destructive' });
+        }
+    };
+
+    // 停止自动刷主线
+    const handleStopAutoBoss = async () => {
+        if (!currentAccountId) return;
+        try {
+            await backgroundTaskApi.stopAutoBoss(currentAccountId);
+            toast({ title: '任务已停止', description: '自动刷主线任务已停止' });
+            fetchTaskStatus();
+        } catch (error) {
+            console.error('Failed to stop auto boss:', error);
+            toast({ title: '停止失败', description: '无法停止自动刷主线任务', variant: 'destructive' });
+        }
+    };
 
     // 计算逻辑
     const maxQuestId = userData?.userBattleBossDtoInfo?.bossClearMaxQuestId || 0;
@@ -125,6 +215,38 @@ export function BattlePage() {
         return { total, byRegion: stats };
     }, [questTable, chapterTable, maxQuestId, t]);
 
+    // 自动刷主线目标关卡选项（显示未来50个关卡）
+    const targetQuestOptions = useMemo(() => {
+        if (!questTable || questTable.length === 0) return [];
+
+        // 解析 Memo 格式 "章节-关卡号" 用于排序
+        const parseMemo = (memo: string): [number, number] => {
+            if (!memo) return [0, 0];
+            const parts = memo.split('-');
+            if (parts.length === 2) {
+                return [parseInt(parts[0]) || 0, parseInt(parts[1]) || 0];
+            }
+            return [0, 0];
+        };
+
+        return [...questTable]
+            .filter(q => q.baseBattlePower > 0 && q.id > maxQuestId)
+            .sort((a, b) => {
+                // 先按 chapterId 排序，再按 Memo 中的关卡号排序
+                if (a.chapterId !== b.chapterId) {
+                    return a.chapterId - b.chapterId;
+                }
+                const [, stageA] = parseMemo(a.memo);
+                const [, stageB] = parseMemo(b.memo);
+                return stageA - stageB;
+            })
+            .slice(0, 50)
+            .map(q => ({
+                id: q.id,
+                name: q.memo || `关卡 ${q.id}`
+            }));
+    }, [questTable, maxQuestId]);
+
     // 关卡列表显示逻辑（当前关卡前后5关）
     const displayStages = useMemo(() => {
         if (!questTable || questTable.length === 0) return [];
@@ -136,27 +258,18 @@ export function BattlePage() {
         const end = Math.min(sortedQuests.length, centerIndex + 3);
 
         return sortedQuests.slice(start, end).map(q => {
-            const chapter = chapterTable?.find(c => c.id === q.chapterId);
-            const chapterNameKey = chapter?.nameKey;
-            const translatedChapterName = chapterNameKey ? t(chapterNameKey) : '';
-            const chapterName = chapterNameKey && translatedChapterName !== chapterNameKey
-                ? translatedChapterName
-                : `章节 ${q.chapterId}`;
-
-            const stageNumber = q.id % 100 || 100;
-            const questNameKey = `[QuestName${q.id}]`;
-            const translatedQuestName = t(questNameKey);
-            const questName = translatedQuestName !== questNameKey ? translatedQuestName : '';
+            // 优先使用 Memo 字段（格式如 "8-96"）
+            const displayName = q.memo || `关卡 ${q.id}`;
 
             return {
                 id: q.id,
-                name: questName ? `${q.chapterId}-${stageNumber} ${questName}` : `${chapterName} ${q.chapterId}-${stageNumber}`,
+                name: displayName,
                 cleared: q.id <= maxQuestId,
                 stars: q.id <= maxQuestId ? 3 : 0,
                 power: q.baseBattlePower
             };
         });
-    }, [questTable, chapterTable, maxQuestId, t]);
+    }, [questTable, maxQuestId]);
 
     // 操作处理
     const handleClaimReward = async () => {
@@ -375,8 +488,9 @@ export function BattlePage() {
 
             {/* 关卡列表与领民数据 */}
             <Tabs defaultValue="stages" className="space-y-4">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="stages">关卡进度</TabsTrigger>
+                    <TabsTrigger value="autoboss">自动刷主线</TabsTrigger>
                     <TabsTrigger value="stats">{t('[DialogAutoBattleStatisticsTabBattle]')}</TabsTrigger>
                     <TabsTrigger value="citizens">{t('[DialogAutoBattleStatisticsTabPopulation]')}</TabsTrigger>
                 </TabsList>
@@ -448,6 +562,138 @@ export function BattlePage() {
                                 </CardContent>
                             </Card>
                         ))}
+                    </div>
+                </TabsContent>
+
+                {/* 自动刷主线 */}
+                <TabsContent value="autoboss" className="space-y-4">
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* 控制面板 */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Play className="h-5 w-5" />
+                                    {t('AUTO_BOSS_TITLE')}
+                                </CardTitle>
+                                <CardDescription>
+                                    {t('AUTO_BOSS_DESC')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>{t('AUTO_BOSS_TARGET_QUEST')}</Label>
+                                    <div className="flex gap-2 items-center">
+                                        <Select
+                                            value={targetQuestId}
+                                            onValueChange={setTargetQuestId}
+                                            disabled={taskStatus?.isAutoBossRunning || false}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('AUTO_BOSS_TARGET_QUEST_PLACEHOLDER')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="0">{t('AUTO_BOSS_UNLIMITED')}</SelectItem>
+                                                {targetQuestOptions.map(quest => (
+                                                    <SelectItem key={quest.id} value={quest.id.toString()}>
+                                                        {quest.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={loadUserData}
+                                            title={t('AUTO_BOSS_REFRESH')}
+                                        >
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('AUTO_BOSS_TARGET_QUEST_HINT')}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        className="flex-1"
+                                        onClick={handleStartAutoBoss}
+                                        disabled={taskStatus?.isAutoBossRunning || false}
+                                    >
+                                        <Play className="mr-2 h-4 w-4" />
+                                        {t('AUTO_BOSS_START')}
+                                    </Button>
+                                    <Button
+                                        className="flex-1"
+                                        variant="destructive"
+                                        onClick={handleStopAutoBoss}
+                                        disabled={!taskStatus?.isAutoBossRunning}
+                                    >
+                                        <Square className="mr-2 h-4 w-4" />
+                                        {t('AUTO_BOSS_STOP')}
+                                    </Button>
+                                </div>
+
+                                {/* 状态显示 */}
+                                {taskStatus?.autoBossProgress && (
+                                    <div className="mt-4 p-3 bg-muted rounded-lg space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">{t('AUTO_BOSS_STATUS')}</span>
+                                            <Badge variant={taskStatus.isAutoBossRunning ? "default" : "secondary"}>
+                                                {taskStatus.isAutoBossRunning ? t('AUTO_BOSS_RUNNING') : t('AUTO_BOSS_STOPPED')}
+                                            </Badge>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div>
+                                                <div className="text-lg font-bold">{taskStatus.autoBossProgress.totalCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_BOSS_TOTAL_COUNT')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-green-600">{taskStatus.autoBossProgress.winCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_BOSS_WIN_COUNT')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-red-600">{taskStatus.autoBossProgress.errorCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_BOSS_ERROR_COUNT')}</div>
+                                            </div>
+                                        </div>
+                                        {taskStatus.autoBossProgress.currentQuestId > 0 && (
+                                            <div className="text-sm">
+                                                {t('AUTO_BOSS_CURRENT_QUEST').replace('{0}', taskStatus.autoBossProgress.currentQuestId.toString())}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* 日志面板 */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BookOpen className="h-5 w-5" />
+                                    {t('AUTO_BOSS_LOG_TITLE')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ScrollArea className="h-[300px]">
+                                    {bossLogs.length > 0 ? (
+                                        <div className="space-y-1 font-mono text-sm">
+                                            {bossLogs.map((log, index) => (
+                                                <div key={index} className="p-1 hover:bg-muted rounded">
+                                                    {log}
+                                                </div>
+                                            ))}
+                                            <div ref={logEndRef} />
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-muted-foreground py-8">
+                                            {t('AUTO_BOSS_NO_LOGS')}
+                                        </div>
+                                    )}
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
                     </div>
                 </TabsContent>
 

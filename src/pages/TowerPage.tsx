@@ -1,10 +1,13 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
     Building2,
     Flame,
@@ -18,9 +21,14 @@ import {
     BookOpen,
     Sparkles,
     Loader2,
-    Zap
+    Zap,
+    Play,
+    Square,
+    RefreshCw
 } from 'lucide-react';
 import { ortegaApi } from '@/api/ortega-client';
+import { backgroundTaskApi } from '@/api/background-task-service';
+import { createJobHubConnection } from '@/api/signalr-client';
 import { toast } from '@/hooks/use-toast';
 import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharacterGroupType';
 import { useMasterTable } from '@/hooks/useMasterData';
@@ -28,8 +36,11 @@ import { TowerBattleQuestMB } from '@/api/generated/towerBattleQuestMB';
 import { TowerType } from '@/api/generated/towerType';
 import { UserTowerBattleDtoInfo } from '@/api/generated/userTowerBattleDtoInfo';
 import { UserItem } from '@/api/generated/userItem';
+import { BackgroundTaskStatus } from '@/api/generated/backgroundTaskStatus';
 import { useItemName } from '@/hooks/useItemName';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAccountStore } from '@/store/accountStore';
+import type { HubConnection } from '@microsoft/signalr';
 
 // 塔类型配置
 type TowerConfig = {
@@ -83,9 +94,23 @@ const TOWER_CONFIGS: Record<number, TowerConfig> = {
 export function TowerPage() {
     const { t } = useTranslation();
     const { getItemName } = useItemName();
+    const { currentAccountId } = useAccountStore();
     const [userTowerProgress, setUserTowerProgress] = useState<UserTowerBattleDtoInfo[]>([]);
     const [loading, setLoading] = useState(true);
     const { data: towerQuests, loading: masterLoading } = useMasterTable<TowerBattleQuestMB>('TowerBattleQuestTable');
+
+    // 自动爬塔状态
+    const [taskStatus, setTaskStatus] = useState<BackgroundTaskStatus | null>(null);
+    const [selectedTowerType, setSelectedTowerType] = useState<TowerType>(TowerType.Infinite);
+    const [targetFloor, setTargetFloor] = useState<string>('0');
+    const [towerLogs, setTowerLogs] = useState<string[]>([]);
+    const jobHubRef = useRef<HubConnection | null>(null);
+    const logEndRef = useRef<HTMLDivElement>(null);
+
+    // 日志自动滚动到底部
+    useEffect(() => {
+        logEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [towerLogs]);
 
     // 获取各塔的所有楼层并按 Floor 升序排列
     const allTowerQuests = useMemo(() => {
@@ -119,6 +144,24 @@ export function TowerPage() {
         return available;
     }, []);
 
+    // 获取选中塔的最大已通关层数
+    const maxClearedFloor = useMemo(() => {
+        const progress = userTowerProgress.find(p => p.towerType === selectedTowerType);
+        return progress?.maxTowerBattleId || 0;
+    }, [userTowerProgress, selectedTowerType]);
+
+    // 目标层数选项（显示未来50层）
+    const targetFloorOptions = useMemo(() => {
+        const quests = allTowerQuests[selectedTowerType] || [];
+        return quests
+            .filter(q => q.floor > maxClearedFloor)
+            .slice(0, 50)
+            .map(q => ({
+                floor: q.floor,
+                name: `第 ${q.floor} 层`
+            }));
+    }, [allTowerQuests, selectedTowerType, maxClearedFloor]);
+
     const fetchUserData = async (silent = false) => {
         try {
             if (!silent) setLoading(true);
@@ -136,6 +179,72 @@ export function TowerPage() {
     useEffect(() => {
         fetchUserData();
     }, []);
+
+    // 获取后台任务状态
+    const fetchTaskStatus = async () => {
+        if (!currentAccountId) return;
+        try {
+            const status = await backgroundTaskApi.getStatus(currentAccountId);
+            setTaskStatus(status);
+        } catch (error) {
+            console.error('Failed to fetch task status:', error);
+        }
+    };
+
+    // SignalR 连接用于接收日志
+    useEffect(() => {
+        if (!currentAccountId) return;
+
+        const connection = createJobHubConnection(currentAccountId, (message) => {
+            setTowerLogs(prev => [...prev.slice(-99), message]);
+        });
+
+        connection.start()
+            .then(() => {
+                jobHubRef.current = connection;
+                console.log('JobHub connected');
+            })
+            .catch(err => console.error('JobHub connection error:', err));
+
+        return () => {
+            connection.stop();
+            jobHubRef.current = null;
+        };
+    }, [currentAccountId]);
+
+    useEffect(() => {
+        fetchTaskStatus();
+        // 每5秒刷新一次状态
+        const interval = setInterval(fetchTaskStatus, 5000);
+        return () => clearInterval(interval);
+    }, [currentAccountId]);
+
+    // 开始自动爬塔
+    const handleStartAutoTower = async () => {
+        if (!currentAccountId) return;
+        try {
+            const target = parseInt(targetFloor) || 0;
+            await backgroundTaskApi.startAutoTower(currentAccountId, selectedTowerType, target > 0 ? target : undefined);
+            toast({ title: '任务已启动', description: '自动爬塔任务已开始' });
+            fetchTaskStatus();
+        } catch (error) {
+            console.error('Failed to start auto tower:', error);
+            toast({ title: '启动失败', description: '无法启动自动爬塔任务', variant: 'destructive' });
+        }
+    };
+
+    // 停止自动爬塔
+    const handleStopAutoTower = async () => {
+        if (!currentAccountId) return;
+        try {
+            await backgroundTaskApi.stopAutoTower(currentAccountId);
+            toast({ title: '任务已停止', description: '自动爬塔任务已停止' });
+            fetchTaskStatus();
+        } catch (error) {
+            console.error('Failed to stop auto tower:', error);
+            toast({ title: '停止失败', description: '无法停止自动爬塔任务', variant: 'destructive' });
+        }
+    };
 
     const handleChallenge = async (type: TowerType, questId: number) => {
         try {
@@ -224,9 +333,10 @@ export function TowerPage() {
     return (
         <div className="space-y-6">
             <Tabs defaultValue="infinite" className="space-y-6">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="infinite">{t('[TowerTypeInfinite]')}</TabsTrigger>
                     <TabsTrigger value="elemental">属性塔</TabsTrigger>
+                    <TabsTrigger value="auto">自动爬塔</TabsTrigger>
                 </TabsList>
 
                 {/* 无穷之塔 */}
@@ -534,6 +644,186 @@ export function TowerPage() {
                             </div>
                         </CardContent>
                     </Card>
+                </TabsContent>
+
+                {/* 自动爬塔 */}
+                <TabsContent value="auto" className="space-y-6">
+                    <div className="grid gap-6 md:grid-cols-2">
+                        {/* 控制面板 */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Play className="h-5 w-5" />
+                                    {t('AUTO_TOWER_TITLE')}
+                                </CardTitle>
+                                <CardDescription>
+                                    {t('AUTO_TOWER_DESC')}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label>{t('AUTO_TOWER_SELECT_TYPE')}</Label>
+                                    <Select
+                                        value={selectedTowerType.toString()}
+                                        onValueChange={(value) => setSelectedTowerType(Number(value) as TowerType)}
+                                        disabled={taskStatus?.isAutoTowerRunning || false}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder={t('AUTO_TOWER_SELECT_TYPE_PLACEHOLDER')} />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableTowers.includes(TowerType.Infinite) && (
+                                                <SelectItem value={TowerType.Infinite.toString()}>{t('AUTO_TOWER_INFINITE')}</SelectItem>
+                                            )}
+                                            {availableTowers.includes(TowerType.Blue) && (
+                                                <SelectItem value={TowerType.Blue.toString()}>{t('AUTO_TOWER_BLUE')}</SelectItem>
+                                            )}
+                                            {availableTowers.includes(TowerType.Red) && (
+                                                <SelectItem value={TowerType.Red.toString()}>{t('AUTO_TOWER_RED')}</SelectItem>
+                                            )}
+                                            {availableTowers.includes(TowerType.Green) && (
+                                                <SelectItem value={TowerType.Green.toString()}>{t('AUTO_TOWER_GREEN')}</SelectItem>
+                                            )}
+                                            {availableTowers.includes(TowerType.Yellow) && (
+                                                <SelectItem value={TowerType.Yellow.toString()}>{t('AUTO_TOWER_YELLOW')}</SelectItem>
+                                            )}
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('AUTO_TOWER_DAILY_LIMIT_HINT')}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <Label>{t('AUTO_TOWER_TARGET_FLOOR')}</Label>
+                                    <div className="flex gap-2 items-center">
+                                        <Select
+                                            value={targetFloor}
+                                            onValueChange={setTargetFloor}
+                                            disabled={taskStatus?.isAutoTowerRunning || false}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder={t('AUTO_TOWER_TARGET_FLOOR_PLACEHOLDER')} />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="0">{t('AUTO_TOWER_UNLIMITED')}</SelectItem>
+                                                {targetFloorOptions.map(opt => (
+                                                    <SelectItem key={opt.floor} value={opt.floor.toString()}>
+                                                        {opt.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={() => fetchUserData(true)}
+                                            title={t('AUTO_TOWER_REFRESH')}
+                                        >
+                                            <RefreshCw className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                    <p className="text-xs text-muted-foreground">
+                                        {t('AUTO_TOWER_CLEARED_FLOOR').replace('{0}', maxClearedFloor.toString())}
+                                    </p>
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <Button
+                                        className="flex-1"
+                                        onClick={handleStartAutoTower}
+                                        disabled={taskStatus?.isAutoTowerRunning || false}
+                                    >
+                                        <Play className="mr-2 h-4 w-4" />
+                                        {t('AUTO_TOWER_START')}
+                                    </Button>
+                                    <Button
+                                        className="flex-1"
+                                        variant="destructive"
+                                        onClick={handleStopAutoTower}
+                                        disabled={!taskStatus?.isAutoTowerRunning}
+                                    >
+                                        <Square className="mr-2 h-4 w-4" />
+                                        {t('AUTO_TOWER_STOP')}
+                                    </Button>
+                                </div>
+
+                                {/* 状态显示 */}
+                                {taskStatus?.autoTowerProgress && (
+                                    <div className="mt-4 p-3 bg-muted rounded-lg space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">{t('AUTO_TOWER_STATUS')}</span>
+                                            <Badge variant={taskStatus.isAutoTowerRunning ? "default" : "secondary"}>
+                                                {taskStatus.isAutoTowerRunning ? t('AUTO_TOWER_RUNNING') : t('AUTO_TOWER_STOPPED')}
+                                            </Badge>
+                                        </div>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">{t('AUTO_TOWER_TOWER_TYPE')}</span>
+                                            <span className="font-medium">
+                                                {taskStatus.autoTowerProgress.towerType === TowerType.Infinite ? t('AUTO_TOWER_INFINITE') :
+                                                 taskStatus.autoTowerProgress.towerType === TowerType.Blue ? t('AUTO_TOWER_BLUE') :
+                                                 taskStatus.autoTowerProgress.towerType === TowerType.Red ? t('AUTO_TOWER_RED') :
+                                                 taskStatus.autoTowerProgress.towerType === TowerType.Green ? t('AUTO_TOWER_GREEN') :
+                                                 taskStatus.autoTowerProgress.towerType === TowerType.Yellow ? t('AUTO_TOWER_YELLOW') : t('AUTO_TOWER_UNKNOWN')}
+                                            </span>
+                                        </div>
+                                        <div className="grid grid-cols-3 gap-2 text-center">
+                                            <div>
+                                                <div className="text-lg font-bold">{taskStatus.autoTowerProgress.totalCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_TOWER_TOTAL_COUNT')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-green-600">{taskStatus.autoTowerProgress.winCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_TOWER_WIN_COUNT')}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-lg font-bold text-red-600">{taskStatus.autoTowerProgress.errorCount}</div>
+                                                <div className="text-xs text-muted-foreground">{t('AUTO_TOWER_ERROR_COUNT')}</div>
+                                            </div>
+                                        </div>
+                                        {taskStatus.autoTowerProgress.currentFloor > 0 && (
+                                            <div className="text-sm">
+                                                {t('AUTO_TOWER_CURRENT_FLOOR').replace('{0}', taskStatus.autoTowerProgress.currentFloor.toString())}
+                                            </div>
+                                        )}
+                                        {taskStatus.autoTowerProgress.towerType !== TowerType.Infinite && (
+                                            <div className="text-sm text-muted-foreground">
+                                                {t('AUTO_TOWER_TODAY_CLEAR').replace('{0}', taskStatus.autoTowerProgress.todayClearCount.toString())}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
+                        {/* 日志面板 */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <BookOpen className="h-5 w-5" />
+                                    {t('AUTO_TOWER_LOG_TITLE')}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ScrollArea className="h-[400px]">
+                                    {towerLogs.length > 0 ? (
+                                        <div className="space-y-1 font-mono text-sm">
+                                            {towerLogs.map((log, index) => (
+                                                <div key={index} className="p-1 hover:bg-muted rounded">
+                                                    {log}
+                                                </div>
+                                            ))}
+                                            <div ref={logEndRef} />
+                                        </div>
+                                    ) : (
+                                        <div className="text-center text-muted-foreground py-8">
+                                            {t('AUTO_TOWER_NO_LOGS')}
+                                        </div>
+                                    )}
+                                </ScrollArea>
+                            </CardContent>
+                        </Card>
+                    </div>
                 </TabsContent>
             </Tabs>
         </div>

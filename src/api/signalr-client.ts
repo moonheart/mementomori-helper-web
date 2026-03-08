@@ -60,4 +60,23 @@ class SignalRService {
     }
 }
 
+/**
+ * 创建 JobHub 连接用于接收后台任务日志
+ */
+export function createJobHubConnection(userId: number, onReceiveLog: (message: string) => void) {
+    const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+    const hubUrl = `${baseUrl}/hubs/jobs?userId=${userId}`;
+
+    const connection = new signalR.HubConnectionBuilder()
+        .withUrl(hubUrl)
+        .withAutomaticReconnect()
+        .build();
+
+    connection.on('ReceiveLog', (data: { time: string; level: string; message: string }) => {
+        onReceiveLog(data.message);
+    });
+
+    return connection;
+}
+
 export const signalRService = new SignalRService();
