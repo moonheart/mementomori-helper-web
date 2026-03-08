@@ -19,7 +19,7 @@ export function SetBonusDisplay({ setId, equippedPieces }: SetBonusDisplayProps)
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="font-semibold">{setData.name}</h3>
-                    <p className="text-sm text-muted-foreground">{t('EQUIPMENT_SET_BONUS')}</p>
+                    <p className="text-sm text-muted-foreground">{t('[CharacterEquipmentSeriesEffect]')}</p>
                 </div>
                 <Badge variant="secondary">
                     {t('EQUIPMENT_SET_PIECES_EQUIPPED', [String(equippedPieces)])}

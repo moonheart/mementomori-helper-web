@@ -158,7 +158,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                 <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-base">
                         <Gift className="h-4 w-4 text-red-500" />
-                        {t('PRESENT_BOX_TITLE')}
+                        {t('[MyPagePresentBoxButtonTitle]')}
                         {presents.length > 0 && (
                             <Badge variant="secondary" className="ml-1 text-xs">
                                 {t('PRESENT_BOX_ITEM_COUNT', [String(presents.length)])}
@@ -211,7 +211,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
 
                             {/* 注脚提示 */}
                             <p className="px-4 pt-3 text-[11px] text-red-500 shrink-0">
-                                {t('PRESENT_BOX_EXPIRY_NOTICE')}
+                                {t('[MyPagePresentBoxWarning]')}
                             </p>
 
                             {/* 礼物列表 */}
@@ -250,11 +250,11 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                             {/* 标题行 */}
                                                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                                 <span className="text-sm font-medium leading-snug truncate">
-                                                                    {present.title || t('PRESENT_BOX_GIFT')}
+                                                                    {present.title || t('[MyPageMenuButtonPresentBoxLabel]')}
                                                                 </span>
                                                                 {present.isReceived && (
                                                                     <Badge variant="outline" className="text-[10px] h-4 px-1 text-muted-foreground shrink-0">
-                                                                        {t('PRESENT_BOX_RECEIVED')}
+                                                                        {t('[GuildTowerFloorRewardStatusReceived]')}
                                                                     </Badge>
                                                                 )}
                                                             </div>
@@ -312,7 +312,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                                 {isReceiving ? (
                                                                     <Loader2 className="h-3 w-3 animate-spin" />
                                                                 ) : (
-                                                                    t('PRESENT_BOX_RECEIVE')
+                                                                    t('[MyPagePresentBoxButtonReceive]')
                                                                 )}
                                                             </Button>
                                                         )}
@@ -341,7 +341,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                             ) : (
                                 <Trash2 className="h-3 w-3 mr-1.5" />
                             )}
-                            {t('PRESENT_BOX_DELETE_READ')}
+                            {t('[MyPagePresentBoxButtonAllDelete]')}
                             {receivedCount > 0 && <span className="ml-1 text-muted-foreground">({receivedCount})</span>}
                         </Button>
                         <Button
@@ -356,7 +356,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                             ) : (
                                 <CheckCheck className="h-3 w-3 mr-1.5" />
                             )}
-                            {t('PRESENT_BOX_RECEIVE_ALL')}
+                            {t('[PopularityVoteRewardBulkReceiveLabel]')}
                             {pendingCount > 0 && <span className="ml-1 opacity-80">({pendingCount})</span>}
                         </Button>
                     </div>

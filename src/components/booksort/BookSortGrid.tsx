@@ -106,7 +106,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                 <div className="flex items-center justify-between mb-4 bg-background/50 p-3 rounded-lg border">
                     <div className="flex items-center gap-3">
                         <span className="text-xl font-bold tracking-widest text-primary drop-shadow-sm">
-                            {translate('BOOKSORT_GRID_FLOOR', [String(currentFloor)])}
+                            {translate('[DialogCommonFormationTowerBattleQuestNameFormat]', [String(currentFloor)])}
                         </span>
                         {/* Floor progression visual (simplified) */}
                         <div className="flex items-center gap-1 ml-4 opacity-80">
@@ -162,7 +162,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                                                     ))}
                                                 </div>
                                                 <Button size="sm" variant="default" className="shrink-0 shadow-[0_0_10px_rgba(var(--primary),0.3)] bg-gradient-to-r from-primary to-primary/80">
-                                                    {translate('BOOKSORT_GRID_SELECT')}
+                                                    {translate('[ItemBoxButtonSelect]')}
                                                 </Button>
                                             </CardContent>
                                         </Card>

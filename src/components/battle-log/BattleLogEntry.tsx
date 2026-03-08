@@ -15,8 +15,8 @@ const effectTypeKeys: Record<number, string> = {
     // 增益效果
     [EffectType.SpeedUp]: 'BATTLE_LOG_EFFECT_SPEED_UP',
     [EffectType.MaxHpUp]: 'BATTLE_LOG_EFFECT_MAX_HP_UP',
-    [EffectType.AttackPowerUp]: 'BATTLE_LOG_EFFECT_ATTACK_POWER_UP',
-    [EffectType.DefenseUp]: 'BATTLE_LOG_EFFECT_DEFENSE_UP',
+    [EffectType.AttackPowerUp]: '[EffectGroupName550000000600101]',
+    [EffectType.DefenseUp]: '[EffectGroupName550000000700101]',
     [EffectType.PhysicalDamageRelaxUp]: 'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP',
     [EffectType.MagicDamageRelaxUp]: 'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP',
     [EffectType.DamageEnhanceUp]: 'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP',
@@ -42,14 +42,14 @@ const effectTypeKeys: Record<number, string> = {
     [EffectType.DamageGuard]: 'BATTLE_LOG_EFFECT_DAMAGE_GUARD',
     [EffectType.Shield1]: 'BATTLE_LOG_EFFECT_SHIELD1_BUFF',
     [EffectType.Shield2]: 'BATTLE_LOG_EFFECT_SHIELD2_BUFF',
-    [EffectType.DebuffGuard]: 'BATTLE_LOG_EFFECT_DEBUFF_GUARD',
-    [EffectType.ConfuseActionDebuffGuard]: 'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD',
-    [EffectType.Taunt]: 'BATTLE_LOG_EFFECT_TAUNT',
+    [EffectType.DebuffGuard]: '[SkillDescriptionLinkText5]',
+    [EffectType.ConfuseActionDebuffGuard]: '[SkillDescriptionLinkText6]',
+    [EffectType.Taunt]: '[SkillDescriptionLinkText8]',
     [EffectType.Stealth]: 'BATTLE_LOG_EFFECT_STEALTH',
     [EffectType.NonTarget]: 'BATTLE_LOG_EFFECT_NON_TARGET',
     [EffectType.HealOverTime]: 'BATTLE_LOG_EFFECT_HEAL_OVER_TIME',
-    [EffectType.Immortal]: 'BATTLE_LOG_EFFECT_IMMORTAL',
-    [EffectType.BuffCover]: 'BATTLE_LOG_EFFECT_BUFF_COVER',
+    [EffectType.Immortal]: '[SkillDescriptionLinkText13]',
+    [EffectType.BuffCover]: '[SkillDescriptionLinkText16]',
     [EffectType.NonHit]: 'BATTLE_LOG_EFFECT_NON_HIT',
 
     // 减益效果
@@ -77,9 +77,9 @@ const effectTypeKeys: Record<number, string> = {
     [EffectType.CriticalResistRateDown]: 'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN',
 
     // 控制效果
-    [EffectType.Stun]: 'BATTLE_LOG_EFFECT_STUN',
+    [EffectType.Stun]: '[SkillDescriptionLinkText7]',
     [EffectType.Confuse]: 'BATTLE_LOG_EFFECT_CONFUSE',
-    [EffectType.Silence]: 'BATTLE_LOG_EFFECT_SILENCE',
+    [EffectType.Silence]: '[SkillDescriptionLinkText19]',
     [EffectType.Stubborn]: 'BATTLE_LOG_EFFECT_STUBBORN',
 
     // 持续伤害
@@ -89,7 +89,7 @@ const effectTypeKeys: Record<number, string> = {
     [EffectType.Burn]: 'BATTLE_LOG_EFFECT_BURN',
     [EffectType.HpRecoveryForbidden]: 'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN',
     [EffectType.AvoidanceForbidden]: 'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN',
-    [EffectType.BuffForbidden]: 'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN',
+    [EffectType.BuffForbidden]: '[SkillDescriptionLinkText29]',
 
     // 共鸣/献身
     [EffectType.DamageResonanceFromSelfAndDamageReduction]: 'BATTLE_LOG_EFFECT_RESONANCE_SELF',
@@ -106,7 +106,7 @@ const skillDisplayTypeKeys: Record<SkillDisplayType, string> = {
     [SkillDisplayType.MagicAttack]: 'BATTLE_LOG_SKILL_MAGIC_ATTACK',
     [SkillDisplayType.PhysicalDirectDamage]: 'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE',
     [SkillDisplayType.MagicDirectDamage]: 'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE',
-    [SkillDisplayType.HpDrain]: 'BATTLE_LOG_SKILL_HP_DRAIN',
+    [SkillDisplayType.HpDrain]: '[BattleParameterTypeHpDrain]',
     [SkillDisplayType.Buff]: 'BATTLE_LOG_SKILL_BUFF',
     [SkillDisplayType.DeBuff]: 'BATTLE_LOG_SKILL_DEBUFF',
     [SkillDisplayType.PhysicalCounterAttack]: 'BATTLE_LOG_SKILL_PHYSICAL_COUNTER',
@@ -116,7 +116,7 @@ const skillDisplayTypeKeys: Record<SkillDisplayType, string> = {
     [SkillDisplayType.RemoveEffect]: 'BATTLE_LOG_SKILL_REMOVE_EFFECT',
     [SkillDisplayType.BurstEffect]: 'BATTLE_LOG_SKILL_BURST_EFFECT',
     [SkillDisplayType.SelfInjuryDamage]: 'BATTLE_LOG_SKILL_SELF_INJURY',
-    [SkillDisplayType.Resurrection]: 'BATTLE_LOG_SKILL_RESURRECTION',
+    [SkillDisplayType.Resurrection]: '[DungeonBattleGridName12]',
     [SkillDisplayType.SilenceHeal]: 'BATTLE_LOG_SKILL_SILENCE_HEAL',
 };
 
@@ -139,7 +139,7 @@ function CharacterName({ character }: { character: CharacterState | null }) {
     );
 
     if (!character) {
-        return <span>{t('BATTLE_LOG_UNKNOWN')}</span>;
+        return <span>{t('[CharacterBloodTypeNone]')}</span>;
     }
 
     const isAttacker = character.groupType === BattleFieldCharacterGroupType.Attacker;
@@ -200,8 +200,8 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
             if (hitType === undefined || hitType === HitType.Hit) return null;
             switch (hitType) {
                 case HitType.Ignore: return t('BATTLE_LOG_IGNORE_DEFENSE');
-                case HitType.Miss: return t('BATTLE_LOG_MISS');
-                case HitType.Critical: return t('BATTLE_LOG_CRITICAL');
+                case HitType.Miss: return t('[SphereCategoryTypeAvoidance]');
+                case HitType.Critical: return t('[BattleParameterTypeCritical]');
                 case HitType.Shield1: return t('BATTLE_LOG_SHIELD1');
                 case HitType.Shield1Critical: return t('BATTLE_LOG_SHIELD1_CRITICAL');
                 case HitType.Shield2: return t('BATTLE_LOG_SHIELD2');
@@ -233,7 +233,7 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                     return (
                         <div className="flex items-center gap-2 flex-wrap">
                             <CharacterName character={sourceChar} />
-                            <span className="text-muted-foreground">{t('BATTLE_LOG_USE_SKILL')}</span>
+                            <span className="text-muted-foreground">{t('[ItemBoxButtonUse]')}</span>
                             <span className="text-primary font-medium">{activeSkillName}</span>
                         </div>
                     );

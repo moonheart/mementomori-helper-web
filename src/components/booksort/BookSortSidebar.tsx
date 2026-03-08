@@ -111,18 +111,18 @@ export function BookSortSidebar({
                     <div className="grid grid-cols-3 gap-2 shrink-0">
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors" onClick={onOpenDispatch}>
                             <Users className="w-5 h-5 text-blue-400" />
-                            <span className="text-xs font-medium">{t('BOOKSORT_DISPATCH_HELPERS')}</span>
+                            <span className="text-xs font-medium">{t('[BookAssistTitle]')}</span>
                         </Button>
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors relative" onClick={() => setShowMissionsDialog(true)}>
                             <CheckSquare className="w-5 h-5 text-green-400" />
-                            <span className="text-xs font-medium">{t('BOOKSORT_MISSIONS')}</span>
+                            <span className="text-xs font-medium">{t('[BookSortMissionButtonLabel]')}</span>
                             {claimableCount > 0 && (
                                 <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full animate-bounce" />
                             )}
                         </Button>
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors" onClick={onOpenShop}>
                             <Store className="w-5 h-5 text-orange-400" />
-                            <span className="text-xs font-medium">{t('BOOKSORT_SHOP')}</span>
+                            <span className="text-xs font-medium">{t('[BookSortShopButtonLabel]')}</span>
                         </Button>
                     </div>
 

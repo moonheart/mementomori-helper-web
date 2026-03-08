@@ -82,7 +82,7 @@ export function BookSortMissionsDialog({ open, onOpenChange, missionData, onFetc
             <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col pt-8">
                 <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-2">
                     <div>
-                        <DialogTitle className="text-2xl font-bold">{t('BOOKSORT_DIALOG_MISSIONS_TITLE')}</DialogTitle>
+                        <DialogTitle className="text-2xl font-bold">{t('[BookSortMissionTitle]')}</DialogTitle>
                         <p className="text-sm text-muted-foreground mt-1">{t('BOOKSORT_DIALOG_MISSIONS_DESC')}</p>
                     </div>
                     {claimableCount > 0 && (

@@ -56,7 +56,7 @@ export function BattleLogModal({
                                     isWin ? "text-yellow-500" : "text-gray-400"
                                 )} />
                                 <div>
-                                    <DialogTitle className="text-lg">{t('BATTLE_LOG_MODAL_TITLE')}</DialogTitle>
+                                    <DialogTitle className="text-lg">{t('[BattleReportTitle]')}</DialogTitle>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
                                         <span>{t('BATTLE_LOG_MODAL_TURNS', [String(battleEndInfo.endTurn)])}</span>
                                     </div>
@@ -89,7 +89,7 @@ export function BattleLogModal({
                         <div className="flex justify-center gap-4 mt-6">
                             <Button variant="outline" onClick={onClose}>
                                 <X className="w-4 h-4 mr-1" />
-                                {t('BATTLE_LOG_MODAL_CLOSE')}
+                                {t('[CommonCloseLabel]')}
                             </Button>
                             <Button
                                 variant="default"
@@ -98,7 +98,7 @@ export function BattleLogModal({
                                 onClick={() => setIsReplayOpen(true)}
                             >
                                 <Play className="w-4 h-4 mr-1" />
-                                {t('BATTLE_LOG_MODAL_REPLAY')}
+                                {t('[CommonPlayLabel]')}
                             </Button>
                         </div>
                     </ScrollArea>

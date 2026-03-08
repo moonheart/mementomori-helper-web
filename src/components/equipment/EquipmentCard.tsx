@@ -87,7 +87,7 @@ export function EquipmentCard({
                 <div className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg">
                     <span className="text-sm font-medium flex items-center gap-1">
                         <Swords className="w-4 h-4" />
-                        {t('EQUIPMENT_COMBAT_POWER')}
+                        {t('[RankingGuildBattlePowerLabel]')}
                     </span>
                     <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                         {equipment.power.toLocaleString()}
@@ -97,7 +97,7 @@ export function EquipmentCard({
                 {/* 强化等级 */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                     <div className="flex flex-col items-center p-1.5 bg-muted rounded">
-                        <span className="text-muted-foreground">{t('EQUIPMENT_ENHANCE')}</span>
+                        <span className="text-muted-foreground">{t('[CommonReinforcementStrengthenLabel]')}</span>
                         <span className="font-semibold">{equipment.reinforcementLv || 0}</span>
                     </div>
                     <div className="flex flex-col items-center p-1.5 bg-muted rounded">
@@ -116,7 +116,7 @@ export function EquipmentCard({
                         {/* 基础属性 */}
                         {equipment.master?.battleParameterChangeInfo && (
                             <div className="flex-1 space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">{t('EQUIPMENT_BASE_STATS')}</div>
+                                <div className="text-xs text-muted-foreground font-medium">{t('[CharacterEquipmentBasicEffect]')}</div>
                                 <div className="flex justify-between text-xs bg-muted/50 px-2 py-1 rounded">
                                     <span className="text-muted-foreground truncate">
                                         {formatStatName(equipment.master.battleParameterChangeInfo.battleParameterType)}
@@ -134,7 +134,7 @@ export function EquipmentCard({
                         {/* 符石插槽 */}
                         {runeUsage.total > 0 && (
                             <div className={`space-y-1 ${equipment.master?.battleParameterChangeInfo ? 'w-auto' : 'flex-1'}`}>
-                                <div className="text-xs text-muted-foreground font-medium">{t('EQUIPMENT_RUNE')}</div>
+                                <div className="text-xs text-muted-foreground font-medium">{t('[CommonSphereLabel]')}</div>
                                 <div className="flex items-center gap-1">
                                     {[...Array(runeUsage.total)].map((_, index) => {
                                         const categoryId = equipment.sphereCategoryIds?.[index];
@@ -150,7 +150,7 @@ export function EquipmentCard({
                                                 {hasSphere ? (
                                                     <img
                                                         src={SphereIconManager.getTinyUrl(categoryId)}
-                                                        alt={t('EQUIPMENT_RUNE')}
+                                                        alt={t('[CommonSphereLabel]')}
                                                         className="w-4 h-4 object-contain"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).style.display = 'none';
@@ -181,7 +181,7 @@ export function EquipmentCard({
                             }}
                         >
                             <XCircle className="w-4 h-4 mr-1" />
-                            {t('EQUIPMENT_UNEQUIP')}
+                            {t('[EquipmentRemoveButton]')}
                         </Button>
                     ) : (
                         <Button
@@ -193,7 +193,7 @@ export function EquipmentCard({
                                 onEquip?.(equipment);
                             }}
                         >
-                            {t('EQUIPMENT_EQUIP')}
+                            {t('[CommonEquipmentLabel]')}
                         </Button>
                     )}
 

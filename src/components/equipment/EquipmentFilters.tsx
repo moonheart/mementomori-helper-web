@@ -113,10 +113,10 @@ export function EquipmentFilters({
                         <SelectValue placeholder={t('EQUIPMENT_FILTER_SORT')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="power">{t('EQUIPMENT_FILTER_SORT_POWER')}</SelectItem>
-                        <SelectItem value="rarity">{t('EQUIPMENT_FILTER_SORT_RARITY')}</SelectItem>
-                        <SelectItem value="level">{t('EQUIPMENT_FILTER_SORT_LEVEL')}</SelectItem>
-                        <SelectItem value="enhance">{t('EQUIPMENT_FILTER_SORT_ENHANCE')}</SelectItem>
+                        <SelectItem value="power">{t('[RankingGuildBattlePowerLabel]')}</SelectItem>
+                        <SelectItem value="rarity">{t('[CharacterSortTypeRarity]')}</SelectItem>
+                        <SelectItem value="level">{t('[RankingGuildLevelLabel]')}</SelectItem>
+                        <SelectItem value="enhance">{t('[EquipmentInheritanceCheckboxReinforcementLevel]')}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -139,7 +139,7 @@ export function EquipmentFilters({
             {/* 部位筛选 */}
             <Tabs value={selectedSlot.toString()} onValueChange={(value) => onSlotChange(value === 'all' ? 'all' : parseInt(value))}>
                 <TabsList className="grid w-full grid-cols-7">
-                    <TabsTrigger value="all">{t('EQUIPMENT_FILTER_ALL')}</TabsTrigger>
+                    <TabsTrigger value="all">{t('[CommonAllLabel]')}</TabsTrigger>
                     {slotOptions.map(slot => (
                         <TabsTrigger key={slot} value={slot.toString()}>
                             <span className="mr-1">{getSlotIcon(slot)}</span>
@@ -177,9 +177,9 @@ export function EquipmentFilters({
                         <label className="text-sm font-medium">{t('EQUIPMENT_FILTER_EQUIPMENT_STATUS')}</label>
                         <Tabs value={equippedFilter} onValueChange={(value: string) => onEquippedFilterChange(value as EquippedFilterOption)}>
                             <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="all">{t('EQUIPMENT_FILTER_ALL')}</TabsTrigger>
+                                <TabsTrigger value="all">{t('[CommonAllLabel]')}</TabsTrigger>
                                 <TabsTrigger value="equipped">{t('EQUIPMENT_FILTER_EQUIPPED')}</TabsTrigger>
-                                <TabsTrigger value="unequipped">{t('EQUIPMENT_FILTER_UNEQUIPPED')}</TabsTrigger>
+                                <TabsTrigger value="unequipped">{t('[CommonNotEquippingLabel]')}</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>

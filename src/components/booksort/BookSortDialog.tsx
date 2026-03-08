@@ -34,9 +34,9 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
     const { getItemName, masterTables } = useItemName();
 
     const getUnlockItemDescription = (type: number) => {
-        if (!masterTables.ItemTable) return translate('BOOKSORT_DIALOG_CLEANING_TOOLS');
+        if (!masterTables.ItemTable) return translate('[BookSortItemListHeaderLabel]');
         const itemMb = masterTables.ItemTable.find(m => m.itemType === ItemType.BookSortGridCellUnlockItem && m.itemId === type);
-        return itemMb ? (t(itemMb.descriptionKey) || itemMb.memo) : translate('BOOKSORT_DIALOG_CLEANING_TOOLS');
+        return itemMb ? (t(itemMb.descriptionKey) || itemMb.memo) : translate('[BookSortItemListHeaderLabel]');
     };
 
     const getUnlockItemName = (type: number) => {
@@ -108,7 +108,7 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
                     if (result.rewardUserItemList && result.rewardUserItemList.length > 0) {
                         result.rewardUserItemList.forEach((item) => {
                             toast({
-                                title: translate('BOOKSORT_DIALOG_OBTAINED_ITEM'),
+                                title: translate('[DialogItemAcquisitionTitle]'),
                                 description: translate('BOOKSORT_DIALOG_OBTAINED_ITEM_DESC', [getItemName(item.itemType, item.itemId), String(item.itemCount)]),
                             });
                         });
@@ -204,7 +204,7 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
 
                 Object.values(rewardSummary).forEach((item) => {
                     toast({
-                        title: translate('BOOKSORT_DIALOG_OBTAINED_ITEM'),
+                        title: translate('[DialogItemAcquisitionTitle]'),
                         description: translate('BOOKSORT_DIALOG_OBTAINED_ITEM_DESC', [item.name, String(item.count)]),
                     });
                 });
@@ -246,14 +246,14 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-5xl h-[80vh] flex flex-col p-0 overflow-hidden bg-[url('/assets/textures/booksort-bg.jpg')] bg-cover bg-center border-primary/20">
-                <DialogTitle className="sr-only">{translate('BOOKSORT_DIALOG_TITLE')}</DialogTitle>
+                <DialogTitle className="sr-only">{translate('[BookSortMainViewControllerTitle]')}</DialogTitle>
                 <DialogDescription className="sr-only">{translate('BOOKSORT_DIALOG_DESCRIPTION')}</DialogDescription>
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 bg-background/80 border-b">
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-1 bg-primary rounded-full" />
-                        <h2 className="text-xl font-bold tracking-wider">{translate('BOOKSORT_DIALOG_TITLE')}</h2>
+                        <h2 className="text-xl font-bold tracking-wider">{translate('[BookSortMainViewControllerTitle]')}</h2>
                     </div>
                 </div>
 
