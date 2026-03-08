@@ -8,6 +8,7 @@ import { BattleTeamStats } from './BattleTeamStats';
 import { BattleReplayModal } from './BattleReplayModal';
 import { Trophy, X, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleLogModalProps {
     isOpen: boolean;
@@ -20,6 +21,7 @@ export function BattleLogModal({
     onClose,
     battleData
 }: BattleLogModalProps) {
+    const { t } = useTranslation();
     const [isReplayOpen, setIsReplayOpen] = useState(false);
 
     if (!battleData) return null;
@@ -36,8 +38,8 @@ export function BattleLogModal({
     );
 
     // 获取队伍名称
-    const attackerName = attackerCharacters[0]?.playerName || '我方';
-    const defenderName = defenderCharacters[0]?.playerName || '敌方';
+    const attackerName = attackerCharacters[0]?.playerName || t('BATTLE_LOG_MODAL_ALLY_TEAM');
+    const defenderName = defenderCharacters[0]?.playerName || t('BATTLE_LOG_MODAL_ENEMY_TEAM');
 
     // 检查是否有战斗日志数据
     const hasBattleLog = battleData.battleLog?.battleSubLogs && battleData.battleLog.battleSubLogs.length > 0;
@@ -54,9 +56,9 @@ export function BattleLogModal({
                                     isWin ? "text-yellow-500" : "text-gray-400"
                                 )} />
                                 <div>
-                                    <DialogTitle className="text-lg">战斗记录</DialogTitle>
+                                    <DialogTitle className="text-lg">{t('BATTLE_LOG_MODAL_TITLE')}</DialogTitle>
                                     <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                        <span>回合数: {battleEndInfo.endTurn}</span>
+                                        <span>{t('BATTLE_LOG_MODAL_TURNS', [String(battleEndInfo.endTurn)])}</span>
                                     </div>
                                 </div>
                             </div>
@@ -87,16 +89,16 @@ export function BattleLogModal({
                         <div className="flex justify-center gap-4 mt-6">
                             <Button variant="outline" onClick={onClose}>
                                 <X className="w-4 h-4 mr-1" />
-                                关闭
+                                {t('BATTLE_LOG_MODAL_CLOSE')}
                             </Button>
                             <Button
                                 variant="default"
                                 disabled={!hasBattleLog}
-                                title={hasBattleLog ? "观看战斗重播" : "无战斗日志数据"}
+                                title={hasBattleLog ? t('BATTLE_LOG_MODAL_REPLAY_TOOLTIP') : t('BATTLE_LOG_MODAL_NO_LOG')}
                                 onClick={() => setIsReplayOpen(true)}
                             >
                                 <Play className="w-4 h-4 mr-1" />
-                                重播
+                                {t('BATTLE_LOG_MODAL_REPLAY')}
                             </Button>
                         </div>
                     </ScrollArea>

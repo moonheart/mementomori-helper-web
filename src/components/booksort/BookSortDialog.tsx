@@ -15,6 +15,7 @@ import { useItemName } from '@/hooks/useItemName';
 import { BookSortBookSortUnlockGridCellResponse } from '@/api/generated/BookSortbookSortUnlockGridCellResponse';
 import { BookSortBookSortUpFloorResponse } from '@/api/generated/BookSortbookSortUpFloorResponse';
 import { BookSortBookSortBulkUnlockGridCellResponse } from '@/api/generated/BookSortbookSortBulkUnlockGridCellResponse';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BookSortDialogProps {
     open: boolean;
@@ -23,6 +24,7 @@ interface BookSortDialogProps {
 
 export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
     const { t } = useLocalizationStore();
+    const { t: translate } = useTranslation();
     const [isLoading, setIsLoading] = useState(false);
     const [isUnlocking, setIsUnlocking] = useState(false);
     const [syncData, setSyncData] = useState<BookSortSyncData | null>(null);
@@ -32,9 +34,9 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
     const { getItemName, masterTables } = useItemName();
 
     const getUnlockItemDescription = (type: number) => {
-        if (!masterTables.ItemTable) return "清扫道具";
+        if (!masterTables.ItemTable) return translate('BOOKSORT_DIALOG_CLEANING_TOOLS');
         const itemMb = masterTables.ItemTable.find(m => m.itemType === ItemType.BookSortGridCellUnlockItem && m.itemId === type);
-        return itemMb ? (t(itemMb.descriptionKey) || itemMb.memo) : "清扫道具";
+        return itemMb ? (t(itemMb.descriptionKey) || itemMb.memo) : translate('BOOKSORT_DIALOG_CLEANING_TOOLS');
     };
 
     const getUnlockItemName = (type: number) => {
@@ -106,8 +108,8 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
                     if (result.rewardUserItemList && result.rewardUserItemList.length > 0) {
                         result.rewardUserItemList.forEach((item) => {
                             toast({
-                                title: "获得道具",
-                                description: `获得了 ${getItemName(item.itemType, item.itemId)} x${item.itemCount}`,
+                                title: translate('BOOKSORT_DIALOG_OBTAINED_ITEM'),
+                                description: translate('BOOKSORT_DIALOG_OBTAINED_ITEM_DESC', [getItemName(item.itemType, item.itemId), String(item.itemCount)]),
                             });
                         });
                     }
@@ -202,8 +204,8 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
 
                 Object.values(rewardSummary).forEach((item) => {
                     toast({
-                        title: "获得道具",
-                        description: `获得了 ${item.name} x${item.count}`,
+                        title: translate('BOOKSORT_DIALOG_OBTAINED_ITEM'),
+                        description: translate('BOOKSORT_DIALOG_OBTAINED_ITEM_DESC', [item.name, String(item.count)]),
                     });
                 });
             }
@@ -244,14 +246,14 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-5xl h-[80vh] flex flex-col p-0 overflow-hidden bg-[url('/assets/textures/booksort-bg.jpg')] bg-cover bg-center border-primary/20">
-                <DialogTitle className="sr-only">魔女的书库大扫除</DialogTitle>
-                <DialogDescription className="sr-only">书库大扫除活动弹窗</DialogDescription>
+                <DialogTitle className="sr-only">{translate('BOOKSORT_DIALOG_TITLE')}</DialogTitle>
+                <DialogDescription className="sr-only">{translate('BOOKSORT_DIALOG_DESCRIPTION')}</DialogDescription>
 
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 bg-background/80 border-b">
                     <div className="flex items-center gap-3">
                         <div className="h-8 w-1 bg-primary rounded-full" />
-                        <h2 className="text-xl font-bold tracking-wider">魔女的书库大扫除</h2>
+                        <h2 className="text-xl font-bold tracking-wider">{translate('BOOKSORT_DIALOG_TITLE')}</h2>
                     </div>
                 </div>
 
@@ -261,7 +263,7 @@ export function BookSortDialog({ open, onOpenChange }: BookSortDialogProps) {
                         <div className="flex-1 flex items-center justify-center bg-background/50">
                             <div className="text-center space-y-4">
                                 <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
-                                <p className="text-sm text-muted-foreground animate-pulse tracking-widest">进入书库中...</p>
+                                <p className="text-sm text-muted-foreground animate-pulse tracking-widest">{translate('BOOKSORT_DIALOG_ENTERING')}</p>
                             </div>
                         </div>
                     ) : (

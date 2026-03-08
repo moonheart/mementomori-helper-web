@@ -18,6 +18,7 @@ import { LoginDailyRewardInfo } from '@/api/generated/loginDailyRewardInfo';
 import { LoginCountRewardInfo } from '@/api/generated/loginCountRewardInfo';
 import { useMasterData } from '@/hooks/useMasterData';
 import { useItemName } from '@/hooks/useItemName';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import { cn } from '@/lib/utils';
 
@@ -33,6 +34,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
     const [receivingDay, setReceivingDay] = useState<number | null>(null);
     const [receiveSuccess, setReceiveSuccess] = useState<{day: number, items: string} | null>(null);
     const [selectedDay, setSelectedDay] = useState<number | null>(null);
+    const { t } = useTranslation();
     const { getItemName, isLoading: isItemNameLoading } = useItemName();
 
     // 获取当前月份的 Master 数据
@@ -79,7 +81,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
             setInfo(response);
         } catch (err) {
             console.error('Failed to fetch monthly login bonus info:', err);
-            setError('获取签到信息失败');
+            setError(t('LOGIN_BONUS_FETCH_FAILED'));
         } finally {
             setLoading(false);
         }
@@ -103,7 +105,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
             setTimeout(() => setReceiveSuccess(null), 3000);
         } catch (err) {
             console.error('Failed to receive daily login bonus:', err);
-            setError('领取奖励失败');
+            setError(t('LOGIN_BONUS_CLAIM_FAILED'));
             setTimeout(() => setError(null), 3000);
         }
 
@@ -131,7 +133,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Gift className="h-5 w-5 text-yellow-500" />
-                        每月签到奖励
+                        {t('LOGIN_BONUS_MONTHLY_TITLE')}
                         {monthlyBonusMb && (
                             <Badge variant="secondary">{monthlyBonusMb.yearMonth}</Badge>
                         )}
@@ -146,7 +148,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                     <div className="flex items-center gap-2 p-3 rounded-lg bg-green-50 border border-green-200 dark:bg-green-950 dark:border-green-800 text-green-700 dark:text-green-300">
                         <PartyPopper className="h-5 w-5" />
                         <span className="text-sm">
-                            成功领取第 {receiveSuccess.day} 天奖励: {receiveSuccess.items}
+                            {t('LOGIN_BONUS_CLAIM_SUCCESS', [String(receiveSuccess.day), receiveSuccess.items])}
                         </span>
                     </div>
                 )}
@@ -154,7 +156,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                 {isAllLoading ? (
                     <div className="flex items-center justify-center py-8">
                         <Loader2 className="h-6 w-6 animate-spin" />
-                        <span className="ml-2">加载中...</span>
+                        <span className="ml-2">{t('COMMON_LOADING')}</span>
                     </div>
                 ) : (
                     <div className="space-y-6">
@@ -184,7 +186,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                                                                 : "bg-card border-border hover:bg-primary/5"
                                             )}
                                         >
-                                            <div className="text-xs text-muted-foreground mb-1">第{day}天</div>
+                                            <div className="text-xs text-muted-foreground mb-1">{t('LOGIN_BONUS_DAY', [String(day)])}</div>
                                             <div className="font-medium text-xs sm:text-sm leading-tight min-h-10 flex items-center justify-center">
                                                 {getItemName(reward.rewardItem.itemType, reward.rewardItem.itemId)}
                                             </div>
@@ -198,7 +200,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                                             )}
                                             {isToday && !received && (
                                                 <div className="absolute -top-1 -right-1">
-                                                    <Badge variant="destructive" className="text-[10px] h-4 px-1">今</Badge>
+                                                    <Badge variant="destructive" className="text-[10px] h-4 px-1">{t('LOGIN_BONUS_TODAY')}</Badge>
                                                 </div>
                                             )}
                                             {isSelected && !received && (
@@ -210,19 +212,17 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                                     );
                                 })}
                             </div>
-                            <div className="mt-4 text-sm text-muted-foreground text-center">
-                                本月已累计签到 <span className="font-bold text-primary">{info?.receivedDailyRewardDayList?.length ?? 0}</span> 天
-                                {selectedDay && !isReceivedDaily(selectedDay) && (
-                                    <span className="ml-2">
-                                        · 已选择第 <span className="font-bold text-primary">{selectedDay}</span> 天
-                                    </span>
-                                )}
-                            </div>
+                            <div className="mt-4 text-sm text-muted-foreground text-center" dangerouslySetInnerHTML={{ __html: t('LOGIN_BONUS_MONTHLY_PROGRESS', [String(info?.receivedDailyRewardDayList?.length ?? 0)]) }} />
+                            {selectedDay && !isReceivedDaily(selectedDay) && (
+                                <div className="text-sm text-muted-foreground text-center">
+                                    <span className="ml-2" dangerouslySetInnerHTML={{ __html: t('LOGIN_BONUS_SELECTED_DAY', [String(selectedDay)]) }} />
+                                </div>
+                            )}
                         </div>
 
                         {/* 累计签到 */}
                         <div>
-                            <h4 className="text-sm font-medium text-muted-foreground mb-3">累计签到奖励</h4>
+                            <h4 className="text-sm font-medium text-muted-foreground mb-3">{t('LOGIN_BONUS_CUMULATIVE_TITLE')}</h4>
                             <div className="grid grid-cols-4 gap-3">
                                 {rewardListMb?.loginCountRewardList?.map((reward: LoginCountRewardInfo) => {
                                     const received = isReceivedCount(reward.dayCount);
@@ -249,7 +249,7 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                                                         ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                                                         : "bg-muted text-muted-foreground"
                                             )}>
-                                                {reward.dayCount}天
+                                                {t('LOGIN_BONUS_DAYS', [String(reward.dayCount)])}
                                             </div>
 
                                             {/* 奖励列表 */}
@@ -267,12 +267,12 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                                                 {received ? (
                                                     <div className="flex items-center justify-center gap-1 text-green-600 text-xs">
                                                         <Check className="h-3 w-3" />
-                                                        <span>已领取</span>
+                                                        <span>{t('LOGIN_BONUS_RECEIVED')}</span>
                                                     </div>
                                                 ) : canReceive ? (
-                                                    <Badge variant="default" className="text-xs">可领取</Badge>
+                                                    <Badge variant="default" className="text-xs">{t('LOGIN_BONUS_CLAIMABLE')}</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-xs text-muted-foreground">未达成</Badge>
+                                                    <Badge variant="outline" className="text-xs text-muted-foreground">{t('LOGIN_BONUS_NOT_ACHIEVED')}</Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -287,21 +287,21 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                     <div className="text-sm text-muted-foreground">
                         {selectedDay ? (
                             isReceivedDaily(selectedDay) ? (
-                                <span className="text-green-600">第 {selectedDay} 天奖励已领取</span>
+                                <span className="text-green-600">{t('LOGIN_BONUS_DAY_RECEIVED', [String(selectedDay)])}</span>
                             ) : selectedDay === today ? (
-                                <span>准备领取第 {selectedDay} 天奖励</span>
+                                <span>{t('LOGIN_BONUS_DAY_READY', [String(selectedDay)])}</span>
                             ) : selectedDay < today ? (
-                                <span className="text-gray-500">第 {selectedDay} 天奖励已过期</span>
+                                <span className="text-gray-500">{t('LOGIN_BONUS_DAY_EXPIRED', [String(selectedDay)])}</span>
                             ) : (
-                                <span className="text-gray-500">第 {selectedDay} 天奖励还未到领取时间</span>
+                                <span className="text-gray-500">{t('LOGIN_BONUS_DAY_NOT_READY', [String(selectedDay)])}</span>
                             )
                         ) : (
-                            <span>点击选择要领取的奖励</span>
+                            <span>{t('LOGIN_BONUS_CLICK_TO_SELECT')}</span>
                         )}
                     </div>
                     <div className="flex gap-2">
                         <Button variant="outline" onClick={() => onOpenChange(false)}>
-                            关闭
+                            {t('COMMON_CLOSE')}
                         </Button>
                         <Button
                             onClick={() => selectedDay && receiveDailyReward(selectedDay)}
@@ -310,10 +310,10 @@ export function MonthlyLoginBonusDialog({ open, onOpenChange }: MonthlyLoginBonu
                             {receivingDay !== null && receivingDay === selectedDay ? (
                                 <>
                                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                                    领取中...
+                                    {t('LOGIN_BONUS_CLAIMING')}
                                 </>
                             ) : (
-                                '领取奖励'
+                                t('LOGIN_BONUS_CLAIM')
                             )}
                         </Button>
                     </div>

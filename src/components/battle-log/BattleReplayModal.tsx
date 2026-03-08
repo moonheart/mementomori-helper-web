@@ -7,15 +7,16 @@ import { useBattleReplay } from '@/hooks/useBattleReplay';
 import { BattleCharacterAvatar } from './BattleCharacterAvatar';
 import { BattleLogPanel } from './BattleLogPanel';
 import { cn } from '@/lib/utils';
-import { 
-    RotateCcw, 
-    ChevronLeft, 
+import {
+    RotateCcw,
+    ChevronLeft,
     ChevronRight,
     SkipBack,
     SkipForward,
     Swords
 } from 'lucide-react';
 import { useCallback, useEffect } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleReplayModalProps {
     isOpen: boolean;
@@ -51,6 +52,7 @@ export function BattleReplayModal({
     onClose,
     battleData
 }: BattleReplayModalProps) {
+    const { t } = useTranslation();
     const {
         currentIndex,
         totalEvents,
@@ -118,31 +120,31 @@ export function BattleReplayModal({
                         {/* 标题 */}
                         <div className="flex items-center gap-2 flex-shrink-0">
                             <Swords className="w-5 h-5 text-primary" />
-                            <DialogTitle className="text-base">战斗重播</DialogTitle>
+                            <DialogTitle className="text-base">{t('BATTLE_REPLAY_TITLE')}</DialogTitle>
                         </div>
 
                         {/* 回合信息 */}
                         <div className="flex items-center gap-1 px-3 py-1 bg-background rounded-md border">
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-6 w-6"
                                 onClick={prevTurn}
                                 disabled={currentIndex <= 0}
-                                title="上一回合"
+                                title={t('BATTLE_REPLAY_PREV_TURN')}
                             >
                                 <SkipBack className="w-3.5 h-3.5" />
                             </Button>
                             <span className="text-sm font-medium px-2">
-                                回合 {currentTurn}
+                                {t('BATTLE_REPLAY_TURN', [String(currentTurn)])}
                             </span>
-                            <Button 
-                                variant="ghost" 
-                                size="icon" 
+                            <Button
+                                variant="ghost"
+                                size="icon"
                                 className="h-6 w-6"
                                 onClick={nextTurn}
                                 disabled={currentIndex >= totalEvents - 1}
-                                title="下一回合"
+                                title={t('BATTLE_REPLAY_NEXT_TURN')}
                             >
                                 <SkipForward className="w-3.5 h-3.5" />
                             </Button>
@@ -151,7 +153,7 @@ export function BattleReplayModal({
                         {/* 当前事件 */}
                         {currentEvent && (
                             <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded">
-                                {getEventLabel(currentEvent)}
+                                {getEventLabel(currentEvent, t)}
                             </span>
                         )}
 
@@ -165,7 +167,7 @@ export function BattleReplayModal({
                                 size="icon"
                                 onClick={prev}
                                 disabled={currentIndex <= 0}
-                                title="上一步 (←)"
+                                title={t('BATTLE_REPLAY_PREV_STEP')}
                                 className="h-6 w-6"
                             >
                                 <ChevronLeft className="w-4 h-4" />
@@ -178,7 +180,7 @@ export function BattleReplayModal({
                                 size="icon"
                                 onClick={next}
                                 disabled={currentIndex >= totalEvents - 1}
-                                title="下一步 (→)"
+                                title={t('BATTLE_REPLAY_NEXT_STEP')}
                                 className="h-6 w-6"
                             >
                                 <ChevronRight className="w-4 h-4" />
@@ -190,7 +192,7 @@ export function BattleReplayModal({
                             variant="outline"
                             size="icon"
                             onClick={reset}
-                            title="重置到开始"
+                            title={t('BATTLE_REPLAY_RESET')}
                             className="h-8 w-8"
                         >
                             <RotateCcw className="w-4 h-4" />
@@ -203,7 +205,7 @@ export function BattleReplayModal({
                     {/* 我方队伍 */}
                     <div className="w-[320px] space-y-2 flex-shrink-0">
                         <div className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-2">
-                            我方队伍
+                            {t('BATTLE_REPLAY_ALLY_TEAM')}
                         </div>
                         {attackerChars.map(char => (
                             <BattleCharacterAvatar
@@ -218,9 +220,9 @@ export function BattleReplayModal({
                     <div className="flex-1 relative bg-gradient-to-b from-muted/30 to-muted/50 rounded-lg h-150 flex flex-col overflow-hidden">
                         {/* 标题栏 */}
                         <div className="px-3 py-2 border-b border-border/50 bg-muted/30 flex items-center justify-between">
-                            <span className="text-xs font-medium text-muted-foreground">战斗日志</span>
+                            <span className="text-xs font-medium text-muted-foreground">{t('BATTLE_REPLAY_BATTLE_LOG')}</span>
                             <span className="text-xs text-muted-foreground">
-                                共 {totalEvents} 条记录
+                                {t('BATTLE_REPLAY_TOTAL_RECORDS', [String(totalEvents)])}
                             </span>
                         </div>
                         
@@ -267,7 +269,7 @@ export function BattleReplayModal({
                     {/* 敌方队伍 */}
                     <div className="w-[320px] space-y-2 flex-shrink-0">
                         <div className="text-xs font-medium text-red-600 dark:text-red-400 mb-2 text-right">
-                            敌方队伍
+                            {t('BATTLE_REPLAY_ENEMY_TEAM')}
                         </div>
                         {defenderChars.map(char => (
                             <BattleCharacterAvatar
@@ -304,22 +306,22 @@ export function BattleReplayModal({
 /**
  * 获取事件标签
  */
-function getEventLabel(event: { type: string; skillId?: number }): string {
+function getEventLabel(event: { type: string; skillId?: number }, t: (key: string, args?: string[]) => string): string {
     switch (event.type) {
         case 'turn_start':
-            return '回合开始';
+            return t('BATTLE_REPLAY_TURN_START');
         case 'turn_end':
-            return '回合结束';
+            return t('BATTLE_REPLAY_TURN_END');
         case 'action':
-            return `技能 #${event.skillId}`;
+            return t('BATTLE_CHARACTER_SKILL', [String(event.skillId)]);
         case 'damage':
-            return '造成伤害';
+            return t('BATTLE_REPLAY_DAMAGE');
         case 'heal':
-            return '治疗';
+            return t('BATTLE_REPLAY_HEAL');
         case 'passive':
-            return '被动触发';
+            return t('BATTLE_REPLAY_PASSIVE');
         case 'effect':
-            return '效果触发';
+            return t('BATTLE_REPLAY_EFFECT');
         default:
             return event.type;
     }

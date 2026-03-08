@@ -7,6 +7,7 @@ import { BookSortSyncData } from '@/api/generated/bookSortSyncData';
 import { BookSortMissionsDialog } from './BookSortMissionsDialog';
 import { ortegaApi } from '@/api/ortega-client';
 import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, UserMissionDtoInfo, MissionInfo } from '@/api/generated';
+import { useTranslation } from '@/hooks/useTranslation';
 
 // Simple parser for Unity rich text tags like <color=#248CA7>text</color>
 const RichTextRenderer = ({ text }: { text: string }) => {
@@ -61,6 +62,7 @@ export function BookSortSidebar({
     onOpenDispatch,
     onOpenShop
 }: BookSortSidebarProps) {
+    const { t } = useTranslation();
     const [showMissionsDialog, setShowMissionsDialog] = useState(false);
     const [missionData, setMissionData] = useState<MissionGetMissionInfoResponse | null>(null);
 
@@ -109,29 +111,29 @@ export function BookSortSidebar({
                     <div className="grid grid-cols-3 gap-2 shrink-0">
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors" onClick={onOpenDispatch}>
                             <Users className="w-5 h-5 text-blue-400" />
-                            <span className="text-xs font-medium">派遣小帮手</span>
+                            <span className="text-xs font-medium">{t('BOOKSORT_DISPATCH_HELPERS')}</span>
                         </Button>
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors relative" onClick={() => setShowMissionsDialog(true)}>
                             <CheckSquare className="w-5 h-5 text-green-400" />
-                            <span className="text-xs font-medium">任务</span>
+                            <span className="text-xs font-medium">{t('BOOKSORT_MISSIONS')}</span>
                             {claimableCount > 0 && (
                                 <span className="absolute top-1 right-1 w-3 h-3 bg-red-500 rounded-full animate-bounce" />
                             )}
                         </Button>
                         <Button variant="outline" className="flex flex-col h-auto py-3 gap-1 hover:border-primary/50 hover:bg-primary/5 transition-colors" onClick={onOpenShop}>
                             <Store className="w-5 h-5 text-orange-400" />
-                            <span className="text-xs font-medium">商城</span>
+                            <span className="text-xs font-medium">{t('BOOKSORT_SHOP')}</span>
                         </Button>
                     </div>
 
-                    <div className="text-sm font-semibold tracking-wider text-muted-foreground border-b pb-2">扫除道具</div>
+                    <div className="text-sm font-semibold tracking-wider text-muted-foreground border-b pb-2">{t('BOOKSORT_CLEANING_ITEMS')}</div>
 
                     {/* Items List */}
                     <ScrollArea className="flex-1 -mx-2 px-2">
                         <div className="space-y-2 p-1">
                             {items.length === 0 ? (
                                 <div className="text-center text-sm text-muted-foreground py-8">
-                                    暂无清扫道具
+                                    {t('BOOKSORT_NO_ITEMS')}
                                 </div>
                             ) : (
                                 items.map(item => (

@@ -14,6 +14,7 @@ import { NoticeInfo } from '@/api/generated/noticeInfo';
 import { NoticeGetMyPageNoticeInfoListResponse } from '@/api/generated/NoticegetMyPageNoticeInfoListResponse';
 import { LanguageType } from '@/api/generated/languageType';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface NoticeDialogProps {
     open: boolean;
@@ -21,6 +22,7 @@ interface NoticeDialogProps {
 }
 
 export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [eventList, setEventList] = useState<NoticeInfo[]>([]);
@@ -67,7 +69,7 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
             }
         } catch (err) {
             console.error('Failed to fetch notice list:', err);
-            setError('获取公告失败，请重试');
+            setError(t('NOTICE_DIALOG_FETCH_ERROR'));
         } finally {
             setLoading(false);
         }
@@ -141,7 +143,7 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
                 <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-base">
                         <Megaphone className="h-4 w-4 text-amber-500" />
-                        活动 &amp; 公告
+                        {t('NOTICE_DIALOG_TITLE')}
                     </DialogTitle>
                 </DialogHeader>
 
@@ -155,14 +157,14 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
                         <TabsList className="w-full">
                             <TabsTrigger value="event" className="flex-1 flex items-center gap-1.5">
                                 <Calendar className="h-3.5 w-3.5" />
-                                活动
+                                {t('NOTICE_DIALOG_EVENT_TAB')}
                                 {eventList.length > 0 && (
                                     <span className="ml-1 text-xs text-muted-foreground">({eventList.length})</span>
                                 )}
                             </TabsTrigger>
                             <TabsTrigger value="notice" className="flex-1 flex items-center gap-1.5">
                                 <Megaphone className="h-3.5 w-3.5" />
-                                公告
+                                {t('NOTICE_DIALOG_NOTICE_TAB')}
                                 {noticeList.length > 0 && (
                                     <span className="ml-1 text-xs text-muted-foreground">({noticeList.length})</span>
                                 )}
@@ -175,18 +177,18 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
                         {loading ? (
                             <div className="flex items-center justify-center h-full">
                                 <Loader2 className="h-6 w-6 animate-spin" />
-                                <span className="ml-2 text-sm text-muted-foreground">加载中...</span>
+                                <span className="ml-2 text-sm text-muted-foreground">{t('NOTICE_DIALOG_LOADING')}</span>
                             </div>
                         ) : error ? (
                             <div className="flex flex-col items-center justify-center h-full gap-3">
                                 <p className="text-sm text-destructive">{error}</p>
                                 <Button variant="outline" size="sm" onClick={fetchNoticeList}>
-                                    重试
+                                    {t('NOTICE_DIALOG_RETRY')}
                                 </Button>
                             </div>
                         ) : currentList.length === 0 ? (
                             <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                                暂无{activeTab === 'event' ? '活动' : '公告'}信息
+                                {activeTab === 'event' ? t('NOTICE_DIALOG_NO_EVENTS') : t('NOTICE_DIALOG_NO_NOTICES')}
                             </div>
                         ) : (
                             <div className="flex h-full">
@@ -237,7 +239,7 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
                                         </ScrollArea>
                                     ) : (
                                         <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-                                            请选择一条{activeTab === 'event' ? '活动' : '公告'}查看详情
+                                            {activeTab === 'event' ? t('NOTICE_DIALOG_SELECT_EVENT') : t('NOTICE_DIALOG_SELECT_NOTICE')}
                                         </div>
                                     )}
                                 </div>
@@ -249,7 +251,7 @@ export function NoticeDialog({ open, onOpenChange }: NoticeDialogProps) {
                 {/* 底部关闭按钮 */}
                 <div className="px-6 py-3 border-t shrink-0 flex justify-end">
                     <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-                        关闭
+                        {t('NOTICE_DIALOG_CLOSE')}
                     </Button>
                 </div>
             </DialogContent>

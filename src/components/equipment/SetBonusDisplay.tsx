@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Check } from 'lucide-react';
 import { mockEquipmentSets } from '@/mocks/data';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface SetBonusDisplayProps {
     setId: string;
@@ -8,6 +9,7 @@ interface SetBonusDisplayProps {
 }
 
 export function SetBonusDisplay({ setId, equippedPieces }: SetBonusDisplayProps) {
+    const { t } = useTranslation();
     const setData = mockEquipmentSets[setId];
 
     if (!setData) return null;
@@ -17,10 +19,10 @@ export function SetBonusDisplay({ setId, equippedPieces }: SetBonusDisplayProps)
             <div className="flex items-center justify-between">
                 <div>
                     <h3 className="font-semibold">{setData.name}</h3>
-                    <p className="text-sm text-muted-foreground">套装效果</p>
+                    <p className="text-sm text-muted-foreground">{t('EQUIPMENT_SET_BONUS')}</p>
                 </div>
                 <Badge variant="secondary">
-                    {equippedPieces}件装备
+                    {t('EQUIPMENT_SET_PIECES_EQUIPPED', [String(equippedPieces)])}
                 </Badge>
             </div>
 
@@ -57,11 +59,11 @@ export function SetBonusDisplay({ setId, equippedPieces }: SetBonusDisplayProps)
                                             variant={isActive ? "default" : "outline"}
                                             className="text-xs"
                                         >
-                                            {bonus.pieces}件套
+                                            {t('EQUIPMENT_SET_PIECES', [String(bonus.pieces)])}
                                         </Badge>
                                         {isActive && (
                                             <span className="text-xs text-green-600 dark:text-green-400 font-medium">
-                                                已激活
+                                                {t('EQUIPMENT_SET_ACTIVE')}
                                             </span>
                                         )}
                                     </div>

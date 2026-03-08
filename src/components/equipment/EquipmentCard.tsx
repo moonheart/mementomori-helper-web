@@ -14,6 +14,7 @@ import {
 } from '@/lib/equipmentUtils';
 import { EquipmentIconManager, SphereIconManager } from '@/lib/asset-manager';
 import { Swords, TrendingUp, XCircle } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface EquipmentCardProps {
     equipment: UIEquipment;
@@ -30,6 +31,7 @@ export function EquipmentCard({
     onEquip,
     onUnequip
 }: EquipmentCardProps) {
+    const { t } = useTranslation();
     const runeUsage = getRuneSlotUsage(equipment);
     const rarityName = getRarityName(equipment.rarity);
 
@@ -74,7 +76,7 @@ export function EquipmentCard({
                             </Badge>
                         </div>
                         {equipment.equippedByName && (
-                            <div className="text-sm text-green-600 mt-0.5">由 {equipment.equippedByName} 装备</div>
+                            <div className="text-sm text-green-600 mt-0.5">{t('EQUIPMENT_EQUIPPED_BY', [equipment.equippedByName])}</div>
                         )}
                     </div>
                 </div>
@@ -85,7 +87,7 @@ export function EquipmentCard({
                 <div className="flex items-center justify-between p-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950 dark:to-purple-950 rounded-lg">
                     <span className="text-sm font-medium flex items-center gap-1">
                         <Swords className="w-4 h-4" />
-                        战斗力
+                        {t('EQUIPMENT_COMBAT_POWER')}
                     </span>
                     <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
                         {equipment.power.toLocaleString()}
@@ -95,15 +97,15 @@ export function EquipmentCard({
                 {/* 强化等级 */}
                 <div className="grid grid-cols-3 gap-2 text-xs">
                     <div className="flex flex-col items-center p-1.5 bg-muted rounded">
-                        <span className="text-muted-foreground">强化</span>
+                        <span className="text-muted-foreground">{t('EQUIPMENT_ENHANCE')}</span>
                         <span className="font-semibold">{equipment.reinforcementLv || 0}</span>
                     </div>
                     <div className="flex flex-col items-center p-1.5 bg-muted rounded">
-                        <span className="text-muted-foreground">圣装</span>
+                        <span className="text-muted-foreground">{t('EQUIPMENT_SACRED')}</span>
                         <span className="font-semibold text-yellow-600">Lv.{equipment.legendSacredTreasureLv || 0}</span>
                     </div>
                     <div className="flex flex-col items-center p-1.5 bg-muted rounded">
-                        <span className="text-muted-foreground">魔装</span>
+                        <span className="text-muted-foreground">{t('EQUIPMENT_MAGIC')}</span>
                         <span className="font-semibold text-purple-600">Lv.{equipment.matchlessSacredTreasureLv || 0}</span>
                     </div>
                 </div>
@@ -114,7 +116,7 @@ export function EquipmentCard({
                         {/* 基础属性 */}
                         {equipment.master?.battleParameterChangeInfo && (
                             <div className="flex-1 space-y-1">
-                                <div className="text-xs text-muted-foreground font-medium">基础属性</div>
+                                <div className="text-xs text-muted-foreground font-medium">{t('EQUIPMENT_BASE_STATS')}</div>
                                 <div className="flex justify-between text-xs bg-muted/50 px-2 py-1 rounded">
                                     <span className="text-muted-foreground truncate">
                                         {formatStatName(equipment.master.battleParameterChangeInfo.battleParameterType)}
@@ -132,7 +134,7 @@ export function EquipmentCard({
                         {/* 符石插槽 */}
                         {runeUsage.total > 0 && (
                             <div className={`space-y-1 ${equipment.master?.battleParameterChangeInfo ? 'w-auto' : 'flex-1'}`}>
-                                <div className="text-xs text-muted-foreground font-medium">符石</div>
+                                <div className="text-xs text-muted-foreground font-medium">{t('EQUIPMENT_RUNE')}</div>
                                 <div className="flex items-center gap-1">
                                     {[...Array(runeUsage.total)].map((_, index) => {
                                         const categoryId = equipment.sphereCategoryIds?.[index];
@@ -148,7 +150,7 @@ export function EquipmentCard({
                                                 {hasSphere ? (
                                                     <img
                                                         src={SphereIconManager.getTinyUrl(categoryId)}
-                                                        alt="符石"
+                                                        alt={t('EQUIPMENT_RUNE')}
                                                         className="w-4 h-4 object-contain"
                                                         onError={(e) => {
                                                             (e.target as HTMLImageElement).style.display = 'none';
@@ -179,7 +181,7 @@ export function EquipmentCard({
                             }}
                         >
                             <XCircle className="w-4 h-4 mr-1" />
-                            卸下
+                            {t('EQUIPMENT_UNEQUIP')}
                         </Button>
                     ) : (
                         <Button
@@ -191,7 +193,7 @@ export function EquipmentCard({
                                 onEquip?.(equipment);
                             }}
                         >
-                            装备
+                            {t('EQUIPMENT_EQUIP')}
                         </Button>
                     )}
 
@@ -206,7 +208,7 @@ export function EquipmentCard({
                             }}
                         >
                             <TrendingUp className="w-4 h-4 mr-1" />
-                            强化
+                            {t('EQUIPMENT_ENHANCE_BTN')}
                         </Button>
                     )}
                 </div>

@@ -9,6 +9,7 @@ import { useLocalizationStore } from '@/store/localization-store';
 import { useMemo } from 'react';
 import { useSkillInfosFromEffectGroups, SkillInfo } from '@/hooks/useSkillInfoFromEffectGroup';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleCharacterAvatarProps {
     character: CharacterState;
@@ -36,10 +37,11 @@ function getUnitIconUrl(unitIconType: UnitIconType, unitIconId: number): string 
  */
 function EffectTag({ effectGroup, skillInfo }: { effectGroup: ActiveEffectGroup; skillInfo: SkillInfo }) {
     const t = useLocalizationStore(state => state.t);
+    const { t: translate } = useTranslation();
     const isPermanent = effectGroup.effectTurn >= 9999;
-    
-    const turnText = !isPermanent ? ` (${effectGroup.effectTurn}回合)` : '';
-    
+
+    const turnText = !isPermanent ? ` (${translate('BATTLE_CHARACTER_TURNS', [String(effectGroup.effectTurn)])})` : '';
+
     // 使用 t 函数格式化描述，传入 effectValues 替换占位符
     const effectValues = effectGroup.effects.map(e => e.effectValue.toLocaleString());
     const description = skillInfo.descriptionKey ? t(skillInfo.descriptionKey, effectValues) : '';
@@ -77,6 +79,7 @@ export function BattleCharacterAvatar({
     isActing = false
 }: BattleCharacterAvatarProps) {
     const t = useLocalizationStore(state => state.t);
+    const { t: translate } = useTranslation();
     const { name: nameKey, unitIconType, unitIconId, isLoading } = useBattleUnitInfo(character.unitType, character.unitId);
     const displayName = t(nameKey);
 
@@ -162,7 +165,7 @@ export function BattleCharacterAvatar({
                             <EffectTag
                                 key={eg.effectGroupId}
                                 effectGroup={eg}
-                                skillInfo={skillInfos.get(eg.effectGroupId) || { name: `技能 #${eg.effectGroupId}`, descriptionKey: '', iconUrl: '', isActiveSkill: false, isLoading: true }}
+                                skillInfo={skillInfos.get(eg.effectGroupId) || { name: translate('BATTLE_CHARACTER_SKILL', [String(eg.effectGroupId)]), descriptionKey: '', iconUrl: '', isActiveSkill: false, isLoading: true }}
                             />
                         ))}
                     </div>
@@ -197,7 +200,7 @@ export function BattleCharacterAvatar({
             {character.isDead && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/20 rounded-lg">
                     <span className="px-2 py-0.5 bg-black/60 text-white text-xs rounded">
-                        阵亡
+                        {translate('BATTLE_CHARACTER_DEAD')}
                     </span>
                 </div>
             )}

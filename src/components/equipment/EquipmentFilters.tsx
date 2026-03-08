@@ -8,6 +8,7 @@ import { EquipmentRarityFlags } from '@/api/generated/equipmentRarityFlags';
 import { Search, Filter, X } from 'lucide-react';
 import { useState } from 'react';
 import { getRarityColor, getRarityName, getSlotIcon, getSlotName } from '@/lib/equipmentUtils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 type SortOption = 'level' | 'rarity' | 'enhance' | 'power';
 type EquippedFilterOption = 'all' | 'equipped' | 'unequipped';
@@ -43,6 +44,7 @@ export function EquipmentFilters({
     onSortChange,
     onReset
 }: EquipmentFiltersProps) {
+    const { t } = useTranslation();
     const [showAdvanced, setShowAdvanced] = useState(false);
 
     const rarityOptions = [
@@ -90,7 +92,7 @@ export function EquipmentFilters({
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <Input
-                        placeholder="搜索装备名称..."
+                        placeholder={t('EQUIPMENT_FILTER_SEARCH')}
                         value={searchQuery}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="pl-10"
@@ -108,13 +110,13 @@ export function EquipmentFilters({
                 {/* 排序 */}
                 <Select value={sortBy} onValueChange={(value: SortOption) => onSortChange(value)}>
                     <SelectTrigger className="w-full md:w-[180px]">
-                        <SelectValue placeholder="排序方式" />
+                        <SelectValue placeholder={t('EQUIPMENT_FILTER_SORT')} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="power">战斗力</SelectItem>
-                        <SelectItem value="rarity">稀有度</SelectItem>
-                        <SelectItem value="level">等级</SelectItem>
-                        <SelectItem value="enhance">强化等级</SelectItem>
+                        <SelectItem value="power">{t('EQUIPMENT_FILTER_SORT_POWER')}</SelectItem>
+                        <SelectItem value="rarity">{t('EQUIPMENT_FILTER_SORT_RARITY')}</SelectItem>
+                        <SelectItem value="level">{t('EQUIPMENT_FILTER_SORT_LEVEL')}</SelectItem>
+                        <SelectItem value="enhance">{t('EQUIPMENT_FILTER_SORT_ENHANCE')}</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -125,7 +127,7 @@ export function EquipmentFilters({
                     className="whitespace-nowrap"
                 >
                     <Filter className="h-4 w-4 mr-2" />
-                    高级筛选
+                    {t('EQUIPMENT_FILTER_ADVANCED')}
                     {hasActiveFilters && (
                         <Badge variant="secondary" className="ml-2">
                             {[searchQuery && 1, selectedSlot !== 'all' && 1, selectedRarities.length, equippedFilter !== 'all' && 1, setFilter !== 'all' && 1].filter(Boolean).length}
@@ -137,7 +139,7 @@ export function EquipmentFilters({
             {/* 部位筛选 */}
             <Tabs value={selectedSlot.toString()} onValueChange={(value) => onSlotChange(value === 'all' ? 'all' : parseInt(value))}>
                 <TabsList className="grid w-full grid-cols-7">
-                    <TabsTrigger value="all">全部</TabsTrigger>
+                    <TabsTrigger value="all">{t('EQUIPMENT_FILTER_ALL')}</TabsTrigger>
                     {slotOptions.map(slot => (
                         <TabsTrigger key={slot} value={slot.toString()}>
                             <span className="mr-1">{getSlotIcon(slot)}</span>
@@ -152,7 +154,7 @@ export function EquipmentFilters({
                 <div className="border rounded-lg p-4 space-y-4 bg-muted/30">
                     {/* 稀有度筛选 */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">稀有度筛选</label>
+                        <label className="text-sm font-medium">{t('EQUIPMENT_FILTER_RARITY_FILTER')}</label>
                         <div className="flex flex-wrap gap-2">
                             {rarityOptions.map(rarity => (
                                 <Badge
@@ -172,26 +174,26 @@ export function EquipmentFilters({
 
                     {/* 装备状态筛选 */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">装备状态</label>
+                        <label className="text-sm font-medium">{t('EQUIPMENT_FILTER_EQUIPMENT_STATUS')}</label>
                         <Tabs value={equippedFilter} onValueChange={(value: string) => onEquippedFilterChange(value as EquippedFilterOption)}>
                             <TabsList className="grid w-full grid-cols-3">
-                                <TabsTrigger value="all">全部</TabsTrigger>
-                                <TabsTrigger value="equipped">已装备</TabsTrigger>
-                                <TabsTrigger value="unequipped">未装备</TabsTrigger>
+                                <TabsTrigger value="all">{t('EQUIPMENT_FILTER_ALL')}</TabsTrigger>
+                                <TabsTrigger value="equipped">{t('EQUIPMENT_FILTER_EQUIPPED')}</TabsTrigger>
+                                <TabsTrigger value="unequipped">{t('EQUIPMENT_FILTER_UNEQUIPPED')}</TabsTrigger>
                             </TabsList>
                         </Tabs>
                     </div>
 
                     {/* 套装筛选 */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">套装筛选</label>
+                        <label className="text-sm font-medium">{t('EQUIPMENT_FILTER_SET_FILTER')}</label>
                         <Select value={setFilter} onValueChange={onSetFilterChange}>
                             <SelectTrigger>
-                                <SelectValue placeholder="选择套装" />
+                                <SelectValue placeholder={t('EQUIPMENT_FILTER_SELECT_SET')} />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="all">全部套装</SelectItem>
-                                <SelectItem value="none">无套装</SelectItem>
+                                <SelectItem value="all">{t('EQUIPMENT_FILTER_ALL_SETS')}</SelectItem>
+                                <SelectItem value="none">{t('EQUIPMENT_FILTER_NO_SET')}</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -204,7 +206,7 @@ export function EquipmentFilters({
                             className="w-full"
                         >
                             <X className="h-4 w-4 mr-2" />
-                            重置所有筛选
+                            {t('EQUIPMENT_FILTER_RESET')}
                         </Button>
                     )}
                 </div>

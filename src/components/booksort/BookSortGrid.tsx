@@ -19,6 +19,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { useLocalizationStore } from '@/store/localization-store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BookSortGridProps {
     syncData: BookSortSyncData | null;
@@ -32,6 +33,7 @@ interface BookSortGridProps {
 
 export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUnlock, onUpFloor, onSelectBonusReward, isUnlocking }: BookSortGridProps) {
     const { t } = useLocalizationStore();
+    const { t: translate } = useTranslation();
     const [confirmOpen, setConfirmOpen] = useState(false);
     // Master data
     const getTable = useMasterStore(state => state.getTable);
@@ -89,7 +91,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                             <Gift className="w-8 h-8 text-purple-500 animate-bounce drop-shadow-[0_0_8px_rgba(168,85,247,0.5)]" />
                         )}
                         {!cellData.isKey && !cellData.isWin && (
-                            <span className="text-xs text-muted-foreground">已清扫</span>
+                            <span className="text-xs text-muted-foreground">{translate('BOOKSORT_GRID_CLEANED')}</span>
                         )}
                     </div>
                 )}
@@ -104,7 +106,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                 <div className="flex items-center justify-between mb-4 bg-background/50 p-3 rounded-lg border">
                     <div className="flex items-center gap-3">
                         <span className="text-xl font-bold tracking-widest text-primary drop-shadow-sm">
-                            第 {currentFloor} 层
+                            {translate('BOOKSORT_GRID_FLOOR', [String(currentFloor)])}
                         </span>
                         {/* Floor progression visual (simplified) */}
                         <div className="flex items-center gap-1 ml-4 opacity-80">
@@ -123,7 +125,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                         className="bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30 shadow-[0_0_15px_rgba(var(--primary),0.2)] transition-all"
                     >
                         <Zap className="w-4 h-4 mr-2 text-yellow-400" />
-                        批量使用
+                        {translate('BOOKSORT_GRID_BULK_USE')}
                     </Button>
                 </div>
 
@@ -160,7 +162,7 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                                                     ))}
                                                 </div>
                                                 <Button size="sm" variant="default" className="shrink-0 shadow-[0_0_10px_rgba(var(--primary),0.3)] bg-gradient-to-r from-primary to-primary/80">
-                                                    选择
+                                                    {translate('BOOKSORT_GRID_SELECT')}
                                                 </Button>
                                             </CardContent>
                                         </Card>
@@ -180,12 +182,12 @@ export function BookSortGrid({ syncData, maxClearQuestId, onUnlockCell, onBulkUn
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
+                            <AlertDialogCancel>{translate('COMMON_CANCEL')}</AlertDialogCancel>
                             <AlertDialogAction onClick={() => {
                                 setConfirmOpen(false);
                                 onUpFloor();
                             }}>
-                                确定
+                                {translate('COMMON_CONFIRM')}
                             </AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>

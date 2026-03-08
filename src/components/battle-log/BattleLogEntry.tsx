@@ -8,115 +8,116 @@ import { forwardRef } from 'react';
 import { useBattleUnitInfo } from '@/hooks/useBattleUnitInfo';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useSkillName } from '@/hooks/useSkillName';
+import { useTranslation } from '@/hooks/useTranslation';
 
-/** 效果类型中文映射 */
-const effectTypeLabels: Record<number, string> = {
+/** 效果类型翻译键映射 */
+const effectTypeKeys: Record<number, string> = {
     // 增益效果
-    [EffectType.SpeedUp]: '速度上升',
-    [EffectType.MaxHpUp]: '最大HP上升',
-    [EffectType.AttackPowerUp]: '攻击力上升',
-    [EffectType.DefenseUp]: '防御力上升',
-    [EffectType.PhysicalDamageRelaxUp]: '物理防御上升',
-    [EffectType.MagicDamageRelaxUp]: '魔法防御上升',
-    [EffectType.DamageEnhanceUp]: '伤害增强上升',
-    [EffectType.HitUp]: '命中上升',
-    [EffectType.AvoidanceUp]: '闪避上升',
-    [EffectType.CriticalUp]: '暴击上升',
-    [EffectType.CriticalResistUp]: '暴击抵抗上升',
-    [EffectType.HpDrainUp]: '吸血上升',
-    [EffectType.DamageReflectUp]: '伤害反弹上升',
-    [EffectType.GiveHealRateUp]: '回血量上升',
-    [EffectType.ReceiveHealRateUp]: '被回血量上升',
-    [EffectType.GiveDamageUp]: '输出伤害上升',
-    [EffectType.ReceiveDamageDown]: '承受伤害下降',
-    [EffectType.CoolTimeRecoveryUp]: '轻快',
-    [EffectType.HitRateUp]: '命中率上升',
-    [EffectType.AvoidanceRateUp]: '闪避率上升',
-    [EffectType.CriticalRateUp]: '暴击率上升',
-    [EffectType.CriticalResistRateUp]: '抗暴率上升',
-    [EffectType.DebuffHitRateUp]: '弱化效果命中率上升',
-    [EffectType.DebuffResistRateUp]: '弱化效果抵抗率上升',
-    
+    [EffectType.SpeedUp]: 'BATTLE_LOG_EFFECT_SPEED_UP',
+    [EffectType.MaxHpUp]: 'BATTLE_LOG_EFFECT_MAX_HP_UP',
+    [EffectType.AttackPowerUp]: 'BATTLE_LOG_EFFECT_ATTACK_POWER_UP',
+    [EffectType.DefenseUp]: 'BATTLE_LOG_EFFECT_DEFENSE_UP',
+    [EffectType.PhysicalDamageRelaxUp]: 'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_UP',
+    [EffectType.MagicDamageRelaxUp]: 'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_UP',
+    [EffectType.DamageEnhanceUp]: 'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_UP',
+    [EffectType.HitUp]: 'BATTLE_LOG_EFFECT_HIT_UP',
+    [EffectType.AvoidanceUp]: 'BATTLE_LOG_EFFECT_AVOIDANCE_UP',
+    [EffectType.CriticalUp]: 'BATTLE_LOG_EFFECT_CRITICAL_UP',
+    [EffectType.CriticalResistUp]: 'BATTLE_LOG_EFFECT_CRITICAL_RESIST_UP',
+    [EffectType.HpDrainUp]: 'BATTLE_LOG_EFFECT_HP_DRAIN_UP',
+    [EffectType.DamageReflectUp]: 'BATTLE_LOG_EFFECT_DAMAGE_REFLECT_UP',
+    [EffectType.GiveHealRateUp]: 'BATTLE_LOG_EFFECT_GIVE_HEAL_RATE_UP',
+    [EffectType.ReceiveHealRateUp]: 'BATTLE_LOG_EFFECT_RECEIVE_HEAL_RATE_UP',
+    [EffectType.GiveDamageUp]: 'BATTLE_LOG_EFFECT_GIVE_DAMAGE_UP',
+    [EffectType.ReceiveDamageDown]: 'BATTLE_LOG_EFFECT_RECEIVE_DAMAGE_DOWN',
+    [EffectType.CoolTimeRecoveryUp]: 'BATTLE_LOG_EFFECT_COOL_TIME_RECOVERY_UP',
+    [EffectType.HitRateUp]: 'BATTLE_LOG_EFFECT_HIT_RATE_UP',
+    [EffectType.AvoidanceRateUp]: 'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_UP',
+    [EffectType.CriticalRateUp]: 'BATTLE_LOG_EFFECT_CRITICAL_RATE_UP',
+    [EffectType.CriticalResistRateUp]: 'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_UP',
+    [EffectType.DebuffHitRateUp]: 'BATTLE_LOG_EFFECT_DEBUFF_HIT_RATE_UP',
+    [EffectType.DebuffResistRateUp]: 'BATTLE_LOG_EFFECT_DEBUFF_RESIST_RATE_UP',
+
     // 特殊增益
-    [EffectType.DamageGuard]: '伤害免疫',
-    [EffectType.Shield1]: '多重屏障',
-    [EffectType.Shield2]: '护盾',
-    [EffectType.DebuffGuard]: '弱化效果免疫',
-    [EffectType.ConfuseActionDebuffGuard]: '控制效果免疫',
-    [EffectType.Taunt]: '挑衅',
-    [EffectType.Stealth]: '隐身',
-    [EffectType.NonTarget]: '透明',
-    [EffectType.HealOverTime]: '再生',
-    [EffectType.Immortal]: '不死之身',
-    [EffectType.BuffCover]: '增益效果护罩',
-    [EffectType.NonHit]: '无法被命中',
-    
+    [EffectType.DamageGuard]: 'BATTLE_LOG_EFFECT_DAMAGE_GUARD',
+    [EffectType.Shield1]: 'BATTLE_LOG_EFFECT_SHIELD1_BUFF',
+    [EffectType.Shield2]: 'BATTLE_LOG_EFFECT_SHIELD2_BUFF',
+    [EffectType.DebuffGuard]: 'BATTLE_LOG_EFFECT_DEBUFF_GUARD',
+    [EffectType.ConfuseActionDebuffGuard]: 'BATTLE_LOG_EFFECT_CONFUSE_ACTION_DEBUFF_GUARD',
+    [EffectType.Taunt]: 'BATTLE_LOG_EFFECT_TAUNT',
+    [EffectType.Stealth]: 'BATTLE_LOG_EFFECT_STEALTH',
+    [EffectType.NonTarget]: 'BATTLE_LOG_EFFECT_NON_TARGET',
+    [EffectType.HealOverTime]: 'BATTLE_LOG_EFFECT_HEAL_OVER_TIME',
+    [EffectType.Immortal]: 'BATTLE_LOG_EFFECT_IMMORTAL',
+    [EffectType.BuffCover]: 'BATTLE_LOG_EFFECT_BUFF_COVER',
+    [EffectType.NonHit]: 'BATTLE_LOG_EFFECT_NON_HIT',
+
     // 减益效果
-    [EffectType.SpeedDown]: '速度下降',
-    [EffectType.MaxHpDown]: '最大HP下降',
-    [EffectType.AttackPowerDown]: '攻击力下降',
-    [EffectType.DefenseDown]: '防御力下降',
-    [EffectType.PhysicalDamageRelaxDown]: '物理防御下降',
-    [EffectType.MagicDamageRelaxDown]: '魔法防御下降',
-    [EffectType.DamageEnhanceDown]: '伤害增强下降',
-    [EffectType.HitDown]: '命中下降',
-    [EffectType.AvoidanceDown]: '闪避下降',
-    [EffectType.CriticalDown]: '暴击下降',
-    [EffectType.CriticalResistDown]: '暴击抵抗下降',
-    [EffectType.HpDrainDown]: '吸血下降',
-    [EffectType.DamageReflectDown]: '伤害反弹下降',
-    [EffectType.GiveHealRateDown]: '回血量下降',
-    [EffectType.ReceiveHealRateDown]: '被回血量下降',
-    [EffectType.GiveDamageDown]: '输出伤害下降',
-    [EffectType.ReceiveDamageUp]: '承受伤害上升',
-    [EffectType.CoolTimeRecoveryDown]: '迟缓',
-    [EffectType.HitRateDown]: '命中率下降',
-    [EffectType.AvoidanceRateDown]: '闪避率下降',
-    [EffectType.CriticalRateDown]: '暴击率下降',
-    [EffectType.CriticalResistRateDown]: '抗暴率下降',
-    
+    [EffectType.SpeedDown]: 'BATTLE_LOG_EFFECT_SPEED_DOWN',
+    [EffectType.MaxHpDown]: 'BATTLE_LOG_EFFECT_MAX_HP_DOWN',
+    [EffectType.AttackPowerDown]: 'BATTLE_LOG_EFFECT_ATTACK_POWER_DOWN',
+    [EffectType.DefenseDown]: 'BATTLE_LOG_EFFECT_DEFENSE_DOWN',
+    [EffectType.PhysicalDamageRelaxDown]: 'BATTLE_LOG_EFFECT_PHYSICAL_DAMAGE_RELAX_DOWN',
+    [EffectType.MagicDamageRelaxDown]: 'BATTLE_LOG_EFFECT_MAGIC_DAMAGE_RELAX_DOWN',
+    [EffectType.DamageEnhanceDown]: 'BATTLE_LOG_EFFECT_DAMAGE_ENHANCE_DOWN',
+    [EffectType.HitDown]: 'BATTLE_LOG_EFFECT_HIT_DOWN',
+    [EffectType.AvoidanceDown]: 'BATTLE_LOG_EFFECT_AVOIDANCE_DOWN',
+    [EffectType.CriticalDown]: 'BATTLE_LOG_EFFECT_CRITICAL_DOWN',
+    [EffectType.CriticalResistDown]: 'BATTLE_LOG_EFFECT_CRITICAL_RESIST_DOWN',
+    [EffectType.HpDrainDown]: 'BATTLE_LOG_EFFECT_HP_DRAIN_DOWN',
+    [EffectType.DamageReflectDown]: 'BATTLE_LOG_EFFECT_DAMAGE_REFLECT_DOWN',
+    [EffectType.GiveHealRateDown]: 'BATTLE_LOG_EFFECT_GIVE_HEAL_RATE_DOWN',
+    [EffectType.ReceiveHealRateDown]: 'BATTLE_LOG_EFFECT_RECEIVE_HEAL_RATE_DOWN',
+    [EffectType.GiveDamageDown]: 'BATTLE_LOG_EFFECT_GIVE_DAMAGE_DOWN',
+    [EffectType.ReceiveDamageUp]: 'BATTLE_LOG_EFFECT_RECEIVE_DAMAGE_UP',
+    [EffectType.CoolTimeRecoveryDown]: 'BATTLE_LOG_EFFECT_COOL_TIME_RECOVERY_DOWN',
+    [EffectType.HitRateDown]: 'BATTLE_LOG_EFFECT_HIT_RATE_DOWN',
+    [EffectType.AvoidanceRateDown]: 'BATTLE_LOG_EFFECT_AVOIDANCE_RATE_DOWN',
+    [EffectType.CriticalRateDown]: 'BATTLE_LOG_EFFECT_CRITICAL_RATE_DOWN',
+    [EffectType.CriticalResistRateDown]: 'BATTLE_LOG_EFFECT_CRITICAL_RESIST_RATE_DOWN',
+
     // 控制效果
-    [EffectType.Stun]: '晕厥',
-    [EffectType.Confuse]: '混乱',
-    [EffectType.Silence]: '沉默',
-    [EffectType.Stubborn]: '固执',
-    
+    [EffectType.Stun]: 'BATTLE_LOG_EFFECT_STUN',
+    [EffectType.Confuse]: 'BATTLE_LOG_EFFECT_CONFUSE',
+    [EffectType.Silence]: 'BATTLE_LOG_EFFECT_SILENCE',
+    [EffectType.Stubborn]: 'BATTLE_LOG_EFFECT_STUBBORN',
+
     // 持续伤害
-    [EffectType.Poison]: '中毒',
-    [EffectType.Bleeding]: '流血',
-    [EffectType.Combustion]: '燃烧',
-    [EffectType.Burn]: '灼烧',
-    [EffectType.HpRecoveryForbidden]: '不治',
-    [EffectType.AvoidanceForbidden]: '禁锢',
-    [EffectType.BuffForbidden]: '增益效果免疫',
-    
+    [EffectType.Poison]: 'BATTLE_LOG_EFFECT_POISON',
+    [EffectType.Bleeding]: 'BATTLE_LOG_EFFECT_BLEEDING',
+    [EffectType.Combustion]: 'BATTLE_LOG_EFFECT_COMBUSTION',
+    [EffectType.Burn]: 'BATTLE_LOG_EFFECT_BURN',
+    [EffectType.HpRecoveryForbidden]: 'BATTLE_LOG_EFFECT_HP_RECOVERY_FORBIDDEN',
+    [EffectType.AvoidanceForbidden]: 'BATTLE_LOG_EFFECT_AVOIDANCE_FORBIDDEN',
+    [EffectType.BuffForbidden]: 'BATTLE_LOG_EFFECT_BUFF_FORBIDDEN',
+
     // 共鸣/献身
-    [EffectType.DamageResonanceFromSelfAndDamageReduction]: '献身',
-    [EffectType.DamageResonanceFromHighHpEnemy]: '共鸣(高HP)',
-    [EffectType.DamageResonanceFromLowHpEnemy]: '共鸣(低HP)',
-    [EffectType.DamageResonanceFromAllEnemy]: '共鸣',
+    [EffectType.DamageResonanceFromSelfAndDamageReduction]: 'BATTLE_LOG_EFFECT_RESONANCE_SELF',
+    [EffectType.DamageResonanceFromHighHpEnemy]: 'BATTLE_LOG_EFFECT_RESONANCE_HIGH_HP',
+    [EffectType.DamageResonanceFromLowHpEnemy]: 'BATTLE_LOG_EFFECT_RESONANCE_LOW_HP',
+    [EffectType.DamageResonanceFromAllEnemy]: 'BATTLE_LOG_EFFECT_RESONANCE_ALL',
 };
 
-/** 技能显示类型映射 */
-const skillDisplayTypeLabels: Record<SkillDisplayType, string> = {
+/** 技能显示类型翻译键映射 */
+const skillDisplayTypeKeys: Record<SkillDisplayType, string> = {
     [SkillDisplayType.None]: '',
-    [SkillDisplayType.Heal]: '治疗',
-    [SkillDisplayType.PhysicalAttack]: '物理攻击',
-    [SkillDisplayType.MagicAttack]: '魔法攻击',
-    [SkillDisplayType.PhysicalDirectDamage]: '直接伤害',
-    [SkillDisplayType.MagicDirectDamage]: '魔法直接伤害',
-    [SkillDisplayType.HpDrain]: '吸血',
-    [SkillDisplayType.Buff]: '增益',
-    [SkillDisplayType.DeBuff]: '减益',
-    [SkillDisplayType.PhysicalCounterAttack]: '物理反击',
-    [SkillDisplayType.MagicCounterAttack]: '魔法反击',
-    [SkillDisplayType.PhysicalResonanceAttack]: '物理共鸣',
-    [SkillDisplayType.MagicResonanceAttack]: '魔法共鸣',
-    [SkillDisplayType.RemoveEffect]: '移除效果',
-    [SkillDisplayType.BurstEffect]: '爆发效果',
-    [SkillDisplayType.SelfInjuryDamage]: '自损',
-    [SkillDisplayType.Resurrection]: '复活',
-    [SkillDisplayType.SilenceHeal]: '沉默治疗',
+    [SkillDisplayType.Heal]: 'BATTLE_LOG_SKILL_HEAL',
+    [SkillDisplayType.PhysicalAttack]: 'BATTLE_LOG_SKILL_PHYSICAL_ATTACK',
+    [SkillDisplayType.MagicAttack]: 'BATTLE_LOG_SKILL_MAGIC_ATTACK',
+    [SkillDisplayType.PhysicalDirectDamage]: 'BATTLE_LOG_SKILL_PHYSICAL_DIRECT_DAMAGE',
+    [SkillDisplayType.MagicDirectDamage]: 'BATTLE_LOG_SKILL_MAGIC_DIRECT_DAMAGE',
+    [SkillDisplayType.HpDrain]: 'BATTLE_LOG_SKILL_HP_DRAIN',
+    [SkillDisplayType.Buff]: 'BATTLE_LOG_SKILL_BUFF',
+    [SkillDisplayType.DeBuff]: 'BATTLE_LOG_SKILL_DEBUFF',
+    [SkillDisplayType.PhysicalCounterAttack]: 'BATTLE_LOG_SKILL_PHYSICAL_COUNTER',
+    [SkillDisplayType.MagicCounterAttack]: 'BATTLE_LOG_SKILL_MAGIC_COUNTER',
+    [SkillDisplayType.PhysicalResonanceAttack]: 'BATTLE_LOG_SKILL_PHYSICAL_RESONANCE',
+    [SkillDisplayType.MagicResonanceAttack]: 'BATTLE_LOG_SKILL_MAGIC_RESONANCE',
+    [SkillDisplayType.RemoveEffect]: 'BATTLE_LOG_SKILL_REMOVE_EFFECT',
+    [SkillDisplayType.BurstEffect]: 'BATTLE_LOG_SKILL_BURST_EFFECT',
+    [SkillDisplayType.SelfInjuryDamage]: 'BATTLE_LOG_SKILL_SELF_INJURY',
+    [SkillDisplayType.Resurrection]: 'BATTLE_LOG_SKILL_RESURRECTION',
+    [SkillDisplayType.SilenceHeal]: 'BATTLE_LOG_SKILL_SILENCE_HEAL',
 };
 
 interface BattleLogEntryProps {
@@ -136,20 +137,20 @@ function CharacterName({ character }: { character: CharacterState | null }) {
         character?.unitType ?? 0,
         character?.unitId ?? 0
     );
-    
+
     if (!character) {
-        return <span>未知</span>;
+        return <span>{t('BATTLE_LOG_UNKNOWN')}</span>;
     }
-    
+
     const isAttacker = character.groupType === BattleFieldCharacterGroupType.Attacker;
-    
+
     if (isLoading) return <span>...</span>;
-    
+
     return (
         <span className={cn(
             "font-medium",
-            isAttacker 
-                ? "text-blue-600 dark:text-blue-400" 
+            isAttacker
+                ? "text-blue-600 dark:text-blue-400"
                 : "text-red-600 dark:text-red-400"
         )}>
             {t(nameKey)}
@@ -162,6 +163,8 @@ function CharacterName({ character }: { character: CharacterState | null }) {
  */
 export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
     ({ event, characters, isCurrent, isPast, onClick }, ref) => {
+        const { t } = useTranslation();
+
         // 通过 guid 查找角色
         const getCharacterByGuid = (guid?: number) => {
             if (guid === undefined) return null;
@@ -170,66 +173,67 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
             }
             return null;
         };
-        
+
         const sourceChar = getCharacterByGuid(event.sourceGuid);
         const targetChar = getCharacterByGuid(event.targetGuid);
-        
+
         // 获取技能名称（必须在顶层调用 hook）
         const { name: activeSkillName } = useSkillName(event.skillId, false);
         const { name: passiveSkillName } = useSkillName(event.skillId, true);
-        
+
         // 获取效果文本
         const getEffectText = () => {
             if (event.addEffectGroups && event.addEffectGroups.length > 0) {
                 const effects = event.addEffectGroups.flatMap(eg => eg.effects || []);
                 return effects.map(e => {
-                    const label = effectTypeLabels[e.effectType] || `效果#${e.effectType}`;
+                    const key = effectTypeKeys[e.effectType];
+                    const label = key ? t(key) : t('BATTLE_LOG_EFFECT_FALLBACK', [String(e.effectType)]);
                     const value = e.effectValue ? ` +${e.effectValue.toLocaleString()}` : '';
                     return `${label}${value}`;
                 }).join(', ');
             }
             return null;
         };
-        
+
         // 获取命中类型文本
         const getHitTypeText = (hitType?: HitType) => {
             if (hitType === undefined || hitType === HitType.Hit) return null;
             switch (hitType) {
-                case HitType.Ignore: return '无视防御';
-                case HitType.Miss: return '闪避';
-                case HitType.Critical: return '暴击';
-                case HitType.Shield1: return '多重屏障';
-                case HitType.Shield1Critical: return '多重屏障·暴击';
-                case HitType.Shield2: return '护盾';
-                case HitType.Shield2Critical: return '护盾·暴击';
-                case HitType.ShieldBreak: return '破盾';
-                case HitType.ShieldBreakCritical: return '破盾·暴击';
+                case HitType.Ignore: return t('BATTLE_LOG_IGNORE_DEFENSE');
+                case HitType.Miss: return t('BATTLE_LOG_MISS');
+                case HitType.Critical: return t('BATTLE_LOG_CRITICAL');
+                case HitType.Shield1: return t('BATTLE_LOG_SHIELD1');
+                case HitType.Shield1Critical: return t('BATTLE_LOG_SHIELD1_CRITICAL');
+                case HitType.Shield2: return t('BATTLE_LOG_SHIELD2');
+                case HitType.Shield2Critical: return t('BATTLE_LOG_SHIELD2_CRITICAL');
+                case HitType.ShieldBreak: return t('BATTLE_LOG_SHIELD_BREAK');
+                case HitType.ShieldBreakCritical: return t('BATTLE_LOG_SHIELD_BREAK_CRITICAL');
                 default: return null;
             }
         };
-        
+
         // 渲染不同类型的事件
         const renderContent = () => {
             switch (event.type) {
                 case 'turn_start':
                     return (
                         <div className="text-center text-muted-foreground font-medium py-1">
-                            ═══ 回合 {event.turn} 开始 ═══
+                            {t('BATTLE_LOG_TURN_START', [String(event.turn)])}
                         </div>
                     );
-                    
+
                 case 'turn_end':
                     return (
                         <div className="text-center text-muted-foreground font-medium py-1">
-                            ═══ 回合 {event.turn} 结束 ═══
+                            {t('BATTLE_LOG_TURN_END', [String(event.turn)])}
                         </div>
                     );
-                    
+
                 case 'action':
                     return (
                         <div className="flex items-center gap-2 flex-wrap">
                             <CharacterName character={sourceChar} />
-                            <span className="text-muted-foreground">使用</span>
+                            <span className="text-muted-foreground">{t('BATTLE_LOG_USE_SKILL')}</span>
                             <span className="text-primary font-medium">{activeSkillName}</span>
                         </div>
                     );
@@ -239,17 +243,17 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                     const isHeal = event.type === 'heal' || (event.changeHp ?? 0) > 0;
                     const value = event.changeHp ?? 0;
                     const isMiss = event.hitType === HitType.Miss;
-                    const valueText = isMiss 
-                        ? 'Miss' 
-                        : (isHeal 
-                            ? `+${value.toLocaleString()}` 
+                    const valueText = isMiss
+                        ? 'Miss'
+                        : (isHeal
+                            ? `+${value.toLocaleString()}`
                             : `-${Math.abs(value).toLocaleString()}`);
                     const hitText = getHitTypeText(event.hitType);
                     const effectText = getEffectText();
-                    const attackTypeText = event.skillDisplayType 
-                        ? skillDisplayTypeLabels[event.skillDisplayType] 
+                    const attackTypeText = event.skillDisplayType
+                        ? (skillDisplayTypeKeys[event.skillDisplayType] ? t(skillDisplayTypeKeys[event.skillDisplayType]) : null)
                         : null;
-                    
+
                     return (
                         <div className="flex items-center gap-1.5 flex-wrap">
                             {/* 来源 */}
@@ -281,24 +285,24 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                             {/* 效果 */}
                             {effectText && (
                                 <span className="text-xs text-muted-foreground w-full">
-                                    获得效果: {effectText}
+                                    {t('BATTLE_LOG_GAIN_EFFECT')}{effectText}
                                 </span>
                             )}
                         </div>
                     );
                 }
-                
+
                 case 'passive':
                 case 'effect': {
                     const effectText = getEffectText();
                     const isBuff = event.skillDisplayType === SkillDisplayType.Buff;
                     const isDeBuff = event.skillDisplayType === SkillDisplayType.DeBuff;
-                    
+
                     return (
                         <div className="flex items-center gap-1.5 flex-wrap">
                             {/* 被动标记 */}
                             {event.isTurnPassive && (
-                                <span className="text-xs text-orange-500 font-medium">[被动]</span>
+                                <span className="text-xs text-orange-500 font-medium">[{t('BATTLE_LOG_PASSIVE')}]</span>
                             )}
                             {/* 来源 */}
                             {sourceChar && (
@@ -330,20 +334,20 @@ export const BattleLogEntry = forwardRef<HTMLDivElement, BattleLogEntryProps>(
                                 </span>
                             )}
                             {/* 持续回合 */}
-                            {event.addEffectGroups && event.addEffectGroups.length > 0 && 
+                            {event.addEffectGroups && event.addEffectGroups.length > 0 &&
                              event.addEffectGroups[0].effectTurn > 0 && event.addEffectGroups[0].effectTurn < 9999 && (
                                 <span className="text-xs text-muted-foreground">
-                                    ({event.addEffectGroups[0].effectTurn}回合)
+                                    ({t('BATTLE_LOG_TURNS', [String(event.addEffectGroups[0].effectTurn)])})
                                 </span>
                             )}
                         </div>
                     );
                 }
-                
+
                 default:
                     return (
                         <div className="text-muted-foreground">
-                            未知事件类型: {event.type}
+                            {t('BATTLE_LOG_UNKNOWN_EVENT', [event.type])}
                         </div>
                     );
             }

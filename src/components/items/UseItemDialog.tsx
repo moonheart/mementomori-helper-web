@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useLocalizationStore } from '@/store/localization-store';
 import { useMasterStore } from '@/store/masterStore';
 import { getItemName } from '@/lib/itemUtils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface UseItemDialogProps {
     open: boolean;
@@ -38,6 +39,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
     const [showRewards, setShowRewards] = useState(false);
     const { toast } = useToast();
     const t = useLocalizationStore((state) => state.t);
+    const { t: translate } = useTranslation();
     const getTable = useMasterStore((state) => state.getTable);
 
     const handleUse = async () => {
@@ -45,7 +47,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
             toast({
                 variant: 'destructive',
                 title: t('[CommonErrorTitle]') || '错误',
-                description: '使用数量无效',
+                description: translate('USE_ITEM_INVALID_COUNT'),
             });
             return;
         }
@@ -72,7 +74,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
 
             toast({
                 title: t('[CommonSuccessTitle]') || '成功',
-                description: `成功使用 ${useCount} 个${itemName}`,
+                description: translate('ITEMS_USE_SUCCESS', [String(useCount), itemName]),
             });
 
             // 通知父组件刷新数据
@@ -82,7 +84,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
             toast({
                 variant: 'destructive',
                 title: t('[CommonErrorTitle]') || '错误',
-                description: '使用道具失败',
+                description: translate('ITEMS_USE_FAILED'),
             });
         } finally {
             setIsUsing(false);
@@ -115,14 +117,14 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                         <DialogHeader>
                             <DialogTitle>{t('[ItemBoxItemUseTitle]') || '使用道具'}</DialogTitle>
                             <DialogDescription>
-                                选择要使用的 {itemName} 数量
+                                {translate('USE_ITEM_SELECT_COUNT', [itemName])}
                             </DialogDescription>
                         </DialogHeader>
 
                         <div className="grid gap-4 py-4">
                             <div className="grid grid-cols-4 items-center gap-4">
                                 <Label htmlFor="count" className="text-right">
-                                    数量
+                                    {translate('USE_ITEM_QUANTITY')}
                                 </Label>
                                 <div className="col-span-3 space-y-2">
                                     <Input
@@ -135,7 +137,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                                         disabled={isUsing}
                                     />
                                     <p className="text-sm text-muted-foreground">
-                                        拥有: {item.itemCount} 个
+                                        {translate('USE_ITEM_OWNED', [String(item.itemCount)])}
                                     </p>
                                 </div>
                             </div>
@@ -148,7 +150,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                                     onClick={() => setUseCount(1)}
                                     disabled={isUsing}
                                 >
-                                    最小
+                                    {translate('USE_ITEM_MIN')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -157,7 +159,7 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                                     onClick={() => setUseCount(Math.max(1, Math.floor(item.itemCount / 2)))}
                                     disabled={isUsing}
                                 >
-                                    一半
+                                    {translate('USE_ITEM_HALF')}
                                 </Button>
                                 <Button
                                     type="button"
@@ -166,14 +168,14 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                                     onClick={() => setUseCount(item.itemCount)}
                                     disabled={isUsing}
                                 >
-                                    全部
+                                    {translate('USE_ITEM_MAX')}
                                 </Button>
                             </div>
                         </div>
 
                         <DialogFooter>
                             <Button variant="outline" onClick={handleClose} disabled={isUsing}>
-                                取消
+                                {translate('COMMON_CANCEL')}
                             </Button>
                             <Button onClick={handleUse} disabled={isUsing}>
                                 {isUsing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -184,9 +186,9 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                 ) : (
                     <>
                         <DialogHeader>
-                            <DialogTitle>获得奖励</DialogTitle>
+                            <DialogTitle>{translate('USE_ITEM_REWARDS_TITLE')}</DialogTitle>
                             <DialogDescription>
-                                使用 {useCount} 个{itemName} 获得以下奖励
+                                {translate('USE_ITEM_REWARDS_DESC', [String(useCount), itemName])}
                             </DialogDescription>
                         </DialogHeader>
 
@@ -205,13 +207,13 @@ export function UseItemDialog({ open, onOpenChange, item, itemName, onSuccess }:
                                 </div>
                             ) : (
                                 <div className="text-center py-8 text-muted-foreground">
-                                    未获得任何奖励
+                                    {translate('USE_ITEM_NO_REWARDS')}
                                 </div>
                             )}
                         </div>
 
                         <DialogFooter>
-                            <Button onClick={handleClose}>确定</Button>
+                            <Button onClick={handleClose}>{translate('COMMON_CONFIRM')}</Button>
                         </DialogFooter>
                     </>
                 )}

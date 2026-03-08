@@ -2,6 +2,7 @@ import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { BattleStateSnapshot } from '@/hooks/useBattleReplay';
 import { BattleLogEntry } from './BattleLogEntry';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleLogPanelProps {
     snapshots: BattleStateSnapshot[];
@@ -20,6 +21,7 @@ export function BattleLogPanel({
     onEventClick,
     className
 }: BattleLogPanelProps) {
+    const { t } = useTranslation();
     const containerRef = useRef<HTMLDivElement>(null);
     const currentEventRef = useRef<HTMLDivElement>(null);
     
@@ -82,7 +84,7 @@ export function BattleLogPanel({
                             <div className="flex items-center gap-2 px-2">
                                 <div className="h-px flex-1 bg-border" />
                                 <span className="text-xs font-medium text-muted-foreground">
-                                    第 {turn} 回合
+                                    {t('BATTLE_LOG_PANEL_TURN', [String(turn)])}
                                 </span>
                                 <div className="h-px flex-1 bg-border" />
                             </div>
@@ -114,7 +116,7 @@ export function BattleLogPanel({
                 {/* 空状态 */}
                 {snapshots.length === 0 && (
                     <div className="flex items-center justify-center h-32 text-muted-foreground">
-                        暂无战斗日志
+                        {t('BATTLE_LOG_PANEL_EMPTY')}
                     </div>
                 )}
             </div>

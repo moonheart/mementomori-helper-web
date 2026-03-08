@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Gift, CheckCircle2, Target, Loader2 } from 'lucide-react';
 import { useMasterData } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
+import { useTranslation } from '@/hooks/useTranslation';
 import { MissionStatusType, MissionMB } from '@/api/generated';
 
 export interface UIStoreMission {
@@ -26,10 +27,11 @@ interface MissionRowProps {
 
 export function MissionRow({ mission, onClaim, isClaiming }: MissionRowProps) {
     const { data: mb } = useMasterData<MissionMB>('MissionTable', mission.id);
-    const t = useLocalizationStore(state => state.t);
+    const localize = useLocalizationStore(state => state.t);
+    const { t } = useTranslation();
 
-    const title = mb ? t(mb.nameKey, [mb.requireValue]) : `任务 ${mission.id}`;
-    const description = mb ? t(mb.descriptionKey, [mb.requireValue]) : `类型: ${mission.missionType}`;
+    const title = mb ? localize(mb.nameKey, [mb.requireValue]) : t('MISSION_FALLBACK_TITLE', [String(mission.id)]);
+    const description = mb ? localize(mb.descriptionKey, [mb.requireValue]) : t('MISSION_FALLBACK_TYPE', [String(mission.missionType)]);
     const target = mb ? mb.requireValue : 0;
 
     const isCompleted = mission.status === MissionStatusType.NotReceived || mission.status === MissionStatusType.Received;
@@ -55,19 +57,19 @@ export function MissionRow({ mission, onClaim, isClaiming }: MissionRowProps) {
                     <div className="flex items-center justify-between">
                         {isCompleted ? (
                             <Badge variant={canClaim ? 'default' : 'secondary'}>
-                                {canClaim ? '可领取' : '已领取'}
+                                {canClaim ? t('MISSION_CLAIMABLE') : t('MISSION_RECEIVED')}
                             </Badge>
                         ) : mission.status === MissionStatusType.Locked ? (
-                            <Badge variant="outline">未解锁</Badge>
+                            <Badge variant="outline">{t('MISSION_UNLOCKED')}</Badge>
                         ) : (
-                            <Badge variant="outline">进行中</Badge>
+                            <Badge variant="outline">{t('MISSION_IN_PROGRESS')}</Badge>
                         )}
                     </div>
 
                     {mission.status === MissionStatusType.Progress && target > 0 && (
                         <div className="space-y-1.5">
                             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                                <span>进度</span>
+                                <span>{t('MISSION_PROGRESS')}</span>
                                 <span>{mission.progress}/{target}</span>
                             </div>
                             <Progress value={progress} className="h-1.5" />
@@ -77,7 +79,7 @@ export function MissionRow({ mission, onClaim, isClaiming }: MissionRowProps) {
                     {canClaim && (
                         <Button className="w-full mt-2" size="sm" onClick={onClaim} disabled={isClaiming}>
                             {isClaiming ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Gift className="mr-2 h-4 w-4" />}
-                            领取奖励
+                            {t('MISSION_CLAIM_REWARD')}
                         </Button>
                     )}
                 </div>

@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { useLocalizationStore } from '@/store/localization-store';
 import { UnitIconType } from '@/api/generated/unitIconType';
 import { AssetManager } from '@/lib/asset-manager';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleCharacterRowProps {
     character: BattleCharacterReport;
@@ -36,6 +37,7 @@ export function BattleCharacterRow({
     maxTaken
 }: BattleCharacterRowProps) {
     const t = useLocalizationStore(state => state.t);
+    const { t: translate } = useTranslation();
     const { name: nameKey, unitIconType, unitIconId, isLoading } = useBattleUnitInfo(character.unitType, character.unitId);
     const name = t(nameKey);
 
@@ -90,19 +92,19 @@ export function BattleCharacterRow({
                 <DamageBar
                     value={character.totalGiveDamage}
                     maxValue={maxDamage}
-                    label="输出"
+                    label={translate('BATTLE_LOG_DAMAGE')}
                     color="red"
                 />
                 <DamageBar
                     value={character.totalHpRecovery}
                     maxValue={maxHeal}
-                    label="治疗"
+                    label={translate('BATTLE_LOG_HEAL')}
                     color="green"
                 />
                 <DamageBar
                     value={character.totalReceiveDamage}
                     maxValue={maxTaken}
-                    label="承伤"
+                    label={translate('BATTLE_LOG_TAKEN')}
                     color="blue"
                 />
             </div>

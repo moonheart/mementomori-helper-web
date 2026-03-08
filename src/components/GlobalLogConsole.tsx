@@ -7,8 +7,10 @@ import { useLogStore } from '@/store/logStore';
 import { useAccountStore } from '@/store/accountStore';
 import * as signalR from '@microsoft/signalr';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/useTranslation';
 
 export function GlobalLogConsole() {
+    const { t } = useTranslation();
     const {
         logs,
         isConnected,
@@ -98,7 +100,7 @@ export function GlobalLogConsole() {
                         ? "bg-green-500 hover:bg-green-600 text-white"
                         : "bg-zinc-700 hover:bg-zinc-600 text-zinc-300"
                 )}
-                title="查看日志"
+                title={t('GLOBAL_LOG_VIEW_LOGS')}
             >
                 <Terminal className="h-5 w-5" />
                 {logs.length > 0 && (
@@ -117,7 +119,7 @@ export function GlobalLogConsole() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-3 bg-zinc-900 rounded-t-lg">
                     <div className="flex items-center gap-2">
                         <Terminal className="h-3.5 w-3.5 text-zinc-400" />
-                        <CardTitle className="text-xs font-medium text-zinc-300">执行日志</CardTitle>
+                        <CardTitle className="text-xs font-medium text-zinc-300">{t('GLOBAL_LOG_TITLE')}</CardTitle>
                         <div className={cn(
                             "w-2 h-2 rounded-full",
                             isConnected ? "bg-green-500" : "bg-red-500"
@@ -150,7 +152,7 @@ export function GlobalLogConsole() {
                     className="bg-black p-2 font-mono text-[10px] max-h-32 overflow-y-auto"
                 >
                     {recentLogs.length === 0 ? (
-                        <p className="text-zinc-600 italic py-2 text-center">暂无日志</p>
+                        <p className="text-zinc-600 italic py-2 text-center">{t('GLOBAL_LOG_NO_LOGS')}</p>
                     ) : (
                         <div className="space-y-1">
                             {recentLogs.map((log, i) => (
@@ -179,26 +181,26 @@ export function GlobalLogConsole() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 py-2 px-4 bg-zinc-900 rounded-t-lg shrink-0">
                 <div className="flex items-center gap-2">
                     <Terminal className="h-4 w-4 text-zinc-400" />
-                    <CardTitle className="text-sm font-medium text-zinc-300">执行日志</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-300">{t('GLOBAL_LOG_TITLE')}</CardTitle>
                     {isConnected ? (
                         <Badge variant="secondary" className="bg-green-900/50 text-green-400 hover:bg-green-900/50 text-[10px] border-0">
-                            已连接
+                            {t('GLOBAL_LOG_CONNECTED')}
                         </Badge>
                     ) : (
                         <Badge variant="destructive" className="text-[10px] bg-red-900/50 text-red-400 border-0">
-                            未连接
+                            {t('GLOBAL_LOG_DISCONNECTED')}
                         </Badge>
                     )}
                 </div>
                 <div className="flex items-center gap-1">
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
+                    <Button
+                        variant="ghost"
+                        size="sm"
                         className="h-7 px-2 text-xs text-zinc-500 hover:text-red-400"
                         onClick={clearLogs}
                     >
                         <Trash2 className="h-3 w-3 mr-1" />
-                        清空
+                        {t('GLOBAL_LOG_CLEAR')}
                     </Button>
                     <Button 
                         variant="ghost" 
@@ -227,7 +229,7 @@ export function GlobalLogConsole() {
             >
                 <div className="space-y-1">
                     {logs.length === 0 ? (
-                        <p className="text-zinc-600 italic text-center py-8">等待任务执行日志...</p>
+                        <p className="text-zinc-600 italic text-center py-8">{t('GLOBAL_LOG_WAITING')}</p>
                     ) : (
                         logs.map((log, i) => (
                             <div key={i} className="flex gap-2">

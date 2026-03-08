@@ -9,6 +9,7 @@ import { ortegaApi } from '@/api/ortega-client';
 import { MissionGroupType, MissionStatusType, MissionGetMissionInfoResponse, MissionInfo, MissionMB } from '@/api/generated';
 import { useMasterData } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import { MissionRow, UIStoreMission } from '@/components/mission/MissionRow';
 import { mapMissionsFromGroupInfo } from '@/components/mission/mission-utils';
@@ -21,6 +22,7 @@ interface BookSortMissionsDialogProps {
 }
 
 export function BookSortMissionsDialog({ open, onOpenChange, missionData, onFetchNeeded }: BookSortMissionsDialogProps) {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [claiming, setClaiming] = useState<Set<number>>(new Set());
 
@@ -80,13 +82,13 @@ export function BookSortMissionsDialog({ open, onOpenChange, missionData, onFetc
             <DialogContent className="max-w-4xl max-h-[85vh] flex flex-col pt-8">
                 <DialogHeader className="flex flex-row items-center justify-between border-b pb-4 mb-2">
                     <div>
-                        <DialogTitle className="text-2xl font-bold">书库大扫除任务</DialogTitle>
-                        <p className="text-sm text-muted-foreground mt-1">完成书库大扫除任务获取奖励</p>
+                        <DialogTitle className="text-2xl font-bold">{t('BOOKSORT_DIALOG_MISSIONS_TITLE')}</DialogTitle>
+                        <p className="text-sm text-muted-foreground mt-1">{t('BOOKSORT_DIALOG_MISSIONS_DESC')}</p>
                     </div>
                     {claimableCount > 0 && (
                         <Button onClick={handleClaimAll} disabled={loading} className="mr-8">
                             {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            一键领取
+                            {t('BOOKSORT_DIALOG_CLAIM_ALL')}
                         </Button>
                     )}
                 </DialogHeader>
@@ -94,7 +96,7 @@ export function BookSortMissionsDialog({ open, onOpenChange, missionData, onFetc
                 <div className="flex-1 overflow-y-auto px-1 py-4">
                     <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         {missions.length === 0 ? (
-                            <div className="col-span-full text-center py-8 text-muted-foreground">暂无书库大扫除任务</div>
+                            <div className="col-span-full text-center py-8 text-muted-foreground">{t('BOOKSORT_NO_MISSIONS')}</div>
                         ) : (
                             missions.map(m => (
                                 <MissionRow

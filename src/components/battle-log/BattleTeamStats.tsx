@@ -3,6 +3,7 @@ import { BattleFieldCharacterGroupType } from '@/api/generated/battleFieldCharac
 import { BattleCharacterRow } from './BattleCharacterRow';
 import { cn } from '@/lib/utils';
 import { Sword, Shield, Heart } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface BattleTeamStatsProps {
     characters: BattleCharacterReport[];
@@ -17,6 +18,7 @@ export function BattleTeamStats({
     isWin,
     groupType
 }: BattleTeamStatsProps) {
+    const { t } = useTranslation();
     // 计算团队统计
     const totalDamage = characters.reduce((sum, c) => sum + c.totalGiveDamage, 0);
     const totalHeal = characters.reduce((sum, c) => sum + c.totalHpRecovery, 0);
@@ -46,7 +48,7 @@ export function BattleTeamStats({
                         {isWin ? 'WIN' : 'LOSE'}
                     </span>
                     <span className="text-white font-medium text-sm truncate">
-                        {teamName || (isAttacker ? '我方' : '敌方')}
+                        {teamName || (isAttacker ? t('BATTLE_TEAM_ALLY') : t('BATTLE_TEAM_ENEMY'))}
                     </span>
                 </div>
             </div>
@@ -61,21 +63,21 @@ export function BattleTeamStats({
                 <div className="flex items-center gap-1.5">
                     <Sword className="w-3.5 h-3.5 text-red-500" />
                     <div>
-                        <div className="text-[10px] text-muted-foreground">总输出</div>
+                        <div className="text-[10px] text-muted-foreground">{t('BATTLE_TEAM_TOTAL_DAMAGE')}</div>
                         <div className="text-xs font-semibold">{totalDamage.toLocaleString()}</div>
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <Heart className="w-3.5 h-3.5 text-green-500" />
                     <div>
-                        <div className="text-[10px] text-muted-foreground">总治疗</div>
+                        <div className="text-[10px] text-muted-foreground">{t('BATTLE_TEAM_TOTAL_HEAL')}</div>
                         <div className="text-xs font-semibold">{totalHeal.toLocaleString()}</div>
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5">
                     <Shield className="w-3.5 h-3.5 text-blue-500" />
                     <div>
-                        <div className="text-[10px] text-muted-foreground">总承伤</div>
+                        <div className="text-[10px] text-muted-foreground">{t('BATTLE_TEAM_TOTAL_TAKEN')}</div>
                         <div className="text-xs font-semibold">{totalTaken.toLocaleString()}</div>
                     </div>
                 </div>

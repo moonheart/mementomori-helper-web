@@ -18,6 +18,7 @@ import { ItemMB } from '@/api/generated/itemMB';
 import { getItemIconUrl, getItemName } from '@/lib/itemUtils';
 import { useMasterTable } from '@/hooks/useMasterData';
 import { useLocalizationStore } from '@/store/localization-store';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
 interface PresentBoxDialogProps {
@@ -51,7 +52,8 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
     const [error, setError] = useState<string | null>(null);
     const [presents, setPresents] = useState<UserPresentDtoInfo[]>([]);
     const [resultItems, setResultItems] = useState<PresentReceiveItemResponse['resultItems'] | null>(null);
-    const { t } = useLocalizationStore();
+    const { t: localize } = useLocalizationStore();
+    const { t } = useTranslation();
     const { data: itemTable } = useMasterTable<ItemMB>('ItemTable');
     const masterTables = { ItemTable: itemTable ?? undefined };
 
@@ -65,11 +67,11 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
             setPresents(resp?.userPresentDtoInfos ?? []);
         } catch (err) {
             console.error('Failed to fetch presents:', err);
-            setError('获取礼物箱失败，请重试');
+            setError(t('PRESENT_BOX_LOAD_FAILED'));
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [t]);
 
     useEffect(() => {
         if (open) {
@@ -151,10 +153,10 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                 <DialogHeader className="px-6 pt-5 pb-3 border-b shrink-0">
                     <DialogTitle className="flex items-center gap-2 text-base">
                         <Gift className="h-4 w-4 text-red-500" />
-                        礼物箱
+                        {t('PRESENT_BOX_TITLE')}
                         {presents.length > 0 && (
                             <Badge variant="secondary" className="ml-1 text-xs">
-                                {presents.length} 件
+                                {t('PRESENT_BOX_ITEM_COUNT', [String(presents.length)])}
                             </Badge>
                         )}
                     </DialogTitle>
@@ -165,27 +167,27 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                     {loading ? (
                         <div className="flex items-center justify-center flex-1 gap-2">
                             <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                            <span className="text-sm text-muted-foreground">加载中...</span>
+                            <span className="text-sm text-muted-foreground">{t('COMMON_LOADING')}</span>
                         </div>
                     ) : error ? (
                         <div className="flex flex-col items-center justify-center flex-1 gap-3">
                             <p className="text-sm text-destructive">{error}</p>
                             <Button variant="outline" size="sm" onClick={fetchPresents}>
                                 <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                                重试
+                                {t('COMMON_RETRY')}
                             </Button>
                         </div>
                     ) : presents.length === 0 ? (
                         <div className="flex flex-col items-center justify-center flex-1 gap-3 text-muted-foreground">
                             <Package className="h-12 w-12 opacity-30" />
-                            <p className="text-sm">礼物箱是空的</p>
+                            <p className="text-sm">{t('PRESENT_BOX_EMPTY')}</p>
                         </div>
                     ) : (
                         <>
                             {/* 领取结果提示 */}
                             {resultItems && resultItems.length > 0 && (
                                 <div className="mx-4 mt-3 p-3 rounded-lg bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 shrink-0">
-                                    <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-2">✓ 已领取道具：</p>
+                                    <p className="text-xs font-medium text-green-700 dark:text-green-400 mb-2">✓ {t('PRESENT_BOX_RECEIVED_ITEMS')}</p>
                                     <div className="flex flex-wrap gap-2">
                                         {resultItems.map((ri, idx) => (
                                             <div key={idx} className="flex items-center gap-1.5 bg-white dark:bg-green-900/50 rounded px-2 py-1 text-xs shadow-sm">
@@ -204,7 +206,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
 
                             {/* 注脚提示 */}
                             <p className="px-4 pt-3 text-[11px] text-red-500 shrink-0">
-                                ※超过期限的礼物将由系统自动删除。
+                                {t('PRESENT_BOX_EXPIRY_NOTICE')}
                             </p>
 
                             {/* 礼物列表 */}
@@ -243,11 +245,11 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                             {/* 标题行 */}
                                                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                                 <span className="text-sm font-medium leading-snug truncate">
-                                                                    {present.title || '礼物'}
+                                                                    {present.title || t('PRESENT_BOX_GIFT')}
                                                                 </span>
                                                                 {present.isReceived && (
                                                                     <Badge variant="outline" className="text-[10px] h-4 px-1 text-muted-foreground shrink-0">
-                                                                        已领取
+                                                                        {t('PRESENT_BOX_RECEIVED')}
                                                                     </Badge>
                                                                 )}
                                                             </div>
@@ -259,7 +261,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                                         <div
                                                                             key={idx}
                                                                             className="relative flex items-center justify-center w-10 h-10 rounded border border-border bg-muted/50"
-                                                                            title={`${getItemName(pItem.item.itemType, pItem.item.itemId, masterTables, t)} × ${pItem.item.itemCount.toLocaleString()}`}
+                                                                            title={`${getItemName(pItem.item.itemType, pItem.item.itemId, masterTables, localize)} × ${pItem.item.itemCount.toLocaleString()}`}
                                                                         >
                                                                             <img
                                                                                 src={getItemIconUrl(pItem.item.itemType, pItem.item.itemId, masterTables)}
@@ -282,13 +284,13 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                             {/* 期限信息行 */}
                                                             <div className="flex items-center gap-4 text-[11px] text-muted-foreground">
                                                                 <span>
-                                                                    领取期限：
+                                                                    {t('PRESENT_BOX_DEADLINE')}
                                                                     <span className={cn('font-medium', isExpiringSoon ? 'text-red-500' : 'text-foreground/70')}>
-                                                                        {remaining !== null ? `尚余 ${remaining} 天` : '-'}
+                                                                        {remaining !== null ? t('PRESENT_BOX_REMAINING_DAYS', [String(remaining)]) : '-'}
                                                                     </span>
                                                                 </span>
                                                                 <span>
-                                                                    领取日期：{formatDate(present.createAt)}
+                                                                    {t('PRESENT_BOX_RECEIVED_DATE', [formatDate(present.createAt)])}
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -305,7 +307,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                                                                 {isReceiving ? (
                                                                     <Loader2 className="h-3 w-3 animate-spin" />
                                                                 ) : (
-                                                                    '领取'
+                                                                    t('PRESENT_BOX_RECEIVE')
                                                                 )}
                                                             </Button>
                                                         )}
@@ -334,7 +336,7 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                             ) : (
                                 <Trash2 className="h-3 w-3 mr-1.5" />
                             )}
-                            删除已读
+                            {t('PRESENT_BOX_DELETE_READ')}
                             {receivedCount > 0 && <span className="ml-1 text-muted-foreground">({receivedCount})</span>}
                         </Button>
                         <Button
@@ -349,12 +351,12 @@ export function PresentBoxDialog({ open, onOpenChange }: PresentBoxDialogProps) 
                             ) : (
                                 <CheckCheck className="h-3 w-3 mr-1.5" />
                             )}
-                            全部领取
+                            {t('PRESENT_BOX_RECEIVE_ALL')}
                             {pendingCount > 0 && <span className="ml-1 opacity-80">({pendingCount})</span>}
                         </Button>
                     </div>
                     <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => onOpenChange(false)}>
-                        关闭
+                        {t('COMMON_CLOSE')}
                     </Button>
                 </div>
             </DialogContent>
