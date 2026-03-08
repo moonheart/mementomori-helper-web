@@ -214,24 +214,6 @@ export function BattlePage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">{t('[CommonHeaderAutoBattleLabel]')}</h1>
-                <p className="text-muted-foreground mt-1">
-                    挑战关卡、挑战首领、进行自动战斗获取资源
-                </p>
-            </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>主线冒险系统：</strong>
-                    通关关卡解锁新内容，已通关的关卡可进行自动战斗获取资源。
-                    使用高速战斗可立即获得2小时的自动战斗收益。每次挑战首领可获得战利品。
-                </AlertDescription>
-            </Alert>
-
             {/* 主要功能区 */}
             <div className="grid gap-6 md:grid-cols-3">
                 {/* 自动战斗 */}

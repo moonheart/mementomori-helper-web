@@ -568,11 +568,6 @@ export function FriendsPage() {
                 onOpenChange={setPlayerDialogOpen}
                 player={playerDialogTarget}
             />
-            {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">{t('[CommonHeaderFriendLabel]')}</h1>
-            </div>
-
             {/* 统计卡片 */}
             <div className="grid gap-6 md:grid-cols-3">
                 <Card>

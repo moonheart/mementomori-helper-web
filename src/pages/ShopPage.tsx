@@ -678,11 +678,7 @@ export function ShopPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">{t('[CommonHeaderExchangeLabel]')}</h1>
-                </div>
+            <div className="flex justify-end">
                 <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
                     <Clock className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
                     刷新数据

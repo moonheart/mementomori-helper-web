@@ -555,17 +555,6 @@ export function TimeSpaceCavePage() {
 
     return (
         <div className="container mx-auto p-6 space-y-6">
-            {/* 页面标题 */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                    <MapPin className="w-8 h-8 text-primary" />
-                    <h1 className="text-3xl font-bold">时空洞窟</h1>
-                </div>
-                <p className="text-muted-foreground">
-                    探索神秘洞窟，获得强大加护
-                </p>
-            </div>
-
             {/* 当前进度概览 */}
             {progressData && (
                 <Card>

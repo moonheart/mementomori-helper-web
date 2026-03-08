@@ -164,11 +164,6 @@ export function PVPPage() {
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
-            <div>
-                <h1 className="text-3xl font-bold">{t('[LockEquipmentDeckTypeLeague]')}</h1>
-            </div>
-
             {/* Main Tabs */}
             <Tabs defaultValue="ancient" onValueChange={setActiveMainTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">

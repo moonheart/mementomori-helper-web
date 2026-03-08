@@ -96,17 +96,6 @@ export function ItemsPage() {
 
     return (
         <div className="w-full p-6 space-y-6">
-            {/* 页面标题 */}
-            <div className="space-y-2">
-                <div className="flex items-center gap-3">
-                    <Package className="w-8 h-8 text-primary" />
-                    <h1 className="text-3xl font-bold">{t('[CommonFooterItemBoxButtonLabel]') || '道具仓库'}</h1>
-                </div>
-                <p className="text-muted-foreground">
-                    管理你的道具 • {totalUniqueItems} 种道具
-                </p>
-            </div>
-
             {/* Tab导航和内容 */}
             <Card className="p-6">
                 {refreshing && (

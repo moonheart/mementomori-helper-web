@@ -449,11 +449,7 @@ export function WishingFountainPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">{t('[CommonHeaderBountyQuestLabel]')}</h1>
-                </div>
+            <div className="flex justify-end">
                 <Button
                     variant="outline"
                     onClick={() => handleReward()}
@@ -463,16 +459,6 @@ export function WishingFountainPage() {
                     {t('[BountyQuestAllReceive]')}
                 </Button>
             </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>{t('WF_HELP_TITLE')}</strong><br />
-                    {t('WF_HELP_DESC1')}<br />
-                    {t('WF_HELP_DESC2')}
-                </AlertDescription>
-            </Alert>
 
             <Tabs defaultValue="regular" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-3">

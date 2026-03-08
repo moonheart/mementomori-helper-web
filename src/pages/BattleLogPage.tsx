@@ -133,14 +133,6 @@ export function BattleLogPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">战斗记录</h1>
-                <p className="text-muted-foreground mt-1">
-                    查看历史战斗记录和详细战报
-                </p>
-            </div>
-
             {/* 筛选栏 */}
             <Card>
                 <CardContent className="p-4">

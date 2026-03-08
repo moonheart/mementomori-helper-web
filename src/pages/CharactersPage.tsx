@@ -190,12 +190,6 @@ export function CharactersPage() {
 
     return (
         <div className="space-y-6">
-            {/* Page Header */}
-            <div>
-                <h1 className="text-3xl font-bold">{t('CHARACTER_PAGE_TITLE')}</h1>
-                <p className="text-muted-foreground">{t('CHARACTER_PAGE_DESC')}</p>
-            </div>
-
             {/* Summary Stats */}
             <div className="grid gap-4 md:grid-cols-4">
                 <Card>

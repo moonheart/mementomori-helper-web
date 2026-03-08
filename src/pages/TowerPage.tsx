@@ -223,24 +223,6 @@ export function TowerPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold">{t('[TowerTypeInfinite]')}</h1>
-                <p className="text-muted-foreground mt-1">
-                    挑战塔层，获取丰厚奖励
-                </p>
-            </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>塔系统说明：</strong>
-                    无穷之塔每天有快速挑战机会，通关新楼层不消耗次数。
-                    属性塔每天开放不同属性，每天最多通关10层，仅可使用对应属性角色。
-                </AlertDescription>
-            </Alert>
-
             <Tabs defaultValue="infinite" className="space-y-6">
                 <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="infinite">{t('[TowerTypeInfinite]')}</TabsTrigger>

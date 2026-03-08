@@ -63,27 +63,6 @@ export function GuildPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div>
-                <h1 className="text-3xl font-bold flex items-center gap-2">
-                    <Crown className="h-8 w-8 text-yellow-500" />
-                    {guildInfo.name}
-                </h1>
-                <p className="text-muted-foreground mt-1">
-                    Lv.{guildInfo.level} • 排名 #{guildInfo.ranking}
-                </p>
-            </div>
-
-            {/* 帮助说明 */}
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>公会说明：</strong>
-                    公会签到可获得奖励，完成任务获得公会积分。
-                    公会积分用于开放讨伐战或获取公会战资格（前16名）。
-                </AlertDescription>
-            </Alert>
-
             {/* 公会状态卡片 */}
             <div className="grid gap-4 md:grid-cols-4">
                 <Card>

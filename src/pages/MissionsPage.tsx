@@ -292,29 +292,16 @@ export function MissionsPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">任务系统</h1>
-                    <p className="text-muted-foreground mt-1">完成任务获取丰厚奖励</p>
-                </div>
-                <div className="flex gap-2">
-                    <Button onClick={handleClaimAll} variant="secondary" disabled={loading}>
-                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        一键领取
-                    </Button>
-                    <Button onClick={fetchMissionInfo} disabled={loading} variant="outline">
-                        {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                        刷新
-                    </Button>
-                </div>
+            <div className="flex justify-end gap-2">
+                <Button onClick={handleClaimAll} variant="secondary" disabled={loading}>
+                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    一键领取
+                </Button>
+                <Button onClick={fetchMissionInfo} disabled={loading} variant="outline">
+                    {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    刷新
+                </Button>
             </div>
-
-            <Alert>
-                <BookOpen className="h-4 w-4" />
-                <AlertDescription>
-                    每日任务每天4:00重置，每周任务周一4:00重置。
-                </AlertDescription>
-            </Alert>
 
             <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="grid w-full max-w-md grid-cols-3">

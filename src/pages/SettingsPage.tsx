@@ -147,11 +147,8 @@ export function SettingsPage() {
 
     return (
         <div className="space-y-6 pb-12">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-3xl font-bold">{t('SETTINGS_PAGE_TITLE')}</h1>
-                    <p className="text-muted-foreground">{t('SETTINGS_CONFIGURING_ACCOUNT')}: <span className="text-primary font-medium">{activeAccountName}</span></p>
-                </div>
+            <div className="flex justify-end items-center">
+                <p className="text-muted-foreground mr-4">{t('SETTINGS_CONFIGURING_ACCOUNT')}: <span className="text-primary font-medium">{activeAccountName}</span></p>
                 {loading && <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />}
             </div>
 

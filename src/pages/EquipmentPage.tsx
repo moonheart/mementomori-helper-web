@@ -222,26 +222,6 @@ export function EquipmentPage() {
 
     return (
         <div className="space-y-6">
-            {/* 页面标题 */}
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-bold">装备管理</h1>
-                    <p className="text-muted-foreground mt-1">
-                        管理和强化你的装备 • {filteredAndSortedEquipment.length} / {allEquipments.length} 件装备
-                    </p>
-                </div>
-            </div>
-
-            {/* 帮助提示 */}
-            <Alert>
-                <Book className="h-4 w-4" />
-                <AlertDescription>
-                    <strong>装备系统说明：</strong>
-                    装备分为武器、头部、身体、腿部、手部和饰品等部位。稀有度越高属性越强，可通过强化、神装强化(圣装/魔装)提升战斗力。
-                    装备同一套装可激活套装效果。
-                </AlertDescription>
-            </Alert>
-
             {/* 筛选器 */}
             <EquipmentFilters
                 searchQuery={searchQuery}
