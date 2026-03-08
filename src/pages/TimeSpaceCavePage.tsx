@@ -638,11 +638,10 @@ export function TimeSpaceCavePage() {
             {/* 标签页内容 */}
             <Card>
                 <Tabs defaultValue="explore" className="p-6">
-                    <TabsList className="grid w-full grid-cols-4">
+                    <TabsList className="grid w-full grid-cols-3">
                         <TabsTrigger value="explore">探索</TabsTrigger>
                         <TabsTrigger value="team">队伍</TabsTrigger>
                         <TabsTrigger value="blessings">加护</TabsTrigger>
-                        <TabsTrigger value="reinforcements">增援</TabsTrigger>
                     </TabsList>
 
                     {/* 探索石台 */}
@@ -895,53 +894,6 @@ export function TimeSpaceCavePage() {
                             {blessings.length === 0 && (
                                 <p className="text-center text-muted-foreground py-8">
                                     还未获得任何加护
-                                </p>
-                            )}
-                        </div>
-                    </TabsContent>
-
-                    {/* 增援角色 */}
-                    <TabsContent value="reinforcements" className="space-y-4">
-                        <CardHeader className="px-0">
-                            <CardTitle>可选增援角色</CardTitle>
-                            <CardDescription>
-                                最多可以选择 3 名增援角色协助战斗
-                            </CardDescription>
-                        </CardHeader>
-                        <div className="grid gap-3">
-                            {reinforcements.map((char) => (
-                                <Card
-                                    key={char.id}
-                                    className={char.selected ? 'border-primary bg-primary/5' : ''}
-                                >
-                                    <CardContent className="pt-6">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <Users className="w-5 h-5 text-muted-foreground" />
-                                                <div>
-                                                    <div className="flex items-center gap-2">
-                                                        <h4 className="font-semibold">{char.name}</h4>
-                                                        {char.selected && (
-                                                            <Badge variant="default" className="text-xs">
-                                                                已选择
-                                                            </Badge>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        战力: {char.battlePower.toLocaleString()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <Button variant={char.selected ? 'outline' : 'default'} size="sm">
-                                                {char.selected ? '取消' : '选择'}
-                                            </Button>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                            {reinforcements.length === 0 && (
-                                <p className="text-center text-muted-foreground py-8">
-                                    暂无可选增援角色
                                 </p>
                             )}
                         </div>
